@@ -3,7 +3,7 @@
 健康管理系统 · 单文件 Web 演示
 ================================================
 将小组设计的功能界面草稿提供给AI，得到「健康管理系统」基础网页，包含：
-  1. 健康数据  2. 饮食  3. 运动  4. 女生健康  5. 睡眠  6. 科普资讯
+  1. 健康数据（女性用户含女性健康档案）  2. 饮食  3. 运动  4. 家人健康  5. 睡眠  6. 科普资讯
   7. 个人信息档案弹窗  8. AI 健康小管家（悬浮聊天窗）
 
 运行方式（无需安装任何第三方库，仅使用 Python 标准库）：
@@ -603,7 +603,7 @@ a { text-decoration: none; }
 .mood textarea::placeholder { color: #b3ac97; }
 
 /* ==========================================================
-   8. 女生健康页
+   8. 女性健康与家人健康页
    ========================================================== */
 .female-wrap { max-width: 720px; margin: 0 auto; }
 
@@ -891,7 +891,13 @@ a { text-decoration: none; }
   border-top: 1px dashed #eef1f6;
 }
 
-.family-line b { color: #39404f; font-weight: 600; }
+.family-line b {
+  color: #39404f;
+  font-weight: 600;
+  max-width: 64%;
+  text-align: right;
+  line-height: 1.5;
+}
 
 .family-card .status-title .icon { color: #5b8def; }
 
@@ -967,6 +973,110 @@ a { text-decoration: none; }
   line-height: 1.7;
   margin: 2px 0 8px;
 }
+
+/* 女性健康档案嵌入「健康数据」页 */
+.female-health { margin-top: 20px; }
+.female-health .female-card { padding: 24px 28px; }
+
+/* 家人健康页：关怀提醒 */
+.family-wrap { max-width: 760px; margin: 0 auto; }
+
+.reminder-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 24px;
+  margin-bottom: 20px;
+}
+
+.reminder-count {
+  font-size: 12px;
+  font-weight: 500;
+  color: #d98a3f;
+  background: #fdf3e0;
+  border-radius: 999px;
+  padding: 3px 9px;
+  margin-left: 6px;
+}
+
+.reminder-list { display: flex; flex-direction: column; gap: 10px; }
+
+.reminder-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #f8f9fc;
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+.reminder-item.done { opacity: 0.5; }
+
+.reminder-check {
+  width: 22px;
+  height: 22px;
+  border: 1.5px solid #cbd3df;
+  border-radius: 50%;
+  background: #fff;
+  color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  flex: none;
+  padding: 0;
+}
+
+.reminder-item.done .reminder-check {
+  background: #4ecdc4;
+  border-color: #4ecdc4;
+  color: #fff;
+}
+
+.reminder-main { flex: 1; min-width: 0; }
+
+.reminder-title { font-size: 13px; font-weight: 600; color: #39404f; }
+.reminder-item.done .reminder-title { text-decoration: line-through; color: #9aa3b2; }
+
+.reminder-meta { font-size: 11px; color: #8a94a6; margin-top: 4px; }
+
+.reminder-badge {
+  flex: none;
+  font-size: 11px;
+  color: #e0679a;
+  background: #fdeaf2;
+  border-radius: 6px;
+  padding: 3px 8px;
+}
+
+.reminder-badge.overdue { color: #d9534f; background: #fdeceb; }
+.reminder-badge.today { color: #d98a3f; background: #fdf3e0; }
+.reminder-badge.done { color: #8a94a6; background: #f1f3f7; }
+
+.reminder-empty {
+  font-size: 12px;
+  color: #aab2c0;
+  padding: 4px 0;
+}
+
+.head-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.btn-small { padding: 8px 12px; font-size: 12px; }
+
+.family-record-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 4px 0 10px;
+}
+
+.family-record-head h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #4a5568;
+}
+
+.family-card .family-records { margin-top: 0; }
 
 /* ==========================================================
    9. 睡眠页
@@ -1451,6 +1561,7 @@ a { text-decoration: none; }
   <symbol id="i-smile" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></symbol>
   <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-3.9-.9L3 21l1.9-5a8.4 8.4 0 0 1-.9-3.9 8.4 8.4 0 0 1 8.4-8.4 8.4 8.4 0 0 1 8.6 8.3z"/><line x1="8" y1="12" x2="8.01" y2="12"/><line x1="12" y1="12" x2="12.01" y2="12"/><line x1="16" y1="12" x2="16.01" y2="12"/></symbol>
   <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></symbol>
 </svg>
 
 <!-- ========================================================
@@ -1467,7 +1578,7 @@ a { text-decoration: none; }
       <button class="active" data-page="data">健康数据</button>
       <button data-page="diet">饮食</button>
       <button data-page="sport">运动</button>
-      <button data-page="female" id="navFemale">女生健康</button>
+      <button data-page="family" id="navFamily">家人健康</button>
       <button data-page="sleep">睡眠</button>
       <button data-page="news">科普资讯</button>
     </nav>
@@ -1554,6 +1665,58 @@ a { text-decoration: none; }
             </div>
           </div>
           <div class="ring-note">较上月提升 2%</div>
+        </div>
+      </div>
+
+      <!-- 女性用户专属：女性健康档案（男性用户会自动隐藏） -->
+      <div class="female-health" id="femaleHealthSection">
+        <div class="female-card">
+          <div class="female-head">
+            <div class="female-title">
+              <svg class="icon"><use href="#i-droplet"/></svg>女性健康档案
+            </div>
+            <button class="btn-soft" id="openPeriod">记录生理期</button>
+          </div>
+
+          <div class="female-grid">
+            <!-- 左侧：周期数据（长度可自由选择） -->
+            <div>
+              <div class="f-item">
+                <span class="left"><svg class="icon"><use href="#i-calendar"/></svg>经期长度</span>
+                <select id="periodDays" aria-label="经期长度"></select>
+              </div>
+              <div class="f-item">
+                <span class="left"><svg class="icon"><use href="#i-refresh"/></svg>周期长度</span>
+                <select id="cycleDaysMain" aria-label="周期长度"></select>
+              </div>
+              <div class="f-item">
+                <span class="left"><svg class="icon"><use href="#i-droplet"/></svg>排卵日预测</span>
+                <b id="ovulationDate">10月25日</b>
+              </div>
+              <div class="f-item">
+                <span class="left"><svg class="icon"><use href="#i-calendar"/></svg>最近一次经期</span>
+                <b id="lastPeriodRange">10月11日 - 10月15日</b>
+              </div>
+            </div>
+
+            <!-- 右侧：今日状态（从预设选项中多选） -->
+            <div class="status-card">
+              <div class="status-title">
+                <svg class="icon"><use href="#i-calendar"/></svg>今日状态记录
+              </div>
+              <div class="tags" id="femaleTags">
+                <button class="tag add" id="femaleAddTag" type="button">+ 添加标签</button>
+              </div>
+              <div class="tag-menu" id="femaleTagMenu">
+                <h4>选择今日状态（可多选）</h4>
+                <div class="tag-options" id="femaleTagOptions"></div>
+                <div class="tag-menu-foot">
+                  <button class="btn-mini" type="button" data-close-tag>确定</button>
+                </div>
+              </div>
+              <div class="tip-pink">科学建议：注意保暖，避免剧烈运动，可适量饮用热饮。</div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -1670,118 +1833,43 @@ a { text-decoration: none; }
     </section>
 
     <!-- ====================================================
-         页面四：女生健康
+         页面四：家人健康
          ==================================================== -->
-    <section class="page" id="page-female">
-      <div class="female-wrap">
+    <section class="page" id="page-family">
+      <div class="family-wrap">
 
-        <!-- 女性视图：生理期管理 -->
-        <div id="femaleView">
-          <div class="female-card">
-            <div class="female-head">
-              <div class="female-title">
-                <svg class="icon"><use href="#i-droplet"/></svg>女性健康档案
-              </div>
-              <button class="btn-soft" id="openPeriod">记录生理期</button>
+        <!-- 关怀提醒：提醒用户主动关照家人 -->
+        <div class="reminder-card">
+          <div class="female-head">
+            <div class="female-title family-title">
+              <svg class="icon"><use href="#i-bell"/></svg>关怀提醒
+              <span class="reminder-count" id="reminderCount">0 条待办</span>
             </div>
-
-            <div class="female-grid">
-              <!-- 左侧：周期数据（长度可自由选择） -->
-              <div>
-                <div class="f-item">
-                  <span class="left"><svg class="icon"><use href="#i-calendar"/></svg>经期长度</span>
-                  <select id="periodDays" aria-label="经期长度"></select>
-                </div>
-                <div class="f-item">
-                  <span class="left"><svg class="icon"><use href="#i-refresh"/></svg>周期长度</span>
-                  <select id="cycleDaysMain" aria-label="周期长度"></select>
-                </div>
-                <div class="f-item">
-                  <span class="left"><svg class="icon"><use href="#i-droplet"/></svg>排卵日预测</span>
-                  <b id="ovulationDate">10月25日</b>
-                </div>
-                <div class="f-item">
-                  <span class="left"><svg class="icon"><use href="#i-calendar"/></svg>最近一次经期</span>
-                  <b id="lastPeriodRange">10月11日 - 10月15日</b>
-                </div>
-              </div>
-
-              <!-- 右侧：今日状态（从预设选项中多选） -->
-              <div class="status-card">
-                <div class="status-title">
-                  <svg class="icon"><use href="#i-calendar"/></svg>今日状态记录
-                </div>
-                <div class="tags" id="femaleTags">
-                  <button class="tag add" id="femaleAddTag" type="button">+ 添加标签</button>
-                </div>
-                <div class="tag-menu" id="femaleTagMenu">
-                  <h4>选择今日状态（可多选）</h4>
-                  <div class="tag-options" id="femaleTagOptions"></div>
-                  <div class="tag-menu-foot">
-                    <button class="btn-mini" type="button" data-close-tag>确定</button>
-                  </div>
-                </div>
-                <div class="tip-pink">科学建议：注意保暖，避免剧烈运动，可适量饮用热饮。</div>
-              </div>
-            </div>
+            <button class="btn-soft" id="openReminder">添加提醒</button>
           </div>
+          <div class="reminder-list" id="reminderList"></div>
         </div>
 
-        <!-- 男性视图：记录母亲 / 爱人的健康情况 -->
-        <div id="maleView" hidden>
-          <div class="family-card">
-            <div class="female-head">
-              <div class="female-title family-title">
-                <svg class="icon"><use href="#i-heart"/></svg>家人健康档案
-              </div>
-              <button class="btn-soft" id="openFamilyRecord">添加记录</button>
+        <!-- 家人档案：支持添加家人与健康记录 -->
+        <div class="family-card">
+          <div class="female-head">
+            <div class="female-title family-title">
+              <svg class="icon"><use href="#i-heart"/></svg>家人健康档案
             </div>
-
-            <div class="family-grid">
-              <div class="person-card">
-                <div class="person-head">
-                  <div class="person-avatar">母</div>
-                  <div><span class="person-name">母亲</span><span class="person-age">58岁</span></div>
-                </div>
-                <div class="family-line">最近体检 <b id="motherExam">2026年9月12日</b></div>
-                <div class="family-line">用药提醒 <b>每日降压药</b></div>
-                <div class="family-line">下次复诊 <b>12月12日</b></div>
-              </div>
-
-              <div class="person-card">
-                <div class="person-head">
-                  <div class="person-avatar">爱</div>
-                  <div><span class="person-name">爱人</span><span class="person-age">28岁</span></div>
-                </div>
-                <div class="family-line">最近经期 <b id="partnerLastPeriod">10月11日</b></div>
-                <div class="family-line">周期长度 <b>28 天</b></div>
-                <div class="family-line">排卵日预测 <b>10月25日</b></div>
-              </div>
+            <div class="head-actions">
+              <button class="btn-soft btn-small" id="openFamilyRecord">添加记录</button>
+              <button class="btn-soft btn-small" id="openMember">添加家人</button>
             </div>
+          </div>
 
-            <div class="status-card">
-              <div class="status-title">
-                <svg class="icon"><use href="#i-heart"/></svg>家人状态记录
-              </div>
-              <div class="tags" id="maleTags">
-                <button class="tag add" id="maleAddTag" type="button">+ 添加标签</button>
-              </div>
-              <div class="tag-menu" id="maleTagMenu">
-                <h4>选择家人状态（可多选）</h4>
-                <div class="tag-options" id="maleTagOptions"></div>
-                <div class="tag-menu-foot">
-                  <button class="btn-mini" type="button" data-close-tag>确定</button>
-                </div>
-              </div>
-              <div class="tip-blue">关怀建议：定期提醒母亲测量血压、按时服药；爱人经期前后注意保暖，避免生冷饮食。</div>
-            </div>
+          <!-- 家人卡片由 JavaScript 根据数据动态生成 -->
+          <div class="family-grid" id="familyGrid"></div>
 
-            <div class="family-records">
-              <h4>最近记录</h4>
-              <div id="familyRecordList">
-                <div class="record-empty" id="recordEmpty">暂无记录，点击右上角「添加记录」为家人建立档案。</div>
-              </div>
-            </div>
+          <div class="family-record-head">
+            <h3>最近记录</h3>
+          </div>
+          <div class="family-records">
+            <div id="familyRecordList"></div>
           </div>
         </div>
 
@@ -1967,6 +2055,80 @@ a { text-decoration: none; }
 </div>
 
 <!-- ========================================================
+     添加家人信息弹窗
+     ======================================================== -->
+<div class="mask" id="memberMask">
+  <div class="modal">
+    <div class="modal-head">
+      <svg class="icon"><use href="#i-user"/></svg>添加家人信息
+      <button class="modal-close" id="memberClose" aria-label="关闭">
+        <svg class="icon"><use href="#i-close"/></svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="field-row">
+        <div class="field">
+          <label for="memberRelation">称呼 / 关系</label>
+          <input id="memberRelation" type="text" placeholder="如：母亲、父亲、爱人">
+        </div>
+        <div class="field">
+          <label for="memberAge">年龄</label>
+          <input id="memberAge" type="number" placeholder="如：58">
+        </div>
+      </div>
+      <div class="field">
+        <label for="memberName">姓名（选填）</label>
+        <input id="memberName" type="text" placeholder="如：李秀兰">
+      </div>
+      <div class="field">
+        <label for="memberNote">备注</label>
+        <input id="memberNote" type="text" placeholder="如：每日降压药、经期注意保暖">
+      </div>
+    </div>
+
+    <div class="modal-foot">
+      <button class="btn-cancel" id="memberCancel">取消</button>
+      <button class="btn-save" id="memberSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================
+     添加关怀提醒弹窗
+     ======================================================== -->
+<div class="mask" id="reminderMask">
+  <div class="modal">
+    <div class="modal-head">
+      <svg class="icon"><use href="#i-bell"/></svg>添加关怀提醒
+      <button class="modal-close" id="reminderClose" aria-label="关闭">
+        <svg class="icon"><use href="#i-close"/></svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="field">
+        <label for="reminderMember">提醒家人</label>
+        <select id="reminderMember"></select>
+      </div>
+      <div class="field">
+        <label for="reminderTitle">提醒内容</label>
+        <input id="reminderTitle" type="text" placeholder="如：提醒母亲测量血压">
+      </div>
+      <div class="field">
+        <label for="reminderDate">提醒日期</label>
+        <input id="reminderDate" type="date">
+      </div>
+    </div>
+
+    <div class="modal-foot">
+      <button class="btn-cancel" id="reminderCancel">取消</button>
+      <button class="btn-save" id="reminderSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================
      悬浮客服按钮与 AI 聊天窗口
      ======================================================== -->
 <button class="fab" id="fab" aria-label="打开健康小管家">
@@ -2106,12 +2268,12 @@ document.getElementById('saveProfile').addEventListener('click', function () {
 
   document.getElementById('userBtn').title = '个人信息 · ' + name + '（' + gender + '）';
 
-  // 根据性别切换「女生健康 / 家人健康」视图
+  // 根据性别显示/隐藏「健康数据」页中的女性健康档案
   currentGender = gender;
   applyGenderView();
 
   closeProfile();
-  showToast(gender === '男' ? '个人信息已保存，已切换至家人健康' : '个人信息已保存');
+  showToast(gender === '男' ? '个人信息已保存，女性健康档案已隐藏' : '个人信息已保存');
 });
 
 /* ==========================================================
@@ -2200,12 +2362,8 @@ let currentGender = '女';
 function applyGenderView() {
   const isFemale = currentGender === '女';
 
-  // 女性显示生理期档案，男性显示家人健康档案
-  document.getElementById('femaleView').hidden = !isFemale;
-  document.getElementById('maleView').hidden = isFemale;
-
-  // 导航文案同步变化
-  document.getElementById('navFemale').textContent = isFemale ? '女生健康' : '家人健康';
+  // 女性健康档案已并入「健康数据」页，仅女性用户显示
+  document.getElementById('femaleHealthSection').hidden = !isFemale;
   document.getElementById('pGender').value = currentGender;
 }
 
@@ -2343,7 +2501,6 @@ document.getElementById('periodSave').addEventListener('click', function () {
 
 // ---------- 状态标签：从预设选项中多选 ----------
 const femaleTagValues = ['轻微腹痛', '情绪平稳', '腰酸', '疲惫', '头痛', '失眠', '食欲不振', '状态良好'];
-const maleTagValues = ['血压平稳', '血压偏高', '睡眠不佳', '情绪平稳', '血糖偏高', '经期不适', '体检正常'];
 
 function closeTagMenus() {
   document.querySelectorAll('.tag-menu.open').forEach(function (menu) {
@@ -2435,15 +2592,6 @@ createTagEditor({
   initial: ['轻微腹痛', '情绪平稳']
 });
 
-createTagEditor({
-  tagsId: 'maleTags',
-  addBtnId: 'maleAddTag',
-  menuId: 'maleTagMenu',
-  optionsId: 'maleTagOptions',
-  values: maleTagValues,
-  initial: ['情绪平稳', '血压平稳']
-});
-
 // 点击标签面板以外的地方时收起面板
 document.addEventListener('click', function (event) {
   if (!event.target.closest('.tag-menu') && !event.target.closest('.tag.add')) {
@@ -2451,38 +2599,321 @@ document.addEventListener('click', function (event) {
   }
 });
 
-// ---------- 家人记录弹窗（男性视图） ----------
+// ---------- 家人健康：成员、健康记录与关怀提醒 ----------
 const familyMask = document.getElementById('familyMask');
+const memberMask = document.getElementById('memberMask');
+const reminderMask = document.getElementById('reminderMask');
 const familyPersonSelect = document.getElementById('familyPerson');
 const familyTypeSelect = document.getElementById('familyType');
+const reminderMemberSelect = document.getElementById('reminderMember');
 
-// 母亲没有生理期记录，爱人可以记录生理期
-const familyTypeMap = {
-  '母亲': ['体检', '用药', '其他'],
-  '爱人': ['体检', '用药', '生理期', '其他']
-};
+// 家人列表（可通过「添加家人」继续扩展）
+let familyMembers = [
+  { id: 'm1', relation: '母亲', name: '', age: 58, note: '每日降压药' },
+  { id: 'm2', relation: '爱人', name: '', age: 28, note: '经期前后注意保暖' }
+];
 
+const todayDate = new Date();
+
+// 健康记录
+let familyRecords = [
+  {
+    memberId: 'm1',
+    type: '体检',
+    date: toISODate(addDays(todayDate, -39)),
+    content: '各项指标正常'
+  }
+];
+
+// 关怀提醒：默认给出「今天」与「三天后」两条示例
+let reminders = [
+  {
+    id: 'r1',
+    memberId: 'm1',
+    title: '提醒母亲测量血压',
+    date: toISODate(todayDate),
+    done: false
+  },
+  {
+    id: 'r2',
+    memberId: 'm2',
+    title: '提醒爱人注意经期保暖',
+    date: toISODate(addDays(todayDate, 3)),
+    done: false
+  }
+];
+
+function getMember(memberId) {
+  return familyMembers.filter(function (member) {
+    return member.id === memberId;
+  })[0];
+}
+
+function memberLabel(member) {
+  if (!member) return '家人';
+  return member.relation + (member.name ? ' · ' + member.name : '');
+}
+
+// 取某位家人最近的一条记录
+function latestRecord(memberId) {
+  const records = familyRecords.filter(function (record) {
+    return record.memberId === memberId;
+  });
+  if (!records.length) return null;
+  return records.slice().sort(function (a, b) {
+    return b.date.localeCompare(a.date);
+  })[0];
+}
+
+// 取某位家人最近一条未完成的提醒
+function nextReminder(memberId) {
+  const list = reminders.filter(function (reminder) {
+    return reminder.memberId === memberId && !reminder.done;
+  });
+  if (!list.length) return null;
+  return list.slice().sort(function (a, b) {
+    return a.date.localeCompare(b.date);
+  })[0];
+}
+
+// 渲染家人卡片
+function renderFamilyMembers() {
+  const grid = document.getElementById('familyGrid');
+  grid.innerHTML = '';
+
+  familyMembers.forEach(function (member) {
+    const card = document.createElement('div');
+    card.className = 'person-card';
+
+    const head = document.createElement('div');
+    head.className = 'person-head';
+
+    const avatar = document.createElement('div');
+    avatar.className = 'person-avatar';
+    avatar.textContent = member.relation.charAt(0);
+
+    const info = document.createElement('div');
+    const name = document.createElement('span');
+    name.className = 'person-name';
+    name.textContent = memberLabel(member);
+    info.appendChild(name);
+
+    if (member.age) {
+      const age = document.createElement('span');
+      age.className = 'person-age';
+      age.textContent = member.age + '岁';
+      info.appendChild(age);
+    }
+
+    head.appendChild(avatar);
+    head.appendChild(info);
+    card.appendChild(head);
+
+    // 最近记录
+    const record = latestRecord(member.id);
+    const recordLine = document.createElement('div');
+    recordLine.className = 'family-line';
+    recordLine.appendChild(document.createTextNode('最近记录'));
+    const recordValue = document.createElement('b');
+    recordValue.textContent = record
+      ? formatYMD(parseISODate(record.date)) + ' · ' + record.type
+      : '暂无记录';
+    recordLine.appendChild(recordValue);
+    card.appendChild(recordLine);
+
+    // 最近提醒
+    const reminder = nextReminder(member.id);
+    const reminderLine = document.createElement('div');
+    reminderLine.className = 'family-line';
+    reminderLine.appendChild(document.createTextNode('关怀提醒'));
+    const reminderValue = document.createElement('b');
+    reminderValue.textContent = reminder
+      ? formatMD(parseISODate(reminder.date)) + ' · ' + reminder.title
+      : '暂无提醒';
+    reminderLine.appendChild(reminderValue);
+    card.appendChild(reminderLine);
+
+    // 备注
+    const noteLine = document.createElement('div');
+    noteLine.className = 'family-line';
+    noteLine.appendChild(document.createTextNode('备注'));
+    const noteValue = document.createElement('b');
+    noteValue.textContent = member.note || '暂无';
+    noteLine.appendChild(noteValue);
+    card.appendChild(noteLine);
+
+    grid.appendChild(card);
+  });
+}
+
+// 渲染「最近记录」列表
+function renderFamilyRecords() {
+  const list = document.getElementById('familyRecordList');
+  list.innerHTML = '';
+
+  if (!familyRecords.length) {
+    const empty = document.createElement('div');
+    empty.className = 'record-empty';
+    empty.textContent = '暂无记录，点击「添加记录」为家人建立健康档案。';
+    list.appendChild(empty);
+    return;
+  }
+
+  familyRecords.slice().sort(function (a, b) {
+    return b.date.localeCompare(a.date);
+  }).forEach(function (record) {
+    const member = getMember(record.memberId);
+
+    const item = document.createElement('div');
+    item.className = 'record-item';
+
+    const dateEl = document.createElement('span');
+    dateEl.className = 'date';
+    dateEl.textContent = formatYMD(parseISODate(record.date));
+
+    const textEl = document.createElement('span');
+    textEl.textContent = memberLabel(member) + ' · ' + record.type +
+      (record.content ? ' · ' + record.content : '');
+
+    item.appendChild(dateEl);
+    item.appendChild(textEl);
+    list.appendChild(item);
+  });
+}
+
+// 渲染关怀提醒
+function renderReminders() {
+  const list = document.getElementById('reminderList');
+  list.innerHTML = '';
+
+  const pendingCount = reminders.filter(function (reminder) {
+    return !reminder.done;
+  }).length;
+  document.getElementById('reminderCount').textContent =
+    pendingCount ? pendingCount + ' 条待办' : '暂无待办';
+
+  if (!reminders.length) {
+    const empty = document.createElement('div');
+    empty.className = 'reminder-empty';
+    empty.textContent = '暂无关怀提醒，点击「添加提醒」设置一条吧。';
+    list.appendChild(empty);
+    return;
+  }
+
+  const todayStr = toISODate(new Date());
+
+  reminders.slice().sort(function (a, b) {
+    if (a.done !== b.done) return a.done ? 1 : -1;
+    return a.date.localeCompare(b.date);
+  }).forEach(function (reminder) {
+    const member = getMember(reminder.memberId);
+    const target = parseISODate(reminder.date);
+    const diffDays = Math.round((target - parseISODate(todayStr)) / MS_PER_DAY);
+
+    const item = document.createElement('div');
+    item.className = 'reminder-item' + (reminder.done ? ' done' : '');
+
+    // 完成按钮
+    const check = document.createElement('button');
+    check.type = 'button';
+    check.className = 'reminder-check';
+    check.textContent = reminder.done ? '✓' : '';
+    check.title = reminder.done ? '标记为未完成' : '标记为已完成';
+    check.addEventListener('click', function () {
+      reminder.done = !reminder.done;
+      renderReminders();
+      renderFamilyMembers();
+      showToast(reminder.done ? '已完成这条关怀提醒' : '已恢复为待办');
+    });
+
+    const main = document.createElement('div');
+    main.className = 'reminder-main';
+
+    const title = document.createElement('div');
+    title.className = 'reminder-title';
+    title.textContent = reminder.title;
+
+    const meta = document.createElement('div');
+    meta.className = 'reminder-meta';
+    meta.textContent = formatYMD(target) + ' · ' + memberLabel(member);
+
+    main.appendChild(title);
+    main.appendChild(meta);
+
+    // 日期状态标签
+    const badge = document.createElement('span');
+    badge.className = 'reminder-badge';
+    if (reminder.done) {
+      badge.textContent = '已完成';
+      badge.classList.add('done');
+    } else if (diffDays === 0) {
+      badge.textContent = '今天';
+      badge.classList.add('today');
+    } else if (diffDays === 1) {
+      badge.textContent = '明天';
+    } else if (diffDays < 0) {
+      badge.textContent = '已逾期';
+      badge.classList.add('overdue');
+    } else {
+      badge.textContent = formatMD(target);
+    }
+
+    item.appendChild(check);
+    item.appendChild(main);
+    item.appendChild(badge);
+    list.appendChild(item);
+  });
+}
+
+// 同步「记录 / 提醒」弹窗中的家人下拉框
+function renderMemberOptions() {
+  [familyPersonSelect, reminderMemberSelect].forEach(function (select) {
+    const previous = select.value;
+
+    select.innerHTML = '';
+    familyMembers.forEach(function (member) {
+      const option = document.createElement('option');
+      option.value = member.id;
+      option.textContent = memberLabel(member);
+      select.appendChild(option);
+    });
+
+    const exists = familyMembers.some(function (member) {
+      return member.id === previous;
+    });
+    if (exists) select.value = previous;
+  });
+
+  renderFamilyTypes();
+}
+
+// 仅「爱人」可以记录生理期
 function renderFamilyTypes() {
-  const person = familyPersonSelect.value;
-  const previous = familyTypeSelect.value;
+  const member = getMember(familyPersonSelect.value);
+  const types = member && member.relation === '爱人'
+    ? ['体检', '用药', '生理期', '其他']
+    : ['体检', '用药', '其他'];
 
+  const previous = familyTypeSelect.value;
   familyTypeSelect.innerHTML = '';
-  familyTypeMap[person].forEach(function (type) {
+
+  types.forEach(function (type) {
     const option = document.createElement('option');
     option.value = type;
     option.textContent = type;
     familyTypeSelect.appendChild(option);
   });
 
-  if (familyTypeMap[person].indexOf(previous) !== -1) {
+  if (types.indexOf(previous) !== -1) {
     familyTypeSelect.value = previous;
   }
 }
 
 familyPersonSelect.addEventListener('change', renderFamilyTypes);
 
+// ---------- 添加健康记录弹窗 ----------
 document.getElementById('openFamilyRecord').addEventListener('click', function () {
-  renderFamilyTypes();
+  renderMemberOptions();
   document.getElementById('familyDate').value = toISODate(new Date());
   openMask(familyMask);
 });
@@ -2500,51 +2931,140 @@ familyMask.addEventListener('click', function (event) {
 });
 
 document.getElementById('familySave').addEventListener('click', function () {
-  const person = document.getElementById('familyPerson').value;
-  const type = document.getElementById('familyType').value;
+  const member = getMember(familyPersonSelect.value);
+  const type = familyTypeSelect.value;
   const date = parseISODate(document.getElementById('familyDate').value);
   const content = document.getElementById('familyContent').value.trim();
 
+  if (!member) {
+    showToast('请先添加家人信息');
+    return;
+  }
   if (!date) {
     showToast('请选择记录日期');
     return;
   }
 
-  // 首次添加时移除空状态提示
-  const empty = document.getElementById('recordEmpty');
-  if (empty) empty.remove();
+  familyRecords.push({
+    memberId: member.id,
+    type: type,
+    date: toISODate(date),
+    content: content
+  });
 
-  // 生成一条记录
-  const item = document.createElement('div');
-  item.className = 'record-item';
-
-  const dateEl = document.createElement('span');
-  dateEl.className = 'date';
-  dateEl.textContent = formatYMD(date);
-
-  const textEl = document.createElement('span');
-  textEl.textContent = person + ' · ' + type + (content ? ' · ' + content : '');
-
-  item.appendChild(dateEl);
-  item.appendChild(textEl);
-  document.getElementById('familyRecordList').appendChild(item);
-
-  // 同步更新上方卡片
-  if (person === '母亲' && type === '体检') {
-    document.getElementById('motherExam').textContent = formatYMD(date);
-  }
-  if (person === '爱人' && type === '生理期') {
-    document.getElementById('partnerLastPeriod').textContent = formatMD(date);
-  }
+  renderFamilyMembers();
+  renderFamilyRecords();
 
   document.getElementById('familyContent').value = '';
   closeMask(familyMask);
-  showToast('已为' + person + '添加' + type + '记录');
+  showToast('已为' + memberLabel(member) + '添加' + type + '记录');
+});
+
+// ---------- 添加家人信息弹窗 ----------
+document.getElementById('openMember').addEventListener('click', function () {
+  document.getElementById('memberRelation').value = '';
+  document.getElementById('memberAge').value = '';
+  document.getElementById('memberName').value = '';
+  document.getElementById('memberNote').value = '';
+  openMask(memberMask);
+});
+
+document.getElementById('memberClose').addEventListener('click', function () {
+  closeMask(memberMask);
+});
+
+document.getElementById('memberCancel').addEventListener('click', function () {
+  closeMask(memberMask);
+});
+
+memberMask.addEventListener('click', function (event) {
+  if (event.target === memberMask) closeMask(memberMask);
+});
+
+document.getElementById('memberSave').addEventListener('click', function () {
+  const relation = document.getElementById('memberRelation').value.trim();
+  const age = parseInt(document.getElementById('memberAge').value, 10);
+  const name = document.getElementById('memberName').value.trim();
+  const note = document.getElementById('memberNote').value.trim();
+
+  if (!relation) {
+    showToast('请填写家人的称呼或关系');
+    return;
+  }
+
+  familyMembers.push({
+    id: 'm' + Date.now(),
+    relation: relation,
+    name: name,
+    age: age || '',
+    note: note
+  });
+
+  renderFamilyMembers();
+  renderMemberOptions();
+  closeMask(memberMask);
+  showToast('已添加家人：' + relation);
+});
+
+// ---------- 添加关怀提醒弹窗 ----------
+document.getElementById('openReminder').addEventListener('click', function () {
+  renderMemberOptions();
+  document.getElementById('reminderTitle').value = '';
+  document.getElementById('reminderDate').value = toISODate(new Date());
+  openMask(reminderMask);
+});
+
+document.getElementById('reminderClose').addEventListener('click', function () {
+  closeMask(reminderMask);
+});
+
+document.getElementById('reminderCancel').addEventListener('click', function () {
+  closeMask(reminderMask);
+});
+
+reminderMask.addEventListener('click', function (event) {
+  if (event.target === reminderMask) closeMask(reminderMask);
+});
+
+document.getElementById('reminderSave').addEventListener('click', function () {
+  const member = getMember(reminderMemberSelect.value);
+  const title = document.getElementById('reminderTitle').value.trim();
+  const date = parseISODate(document.getElementById('reminderDate').value);
+
+  if (!member) {
+    showToast('请先添加家人信息');
+    return;
+  }
+  if (!title) {
+    showToast('请填写提醒内容');
+    return;
+  }
+  if (!date) {
+    showToast('请选择提醒日期');
+    return;
+  }
+
+  reminders.push({
+    id: 'r' + Date.now(),
+    memberId: member.id,
+    title: title,
+    date: toISODate(date),
+    done: false
+  });
+
+  renderReminders();
+  renderFamilyMembers();
+  closeMask(reminderMask);
+  showToast('关怀提醒已添加');
 });
 
 // 初始化页面状态
 renderCycle();
 applyGenderView();
+renderMemberOptions();
+renderFamilyMembers();
+renderFamilyRecords();
+renderReminders();
 
 /* ==========================================================
    七、AI 健康小管家聊天
@@ -2661,6 +3181,8 @@ document.addEventListener('keydown', function (event) {
   closeChat();
   closeMask(periodMask);
   closeMask(familyMask);
+  closeMask(memberMask);
+  closeMask(reminderMask);
   closeTagMenus();
 });
 </script>
