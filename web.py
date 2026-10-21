@@ -673,6 +673,7 @@ a { text-decoration: none; }
   background: #fff;
   border-radius: 12px;
   padding: 16px;
+  position: relative;
 }
 
 .status-title {
@@ -717,6 +718,254 @@ a { text-decoration: none; }
   font-size: 12px;
   color: #a06c82;
   line-height: 1.8;
+}
+
+/* 可自由选择的周期字段（下拉框伪装成普通文字） */
+.f-item select {
+  border: 0;
+  background-color: transparent;
+  padding: 0 16px 0 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #39404f;
+  text-align: right;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, #b7bfcc 50%),
+                    linear-gradient(135deg, #b7bfcc 50%, transparent 50%);
+  background-position: calc(100% - 7px) 55%, calc(100% - 3px) 55%;
+  background-size: 4px 4px, 4px 4px;
+  background-repeat: no-repeat;
+}
+
+/* 标签移除小叉号（扩大点击区域） */
+.tag .x {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-left: 4px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  font-size: 12px;
+  line-height: 1;
+  font-style: normal;
+  cursor: pointer;
+  opacity: 0.6;
+}
+
+.tag .x:hover {
+  opacity: 1;
+  background: rgba(221, 109, 156, 0.14);
+}
+
+/* 标签多选浮层 */
+.tag-menu {
+  position: absolute;
+  top: 46px;
+  right: 12px;
+  z-index: 30;
+  display: none;
+  width: 252px;
+  padding: 14px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 14px 34px rgba(30, 42, 70, 0.18);
+}
+
+.tag-menu.open { display: block; animation: pop 0.18s ease both; }
+
+.tag-menu h4 {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7688;
+  margin-bottom: 10px;
+}
+
+.tag-options { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.tag-option {
+  border: 1px solid #eef0f5;
+  background: #f8f9fc;
+  color: #6b7688;
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 12px;
+  transition: all 0.15s;
+}
+
+.tag-option:hover { border-color: #d9dee8; }
+
+.tag-option.selected {
+  background: #fdeaf2;
+  border-color: #f6d3e3;
+  color: #d76596;
+  font-weight: 600;
+}
+
+.tag-menu-foot {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.btn-mini {
+  border: 0;
+  border-radius: 6px;
+  background: #4ecdc4;
+  color: #fff;
+  padding: 6px 14px;
+  font-size: 12px;
+}
+
+/* 男性模式：家人健康关怀 */
+.family-card {
+  background: #f2f8ff;
+  border: 1px solid #dfeaf8;
+  border-radius: 16px;
+  padding: 24px;
+}
+
+.family-title .icon { color: #5b8def; }
+
+.family-card .btn-soft {
+  border-color: #d5e5fb;
+  color: #4f86e8;
+}
+
+.family-card .btn-soft:hover { background: #f6faff; }
+
+.family-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.person-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.person-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.person-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #eaf2ff;
+  color: #5b8def;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  flex: none;
+}
+
+.person-name { font-size: 14px; font-weight: 700; color: #39404f; }
+
+.person-age { font-size: 11px; color: var(--muted); margin-left: 6px; }
+
+.family-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12px;
+  color: #6b7688;
+  padding: 8px 0;
+  border-top: 1px dashed #eef1f6;
+}
+
+.family-line b { color: #39404f; font-weight: 600; }
+
+.family-card .status-title .icon { color: #5b8def; }
+
+.family-card .tag {
+  background: #eaf2ff;
+  color: #4f7fd0;
+}
+
+.family-card .tag.add {
+  background: #fff;
+  border-color: #c5daf7;
+  color: #86a6ce;
+}
+
+.family-card .tag-option.selected {
+  background: #eaf2ff;
+  border-color: #d5e5fb;
+  color: #4f7fd0;
+}
+
+.tip-blue {
+  background: #eef5ff;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 12px;
+  color: #6b84a3;
+  line-height: 1.8;
+}
+
+.family-records {
+  margin-top: 14px;
+  background: #fff;
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+.family-records h4 {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7688;
+  margin-bottom: 6px;
+}
+
+.record-empty { font-size: 12px; color: #aab2c0; }
+
+.record-item {
+  display: flex;
+  gap: 10px;
+  font-size: 12px;
+  color: #6b7688;
+  padding: 5px 0;
+  border-top: 1px dashed #f1f4f8;
+}
+
+.record-item .date { color: #9aa6b6; flex: none; }
+
+/* 弹窗中的取消按钮与说明文字 */
+.btn-cancel {
+  background: #f1f3f7;
+  color: #6b7688;
+  border: 0;
+  border-radius: 8px;
+  padding: 9px 14px;
+  font-size: 12px;
+  margin-right: 10px;
+}
+
+.btn-cancel:hover { background: #e8ebf1; }
+
+.form-hint {
+  font-size: 12px;
+  color: #9aa3b2;
+  line-height: 1.7;
+  margin: 2px 0 8px;
 }
 
 /* ==========================================================
@@ -1153,6 +1402,7 @@ a { text-decoration: none; }
 
   .ex-stats { grid-template-columns: repeat(2, 1fr); }
   .female-grid { grid-template-columns: 1fr; }
+  .family-grid { grid-template-columns: 1fr; }
   .news-grid { grid-template-columns: 1fr; }
   .chat { right: 12px; left: 12px; width: auto; }
 }
@@ -1164,6 +1414,8 @@ a { text-decoration: none; }
   .vitals { grid-template-columns: 1fr; }
   .macros { grid-template-columns: repeat(2, 1fr); }
   .female-card { padding: 18px; }
+  .family-card { padding: 18px; }
+  .tag-menu { width: 230px; right: 6px; }
   .sleep-card { padding: 36px 20px; }
 }
 </style>
@@ -1215,7 +1467,7 @@ a { text-decoration: none; }
       <button class="active" data-page="data">健康数据</button>
       <button data-page="diet">饮食</button>
       <button data-page="sport">运动</button>
-      <button data-page="female">女生健康</button>
+      <button data-page="female" id="navFemale">女生健康</button>
       <button data-page="sleep">睡眠</button>
       <button data-page="news">科普资讯</button>
     </nav>
@@ -1422,45 +1674,117 @@ a { text-decoration: none; }
          ==================================================== -->
     <section class="page" id="page-female">
       <div class="female-wrap">
-        <div class="female-card">
-          <div class="female-head">
-            <div class="female-title">
-              <svg class="icon"><use href="#i-droplet"/></svg>女性健康档案
-            </div>
-            <button class="btn-soft" data-toast="已开启生理期记录">记录生理期</button>
-          </div>
 
-          <div class="female-grid">
-            <!-- 左侧：周期数据 -->
-            <div>
-              <div class="f-item">
-                <span class="left"><svg class="icon"><use href="#i-calendar"/></svg>经期长度</span>
-                <b>5 天</b>
+        <!-- 女性视图：生理期管理 -->
+        <div id="femaleView">
+          <div class="female-card">
+            <div class="female-head">
+              <div class="female-title">
+                <svg class="icon"><use href="#i-droplet"/></svg>女性健康档案
               </div>
-              <div class="f-item">
-                <span class="left"><svg class="icon"><use href="#i-refresh"/></svg>周期长度</span>
-                <b>28 天</b>
-              </div>
-              <div class="f-item">
-                <span class="left"><svg class="icon"><use href="#i-droplet"/></svg>排卵日预测</span>
-                <b>10月25日</b>
-              </div>
+              <button class="btn-soft" id="openPeriod">记录生理期</button>
             </div>
 
-            <!-- 右侧：今日状态 -->
-            <div class="status-card">
-              <div class="status-title">
-                <svg class="icon"><use href="#i-calendar"/></svg>今日状态记录
+            <div class="female-grid">
+              <!-- 左侧：周期数据（长度可自由选择） -->
+              <div>
+                <div class="f-item">
+                  <span class="left"><svg class="icon"><use href="#i-calendar"/></svg>经期长度</span>
+                  <select id="periodDays" aria-label="经期长度"></select>
+                </div>
+                <div class="f-item">
+                  <span class="left"><svg class="icon"><use href="#i-refresh"/></svg>周期长度</span>
+                  <select id="cycleDaysMain" aria-label="周期长度"></select>
+                </div>
+                <div class="f-item">
+                  <span class="left"><svg class="icon"><use href="#i-droplet"/></svg>排卵日预测</span>
+                  <b id="ovulationDate">10月25日</b>
+                </div>
+                <div class="f-item">
+                  <span class="left"><svg class="icon"><use href="#i-calendar"/></svg>最近一次经期</span>
+                  <b id="lastPeriodRange">10月11日 - 10月15日</b>
+                </div>
               </div>
-              <div class="tags" id="tagList">
-                <span class="tag">轻微腹痛</span>
-                <span class="tag">情绪平稳</span>
-                <span class="tag add" id="addTag">+ 添加标签</span>
+
+              <!-- 右侧：今日状态（从预设选项中多选） -->
+              <div class="status-card">
+                <div class="status-title">
+                  <svg class="icon"><use href="#i-calendar"/></svg>今日状态记录
+                </div>
+                <div class="tags" id="femaleTags">
+                  <button class="tag add" id="femaleAddTag" type="button">+ 添加标签</button>
+                </div>
+                <div class="tag-menu" id="femaleTagMenu">
+                  <h4>选择今日状态（可多选）</h4>
+                  <div class="tag-options" id="femaleTagOptions"></div>
+                  <div class="tag-menu-foot">
+                    <button class="btn-mini" type="button" data-close-tag>确定</button>
+                  </div>
+                </div>
+                <div class="tip-pink">科学建议：注意保暖，避免剧烈运动，可适量饮用热饮。</div>
               </div>
-              <div class="tip-pink">科学建议：注意保暖，避免剧烈运动，可适量饮用热饮。</div>
             </div>
           </div>
         </div>
+
+        <!-- 男性视图：记录母亲 / 爱人的健康情况 -->
+        <div id="maleView" hidden>
+          <div class="family-card">
+            <div class="female-head">
+              <div class="female-title family-title">
+                <svg class="icon"><use href="#i-heart"/></svg>家人健康档案
+              </div>
+              <button class="btn-soft" id="openFamilyRecord">添加记录</button>
+            </div>
+
+            <div class="family-grid">
+              <div class="person-card">
+                <div class="person-head">
+                  <div class="person-avatar">母</div>
+                  <div><span class="person-name">母亲</span><span class="person-age">58岁</span></div>
+                </div>
+                <div class="family-line">最近体检 <b id="motherExam">2026年9月12日</b></div>
+                <div class="family-line">用药提醒 <b>每日降压药</b></div>
+                <div class="family-line">下次复诊 <b>12月12日</b></div>
+              </div>
+
+              <div class="person-card">
+                <div class="person-head">
+                  <div class="person-avatar">爱</div>
+                  <div><span class="person-name">爱人</span><span class="person-age">28岁</span></div>
+                </div>
+                <div class="family-line">最近经期 <b id="partnerLastPeriod">10月11日</b></div>
+                <div class="family-line">周期长度 <b>28 天</b></div>
+                <div class="family-line">排卵日预测 <b>10月25日</b></div>
+              </div>
+            </div>
+
+            <div class="status-card">
+              <div class="status-title">
+                <svg class="icon"><use href="#i-heart"/></svg>家人状态记录
+              </div>
+              <div class="tags" id="maleTags">
+                <button class="tag add" id="maleAddTag" type="button">+ 添加标签</button>
+              </div>
+              <div class="tag-menu" id="maleTagMenu">
+                <h4>选择家人状态（可多选）</h4>
+                <div class="tag-options" id="maleTagOptions"></div>
+                <div class="tag-menu-foot">
+                  <button class="btn-mini" type="button" data-close-tag>确定</button>
+                </div>
+              </div>
+              <div class="tip-blue">关怀建议：定期提醒母亲测量血压、按时服药；爱人经期前后注意保暖，避免生冷饮食。</div>
+            </div>
+
+            <div class="family-records">
+              <h4>最近记录</h4>
+              <div id="familyRecordList">
+                <div class="record-empty" id="recordEmpty">暂无记录，点击右上角「添加记录」为家人建立档案。</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </section>
 
@@ -1558,6 +1882,91 @@ a { text-decoration: none; }
 </div>
 
 <!-- ========================================================
+     生理期记录弹窗：可选择开始/结束日期与周期长度
+     ======================================================== -->
+<div class="mask" id="periodMask">
+  <div class="modal">
+    <div class="modal-head">
+      <svg class="icon"><use href="#i-calendar"/></svg>记录生理期
+      <button class="modal-close" id="periodClose" aria-label="关闭">
+        <svg class="icon"><use href="#i-close"/></svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="field-row">
+        <div class="field">
+          <label for="periodStart">开始日期</label>
+          <input id="periodStart" type="date" value="2026-10-11">
+        </div>
+        <div class="field">
+          <label for="periodEnd">结束日期</label>
+          <input id="periodEnd" type="date" value="2026-10-15">
+        </div>
+      </div>
+      <div class="field">
+        <label for="cycleDaysInput">周期长度</label>
+        <select id="cycleDaysInput"></select>
+      </div>
+      <p class="form-hint">选择本次经期的开始与结束日期后，经期长度和排卵日会自动更新。</p>
+    </div>
+
+    <div class="modal-foot">
+      <button class="btn-cancel" id="periodCancel">取消</button>
+      <button class="btn-save" id="periodSave">保存记录</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================
+     家人记录弹窗（男性视图）
+     ======================================================== -->
+<div class="mask" id="familyMask">
+  <div class="modal">
+    <div class="modal-head">
+      <svg class="icon"><use href="#i-heart"/></svg>添加家人记录
+      <button class="modal-close" id="familyClose" aria-label="关闭">
+        <svg class="icon"><use href="#i-close"/></svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="field-row">
+        <div class="field">
+          <label for="familyPerson">关怀对象</label>
+          <select id="familyPerson">
+            <option value="母亲">母亲</option>
+            <option value="爱人">爱人</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="familyType">记录类型</label>
+          <select id="familyType">
+            <option value="体检">体检</option>
+            <option value="用药">用药</option>
+            <option value="生理期">生理期</option>
+            <option value="其他">其他</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label for="familyDate">日期</label>
+        <input id="familyDate" type="date">
+      </div>
+      <div class="field">
+        <label for="familyContent">记录内容</label>
+        <input id="familyContent" type="text" placeholder="例如：血压 135/85，每日服用降压药">
+      </div>
+    </div>
+
+    <div class="modal-foot">
+      <button class="btn-cancel" id="familyCancel">取消</button>
+      <button class="btn-save" id="familySave">保存记录</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================
      悬浮客服按钮与 AI 聊天窗口
      ======================================================== -->
 <button class="fab" id="fab" aria-label="打开健康小管家">
@@ -1645,13 +2054,15 @@ document.querySelectorAll('[data-toast]').forEach(function (el) {
 const profileMask = document.getElementById('profileMask');
 
 function openProfile() {
+  // 打开弹窗时回显当前性别
+  document.getElementById('pGender').value = currentGender;
   profileMask.classList.add('open');
   document.body.style.overflow = 'hidden'; // 弹窗打开时禁止页面滚动
 }
 
 function closeProfile() {
   profileMask.classList.remove('open');
-  document.body.style.overflow = '';
+  if (!document.querySelector('.mask.open')) document.body.style.overflow = '';
 }
 
 document.getElementById('userBtn').addEventListener('click', openProfile);
@@ -1694,8 +2105,13 @@ document.getElementById('saveProfile').addEventListener('click', function () {
   }
 
   document.getElementById('userBtn').title = '个人信息 · ' + name + '（' + gender + '）';
+
+  // 根据性别切换「女生健康 / 家人健康」视图
+  currentGender = gender;
+  applyGenderView();
+
   closeProfile();
-  showToast('个人信息已保存');
+  showToast(gender === '男' ? '个人信息已保存，已切换至家人健康' : '个人信息已保存');
 });
 
 /* ==========================================================
@@ -1744,26 +2160,391 @@ document.querySelectorAll('#sportTabs button').forEach(function (btn) {
 });
 
 /* ==========================================================
-   六、女生健康：添加状态标签
+   六、健康档案：性别视图、周期设置、状态标签与家人记录
    ========================================================== */
-const pendingTags = ['腰酸', '疲惫', '状态良好', '轻微头痛'];
-let tagIndex = 0;
 
-document.getElementById('addTag').addEventListener('click', function () {
-  if (tagIndex >= pendingTags.length) {
-    showToast('暂无更多推荐标签');
+// ---------- 日期工具 ----------
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+function addDays(date, days) {
+  const result = new Date(date.getTime());
+  result.setDate(result.getDate() + days);
+  return result;
+}
+
+function parseISODate(value) {
+  if (!value) return null;
+  const parts = value.split('-');
+  if (parts.length !== 3) return null;
+  const date = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+  return isNaN(date.getTime()) ? null : date;
+}
+
+function toISODate(date) {
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return date.getFullYear() + '-' + month + '-' + day;
+}
+
+function formatMD(date) {
+  return (date.getMonth() + 1) + '月' + date.getDate() + '日';
+}
+
+function formatYMD(date) {
+  return date.getFullYear() + '年' + (date.getMonth() + 1) + '月' + date.getDate() + '日';
+}
+
+// ---------- 根据性别切换视图 ----------
+let currentGender = '女';
+
+function applyGenderView() {
+  const isFemale = currentGender === '女';
+
+  // 女性显示生理期档案，男性显示家人健康档案
+  document.getElementById('femaleView').hidden = !isFemale;
+  document.getElementById('maleView').hidden = isFemale;
+
+  // 导航文案同步变化
+  document.getElementById('navFemale').textContent = isFemale ? '女生健康' : '家人健康';
+  document.getElementById('pGender').value = currentGender;
+}
+
+// ---------- 生理周期：长度与日期都可自由选择 ----------
+let lastPeriodStart = new Date(2026, 9, 11); // 最近一次经期开始日
+let periodDays = 5;                          // 经期长度（天）
+let cycleDays = 28;                          // 周期长度（天）
+
+const periodDaysSelect = document.getElementById('periodDays');
+const cycleDaysMainSelect = document.getElementById('cycleDaysMain');
+const cycleDaysInput = document.getElementById('cycleDaysInput');
+
+// 生成下拉选项
+function fillSelect(select, from, to, unit, selected) {
+  select.innerHTML = '';
+  for (let i = from; i <= to; i++) {
+    const option = document.createElement('option');
+    option.value = String(i);
+    option.textContent = i + ' ' + unit;
+    if (i === selected) option.selected = true;
+    select.appendChild(option);
+  }
+}
+
+// 若记录出的天数不在预设范围内，动态补充选项
+function ensureOption(select, value, unit) {
+  const exists = Array.from(select.options).some(function (option) {
+    return option.value === String(value);
+  });
+  if (!exists) {
+    const option = document.createElement('option');
+    option.value = String(value);
+    option.textContent = value + ' ' + unit;
+    select.appendChild(option);
+  }
+}
+
+function renderCycle() {
+  ensureOption(periodDaysSelect, periodDays, '天');
+  ensureOption(cycleDaysMainSelect, cycleDays, '天');
+  ensureOption(cycleDaysInput, cycleDays, '天');
+
+  periodDaysSelect.value = String(periodDays);
+  cycleDaysMainSelect.value = String(cycleDays);
+  cycleDaysInput.value = String(cycleDays);
+
+  const end = addDays(lastPeriodStart, periodDays - 1);
+  document.getElementById('lastPeriodRange').textContent =
+    formatMD(lastPeriodStart) + ' - ' + formatMD(end);
+
+  // 排卵日按“下次月经前 14 天”估算
+  document.getElementById('ovulationDate').textContent =
+    formatMD(addDays(lastPeriodStart, cycleDays - 14));
+}
+
+fillSelect(periodDaysSelect, 3, 10, '天', periodDays);
+fillSelect(cycleDaysMainSelect, 21, 40, '天', cycleDays);
+fillSelect(cycleDaysInput, 21, 40, '天', cycleDays);
+
+periodDaysSelect.addEventListener('change', function () {
+  periodDays = parseInt(periodDaysSelect.value, 10);
+  renderCycle();
+});
+
+cycleDaysMainSelect.addEventListener('change', function () {
+  cycleDays = parseInt(cycleDaysMainSelect.value, 10);
+  renderCycle();
+});
+
+// ---------- 弹窗开关辅助 ----------
+function openMask(mask) {
+  mask.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeMask(mask) {
+  mask.classList.remove('open');
+  if (!document.querySelector('.mask.open')) document.body.style.overflow = '';
+}
+
+// ---------- 生理期记录弹窗 ----------
+const periodMask = document.getElementById('periodMask');
+
+document.getElementById('openPeriod').addEventListener('click', function () {
+  document.getElementById('periodStart').value = toISODate(lastPeriodStart);
+  document.getElementById('periodEnd').value = toISODate(addDays(lastPeriodStart, periodDays - 1));
+  cycleDaysInput.value = String(cycleDays);
+  openMask(periodMask);
+});
+
+document.getElementById('periodClose').addEventListener('click', function () {
+  closeMask(periodMask);
+});
+
+document.getElementById('periodCancel').addEventListener('click', function () {
+  closeMask(periodMask);
+});
+
+periodMask.addEventListener('click', function (event) {
+  if (event.target === periodMask) closeMask(periodMask);
+});
+
+document.getElementById('periodSave').addEventListener('click', function () {
+  const start = parseISODate(document.getElementById('periodStart').value);
+  const end = parseISODate(document.getElementById('periodEnd').value);
+  const nextCycle = parseInt(cycleDaysInput.value, 10);
+
+  if (!start || !end) {
+    showToast('请选择开始和结束日期');
+    return;
+  }
+  if (end < start) {
+    showToast('结束日期不能早于开始日期');
     return;
   }
 
-  const tag = document.createElement('span');
-  tag.className = 'tag';
-  tag.textContent = pendingTags[tagIndex++];
+  const days = Math.round((end - start) / MS_PER_DAY) + 1;
+  if (days < 1 || days > 15) {
+    showToast('经期长度需在 1-15 天之间');
+    return;
+  }
+  if (!nextCycle || nextCycle < 21 || nextCycle > 40) {
+    showToast('请选择正确的周期长度');
+    return;
+  }
 
-  // 插入到「+ 添加标签」按钮之前
-  const addBtn = document.getElementById('addTag');
-  addBtn.parentNode.insertBefore(tag, addBtn);
-  showToast('已添加标签：' + tag.textContent);
+  lastPeriodStart = start;
+  periodDays = days;
+  cycleDays = nextCycle;
+
+  renderCycle();
+  closeMask(periodMask);
+  showToast('生理期记录已保存');
 });
+
+// ---------- 状态标签：从预设选项中多选 ----------
+const femaleTagValues = ['轻微腹痛', '情绪平稳', '腰酸', '疲惫', '头痛', '失眠', '食欲不振', '状态良好'];
+const maleTagValues = ['血压平稳', '血压偏高', '睡眠不佳', '情绪平稳', '血糖偏高', '经期不适', '体检正常'];
+
+function closeTagMenus() {
+  document.querySelectorAll('.tag-menu.open').forEach(function (menu) {
+    menu.classList.remove('open');
+  });
+}
+
+function createTagEditor(config) {
+  const tagsEl = document.getElementById(config.tagsId);
+  const addBtn = document.getElementById(config.addBtnId);
+  const menu = document.getElementById(config.menuId);
+  const optionsEl = document.getElementById(config.optionsId);
+  const selected = new Set(config.initial);
+
+  // 重新绘制已选标签
+  function renderTags() {
+    tagsEl.querySelectorAll('.tag:not(.add)').forEach(function (tag) {
+      tag.remove();
+    });
+
+    selected.forEach(function (value) {
+      const tag = document.createElement('span');
+      tag.className = 'tag';
+      tag.textContent = value;
+
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.className = 'x';
+      remove.textContent = '×';
+      remove.title = '移除标签';
+      remove.setAttribute('aria-label', '移除标签');
+      remove.addEventListener('click', function () {
+        selected.delete(value);
+        renderTags();
+        renderOptions();
+      });
+
+      tag.appendChild(remove);
+      tagsEl.insertBefore(tag, addBtn);
+    });
+  }
+
+  // 绘制可选项，点击切换选中状态
+  function renderOptions() {
+    optionsEl.innerHTML = '';
+    config.values.forEach(function (value) {
+      const option = document.createElement('button');
+      option.type = 'button';
+      option.className = 'tag-option' + (selected.has(value) ? ' selected' : '');
+      option.textContent = value;
+      option.addEventListener('click', function () {
+        if (selected.has(value)) {
+          selected.delete(value);
+        } else {
+          selected.add(value);
+        }
+        option.classList.toggle('selected');
+        renderTags(); // 勾选后立即同步标签区
+      });
+      optionsEl.appendChild(option);
+    });
+  }
+
+  addBtn.addEventListener('click', function (event) {
+    event.stopPropagation();
+    closeTagMenus();
+    renderOptions();
+    menu.classList.add('open');
+  });
+
+  menu.addEventListener('click', function (event) {
+    event.stopPropagation();
+  });
+
+  menu.querySelector('[data-close-tag]').addEventListener('click', function () {
+    menu.classList.remove('open');
+    renderTags();
+  });
+
+  renderTags();
+}
+
+createTagEditor({
+  tagsId: 'femaleTags',
+  addBtnId: 'femaleAddTag',
+  menuId: 'femaleTagMenu',
+  optionsId: 'femaleTagOptions',
+  values: femaleTagValues,
+  initial: ['轻微腹痛', '情绪平稳']
+});
+
+createTagEditor({
+  tagsId: 'maleTags',
+  addBtnId: 'maleAddTag',
+  menuId: 'maleTagMenu',
+  optionsId: 'maleTagOptions',
+  values: maleTagValues,
+  initial: ['情绪平稳', '血压平稳']
+});
+
+// 点击标签面板以外的地方时收起面板
+document.addEventListener('click', function (event) {
+  if (!event.target.closest('.tag-menu') && !event.target.closest('.tag.add')) {
+    closeTagMenus();
+  }
+});
+
+// ---------- 家人记录弹窗（男性视图） ----------
+const familyMask = document.getElementById('familyMask');
+const familyPersonSelect = document.getElementById('familyPerson');
+const familyTypeSelect = document.getElementById('familyType');
+
+// 母亲没有生理期记录，爱人可以记录生理期
+const familyTypeMap = {
+  '母亲': ['体检', '用药', '其他'],
+  '爱人': ['体检', '用药', '生理期', '其他']
+};
+
+function renderFamilyTypes() {
+  const person = familyPersonSelect.value;
+  const previous = familyTypeSelect.value;
+
+  familyTypeSelect.innerHTML = '';
+  familyTypeMap[person].forEach(function (type) {
+    const option = document.createElement('option');
+    option.value = type;
+    option.textContent = type;
+    familyTypeSelect.appendChild(option);
+  });
+
+  if (familyTypeMap[person].indexOf(previous) !== -1) {
+    familyTypeSelect.value = previous;
+  }
+}
+
+familyPersonSelect.addEventListener('change', renderFamilyTypes);
+
+document.getElementById('openFamilyRecord').addEventListener('click', function () {
+  renderFamilyTypes();
+  document.getElementById('familyDate').value = toISODate(new Date());
+  openMask(familyMask);
+});
+
+document.getElementById('familyClose').addEventListener('click', function () {
+  closeMask(familyMask);
+});
+
+document.getElementById('familyCancel').addEventListener('click', function () {
+  closeMask(familyMask);
+});
+
+familyMask.addEventListener('click', function (event) {
+  if (event.target === familyMask) closeMask(familyMask);
+});
+
+document.getElementById('familySave').addEventListener('click', function () {
+  const person = document.getElementById('familyPerson').value;
+  const type = document.getElementById('familyType').value;
+  const date = parseISODate(document.getElementById('familyDate').value);
+  const content = document.getElementById('familyContent').value.trim();
+
+  if (!date) {
+    showToast('请选择记录日期');
+    return;
+  }
+
+  // 首次添加时移除空状态提示
+  const empty = document.getElementById('recordEmpty');
+  if (empty) empty.remove();
+
+  // 生成一条记录
+  const item = document.createElement('div');
+  item.className = 'record-item';
+
+  const dateEl = document.createElement('span');
+  dateEl.className = 'date';
+  dateEl.textContent = formatYMD(date);
+
+  const textEl = document.createElement('span');
+  textEl.textContent = person + ' · ' + type + (content ? ' · ' + content : '');
+
+  item.appendChild(dateEl);
+  item.appendChild(textEl);
+  document.getElementById('familyRecordList').appendChild(item);
+
+  // 同步更新上方卡片
+  if (person === '母亲' && type === '体检') {
+    document.getElementById('motherExam').textContent = formatYMD(date);
+  }
+  if (person === '爱人' && type === '生理期') {
+    document.getElementById('partnerLastPeriod').textContent = formatMD(date);
+  }
+
+  document.getElementById('familyContent').value = '';
+  closeMask(familyMask);
+  showToast('已为' + person + '添加' + type + '记录');
+});
+
+// 初始化页面状态
+renderCycle();
+applyGenderView();
 
 /* ==========================================================
    七、AI 健康小管家聊天
@@ -1878,6 +2659,9 @@ document.addEventListener('keydown', function (event) {
   if (event.key !== 'Escape') return;
   closeProfile();
   closeChat();
+  closeMask(periodMask);
+  closeMask(familyMask);
+  closeTagMenus();
 });
 </script>
 </body>
