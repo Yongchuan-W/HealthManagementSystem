@@ -1354,6 +1354,384 @@ a { text-decoration: none; }
 .active-sport .end:hover { color: #d9534f; }
 
 /* ==========================================================
+   登录界面
+   ========================================================== */
+.auth-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  overflow-y: auto;
+  background:
+    radial-gradient(circle at 12% 18%, rgba(78, 211, 176, 0.18), transparent 42%),
+    radial-gradient(circle at 88% 24%, rgba(91, 141, 239, 0.14), transparent 40%),
+    #f6f8fb;
+}
+
+.login-wrap {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  padding: 40px 20px;
+}
+
+.login-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #2c3648;
+}
+
+.login-card {
+  width: 380px;
+  max-width: 100%;
+  background: #fff;
+  border-radius: 18px;
+  padding: 30px;
+  box-shadow: 0 20px 50px rgba(35, 72, 110, 0.12);
+}
+
+.login-card h1 { font-size: 24px; color: #1f2d3d; }
+
+.login-sub {
+  font-size: 13px;
+  color: #8a94a6;
+  margin: 8px 0 22px;
+}
+
+.login-field { margin-bottom: 15px; }
+
+.login-field label {
+  display: block;
+  font-size: 12px;
+  color: #6b7688;
+  margin-bottom: 8px;
+}
+
+.login-field input {
+  width: 100%;
+  height: 44px;
+  border: 1px solid #e9edf2;
+  border-radius: 9px;
+  background: #f8f9fc;
+  padding: 0 14px;
+  font-size: 14px;
+  color: #39404f;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+
+.login-field input:focus {
+  background: #fff;
+  border-color: #7fdccd;
+  box-shadow: 0 0 0 3px #e6faf5;
+}
+
+.login-error {
+  font-size: 12px;
+  color: #d9534f;
+  margin: 2px 0 10px;
+}
+
+.login-btn {
+  width: 100%;
+  justify-content: center;
+  padding: 12px;
+  font-size: 14px;
+}
+
+.login-hint {
+  margin-top: 16px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  background: #f7f9fc;
+  color: #9aa3b2;
+  font-size: 12px;
+  text-align: center;
+}
+
+.login-hint b { color: #4a5568; letter-spacing: 1px; }
+
+/* ==========================================================
+   登录后的基本信息填写
+   ========================================================== */
+.onboarding-wrap {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 42px 24px 56px;
+}
+
+.onboarding-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 26px;
+}
+
+.onboarding-head h1 { font-size: 24px; color: #1f2d3d; }
+
+.onboarding-head p {
+  font-size: 13px;
+  color: #8a94a6;
+  margin-top: 6px;
+}
+
+.onboarding-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.onboarding-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 22px;
+  box-shadow: var(--shadow);
+}
+
+.onboarding-card h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  color: #2c3648;
+  margin-bottom: 18px;
+}
+
+.onboarding-card h2 .icon { color: #4ecdc4; }
+
+.ob-field { margin-bottom: 14px; }
+
+.ob-field label {
+  display: block;
+  font-size: 12px;
+  color: #6b7688;
+  margin-bottom: 7px;
+}
+
+.ob-field input,
+.ob-field select {
+  width: 100%;
+  height: 38px;
+  border: 1px solid #e9edf2;
+  border-radius: 8px;
+  background: #f8f9fc;
+  padding: 0 12px;
+  font-size: 13px;
+  color: #39404f;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.ob-field input:focus,
+.ob-field select:focus {
+  background: #fff;
+  border-color: #7fdccd;
+}
+
+.ob-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.pref-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.pref-chip {
+  border: 1px solid #eef0f5;
+  background: #f8f9fc;
+  color: #6b7688;
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 12px;
+  transition: all 0.15s;
+}
+
+.pref-chip:hover { border-color: #d9dee8; }
+
+.pref-chip.selected {
+  background: #eefaf6;
+  border-color: #9fe3d5;
+  color: #2b9a7d;
+  font-weight: 600;
+}
+
+.onboarding-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+  margin-top: 24px;
+}
+
+.link-skip {
+  background: none;
+  border: 0;
+  color: #8a94a6;
+  font-size: 13px;
+}
+
+.link-skip:hover { color: #4a5568; }
+
+.onboarding-actions .btn-primary { padding: 12px 24px; font-size: 14px; }
+
+/* ==========================================================
+   科学变美 · 目标与计划
+   ========================================================== */
+.beauty-card { margin-top: 20px; }
+
+.beauty-sub { font-size: 12px; color: #8a94a6; }
+
+.beauty-body {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 22px;
+  align-items: start;
+}
+
+.beauty-form .field { margin-bottom: 12px; }
+
+.beauty-form .btn-primary {
+  width: 100%;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+.beauty-result {
+  background: #f8f9fc;
+  border-radius: 12px;
+  padding: 18px;
+  min-height: 210px;
+}
+
+.beauty-empty {
+  height: 174px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 12px;
+  color: #aab2c0;
+  line-height: 1.8;
+  padding: 0 24px;
+}
+
+.goal-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.goal-stat {
+  background: #fff;
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.goal-stat .label { font-size: 11px; color: #8a94a6; }
+
+.goal-stat .value {
+  font-size: 16px;
+  font-weight: 700;
+  color: #222f3e;
+  margin-top: 6px;
+}
+
+.goal-stat .value .unit {
+  font-size: 11px;
+  color: #8a94a6;
+  font-weight: 400;
+  margin-left: 3px;
+}
+
+.progress-wrap { margin-top: 14px; }
+
+.progress-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #6b7688;
+  margin-bottom: 7px;
+}
+
+.progress-label b { color: #2fbf9b; }
+
+.progress-bar {
+  height: 9px;
+  border-radius: 999px;
+  background: #e8edf4;
+  overflow: hidden;
+}
+
+.progress-bar i {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #4ed3b0, #5b8def);
+  transition: width 0.4s ease;
+}
+
+.plan-summary {
+  font-size: 12px;
+  color: #6b7688;
+  line-height: 1.8;
+  margin-top: 14px;
+  background: #fff;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.plan-week {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.plan-day {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  background: #fff;
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 12px;
+  color: #4a5568;
+}
+
+.plan-day span:last-child { color: #8a94a6; text-align: right; }
+
+.weight-log {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  font-size: 12px;
+  color: #6b7688;
+}
+
+.weight-log input {
+  width: 92px;
+  height: 34px;
+  border: 1px solid #e9edf2;
+  border-radius: 8px;
+  background: #fff;
+  padding: 0 10px;
+  font-size: 12px;
+  color: #39404f;
+  outline: none;
+}
+
+.weight-log input:focus { border-color: #7fdccd; }
+
+/* ==========================================================
    9. 睡眠页
    ========================================================== */
 .sleep-wrap { max-width: 620px; margin: 0 auto; }
@@ -1812,6 +2190,8 @@ a { text-decoration: none; }
   .female-grid { grid-template-columns: 1fr; }
   .family-grid { grid-template-columns: 1fr; }
   .news-grid { grid-template-columns: 1fr; }
+  .onboarding-grid { grid-template-columns: 1fr; }
+  .beauty-body { grid-template-columns: 1fr; }
   .chat { right: 12px; left: 12px; width: auto; }
 }
 
@@ -1825,6 +2205,11 @@ a { text-decoration: none; }
   .family-card { padding: 18px; }
   .tag-menu { width: 230px; right: 6px; }
   .sleep-card { padding: 36px 20px; }
+  .login-card { padding: 24px; }
+  .onboarding-wrap { padding: 28px 16px 40px; }
+  .onboarding-head { flex-direction: column; align-items: flex-start; }
+  .goal-stats { grid-template-columns: 1fr; }
+  .plan-week { grid-template-columns: 1fr; }
 }
 </style>
 </head>
@@ -1861,6 +2246,185 @@ a { text-decoration: none; }
   <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></symbol>
   <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></symbol>
 </svg>
+
+<!-- ========================================================
+     登录界面
+     ======================================================== -->
+<div class="auth-layer" id="loginView">
+  <div class="login-wrap">
+    <div class="login-brand">
+      <div class="logo"><svg class="icon"><use href="#i-pulse"/></svg></div>
+      <span>健康管理系统</span>
+    </div>
+
+    <div class="login-card">
+      <h1>欢迎回来</h1>
+      <p class="login-sub">登录后开始科学管理你的健康</p>
+
+      <form id="loginForm" novalidate>
+        <div class="login-field">
+          <label for="loginAccount">账号</label>
+          <input id="loginAccount" type="text" autocomplete="username" placeholder="请输入账号" value="AAA">
+        </div>
+        <div class="login-field">
+          <label for="loginPassword">密码</label>
+          <input id="loginPassword" type="password" autocomplete="current-password" placeholder="请输入密码" value="123456">
+        </div>
+        <div class="login-error" id="loginError" hidden></div>
+        <button class="btn-primary login-btn" type="submit">登录</button>
+      </form>
+
+      <div class="login-hint">演示账号：<b>AAA</b>　密码：<b>123456</b></div>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================
+     登录后的基本信息填写
+     ======================================================== -->
+<div class="auth-layer" id="onboardingView" hidden>
+  <div class="onboarding-wrap">
+    <div class="onboarding-head">
+      <div>
+        <h1>完善你的健康信息</h1>
+        <p>填写后，我们会为你生成更贴合的健康建议与变美计划。</p>
+      </div>
+    </div>
+
+    <form id="onboardingForm">
+      <div class="onboarding-grid">
+
+        <!-- 基本信息 -->
+        <section class="onboarding-card">
+          <h2><svg class="icon"><use href="#i-user"/></svg>基本信息</h2>
+          <div class="ob-field">
+            <label for="obName">昵称</label>
+            <input id="obName" type="text" value="张三">
+          </div>
+          <div class="ob-row">
+            <div class="ob-field">
+              <label for="obGender">性别</label>
+              <select id="obGender">
+                <option value="女" selected>女</option>
+                <option value="男">男</option>
+              </select>
+            </div>
+            <div class="ob-field">
+              <label for="obAge">年龄</label>
+              <input id="obAge" type="number" value="28" min="1" max="120">
+            </div>
+          </div>
+          <div class="ob-row">
+            <div class="ob-field">
+              <label for="obHeight">身高（cm）</label>
+              <input id="obHeight" type="number" value="165">
+            </div>
+            <div class="ob-field">
+              <label for="obWeight">体重（kg）</label>
+              <input id="obWeight" type="number" step="0.1" value="65.2">
+            </div>
+          </div>
+        </section>
+
+        <!-- 健康情况 -->
+        <section class="onboarding-card">
+          <h2><svg class="icon"><use href="#i-heart"/></svg>健康情况</h2>
+          <div class="ob-field">
+            <label for="obSleep">睡眠质量</label>
+            <select id="obSleep">
+              <option>良好</option>
+              <option selected>一般</option>
+              <option>较差</option>
+            </select>
+          </div>
+          <div class="ob-field">
+            <label for="obExercise">运动频率</label>
+            <select id="obExercise">
+              <option>很少运动</option>
+              <option selected>每周 1-2 次</option>
+              <option>每周 3-4 次</option>
+              <option>几乎每天</option>
+            </select>
+          </div>
+          <div class="ob-field">
+            <label for="obGoal">健康目标</label>
+            <select id="obGoal">
+              <option selected>减脂塑形</option>
+              <option>增肌紧致</option>
+              <option>保持健康</option>
+              <option>改善睡眠</option>
+              <option>改善体态</option>
+            </select>
+          </div>
+          <div class="ob-field">
+            <label>健康情况（可多选）</label>
+            <div class="pref-chips" id="obConditions">
+              <button type="button" class="pref-chip selected" data-value="无">无</button>
+              <button type="button" class="pref-chip" data-value="高血压">高血压</button>
+              <button type="button" class="pref-chip" data-value="糖尿病">糖尿病</button>
+              <button type="button" class="pref-chip" data-value="过敏体质">过敏体质</button>
+              <button type="button" class="pref-chip" data-value="颈椎不适">颈椎不适</button>
+              <button type="button" class="pref-chip" data-value="睡眠不佳">睡眠不佳</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- 饮食偏好 -->
+        <section class="onboarding-card">
+          <h2><svg class="icon"><use href="#i-fork"/></svg>饮食偏好</h2>
+          <div class="ob-row">
+            <div class="ob-field">
+              <label for="obTaste">口味</label>
+              <select id="obTaste">
+                <option selected>清淡</option>
+                <option>适中</option>
+                <option>重口</option>
+              </select>
+            </div>
+            <div class="ob-field">
+              <label for="obDietType">饮食类型</label>
+              <select id="obDietType">
+                <option selected>均衡饮食</option>
+                <option>素食</option>
+                <option>低糖</option>
+                <option>高蛋白</option>
+              </select>
+            </div>
+          </div>
+          <div class="ob-field">
+            <label for="obMeals">每日餐数</label>
+            <select id="obMeals">
+              <option>2 餐</option>
+              <option selected>3 餐</option>
+              <option>3 餐 + 加餐</option>
+            </select>
+          </div>
+          <div class="ob-field">
+            <label>忌口 / 过敏（可多选）</label>
+            <div class="pref-chips" id="obRestrictions">
+              <button type="button" class="pref-chip selected" data-value="无">无</button>
+              <button type="button" class="pref-chip" data-value="辛辣">辛辣</button>
+              <button type="button" class="pref-chip" data-value="海鲜">海鲜</button>
+              <button type="button" class="pref-chip" data-value="花生">花生</button>
+              <button type="button" class="pref-chip" data-value="乳制品">乳制品</button>
+              <button type="button" class="pref-chip" data-value="麸质">麸质</button>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="onboarding-actions">
+        <button type="button" class="link-skip" id="skipOnboarding">稍后完善</button>
+        <button type="submit" class="btn-primary">保存并进入系统</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ========================================================
+     主应用（登录并完善信息后显示）
+     ======================================================== -->
+<div id="appShell" hidden>
 
 <!-- ========================================================
      侧边导航
@@ -2150,7 +2714,7 @@ a { text-decoration: none; }
             <svg class="icon"><use href="#i-spark"/></svg>
             <div>
               <b>推荐补充</b>
-              <p>今日蛋白质摄入略低，晚餐可增加一份鸡胸肉、鸡蛋或豆制品，帮助肌肉修复与饱腹感提升。</p>
+              <p id="dietTipText">今日蛋白质摄入略低，晚餐可增加一份鸡胸肉、鸡蛋或豆制品，帮助肌肉修复与饱腹感提升。</p>
             </div>
           </div>
         </div>
@@ -2222,6 +2786,90 @@ a { text-decoration: none; }
               <svg class="icon"><use href="#i-smile"/></svg>心理情绪记录
             </div>
             <textarea placeholder="今天心情怎么样？记录一下吧..."></textarea>
+          </div>
+        </div>
+
+        <!-- 科学变美：健身减脂计划与目标设置 -->
+        <div class="card beauty-card">
+          <div class="card-head">
+            <div class="card-title">
+              <svg class="icon"><use href="#i-spark"/></svg>科学变美
+            </div>
+            <span class="beauty-sub">健身减脂 · 目标与计划</span>
+          </div>
+
+          <div class="beauty-body">
+            <!-- 目标设置 -->
+            <div class="beauty-form">
+              <div class="field">
+                <label for="beautyType">计划类型</label>
+                <select id="beautyType">
+                  <option>健身减脂</option>
+                  <option>增肌塑形</option>
+                  <option>体态改善</option>
+                </select>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label for="beautyTarget">目标体重（kg）</label>
+                  <input id="beautyTarget" type="number" step="0.1" value="58">
+                </div>
+                <div class="field">
+                  <label for="beautyWeeks">目标周期（周）</label>
+                  <input id="beautyWeeks" type="number" value="12" min="2" max="52">
+                </div>
+              </div>
+              <div class="field">
+                <label for="beautyTimes">每周运动次数</label>
+                <select id="beautyTimes">
+                  <option value="2">2 次</option>
+                  <option value="3">3 次</option>
+                  <option value="4" selected>4 次</option>
+                  <option value="5">5 次</option>
+                  <option value="6">6 次</option>
+                  <option value="7">7 次</option>
+                </select>
+              </div>
+              <button class="btn-primary" id="generatePlan" type="button">生成变美计划</button>
+            </div>
+
+            <!-- 计划结果 -->
+            <div class="beauty-result">
+              <div class="beauty-empty" id="beautyEmpty">
+                设置目标体重与周期后，<br>这里会生成属于你的变美计划。
+              </div>
+
+              <div id="beautyResultBody" hidden>
+                <div class="goal-stats">
+                  <div class="goal-stat">
+                    <div class="label">当前 → 目标</div>
+                    <div class="value"><span id="beautyCurrent">65.2</span> → <span id="beautyTargetText">58.0</span><span class="unit">kg</span></div>
+                  </div>
+                  <div class="goal-stat">
+                    <div class="label">每周变化</div>
+                    <div class="value"><span id="beautyWeekly">0.6</span><span class="unit">kg/周</span></div>
+                  </div>
+                  <div class="goal-stat">
+                    <div class="label">每日热量</div>
+                    <div class="value"><span id="beautyDeficit">550</span><span class="unit">kcal/天</span></div>
+                  </div>
+                </div>
+
+                <div class="progress-wrap">
+                  <div class="progress-label"><span>目标进度</span><b id="beautyProgressText">0%</b></div>
+                  <div class="progress-bar"><i id="beautyProgress"></i></div>
+                </div>
+
+                <div class="plan-summary" id="beautySummary"></div>
+                <div class="plan-week" id="beautyWeek"></div>
+
+                <div class="weight-log">
+                  <label for="beautyWeightNow">记录当前体重</label>
+                  <input id="beautyWeightNow" type="number" step="0.1" placeholder="65.2">
+                  <button class="btn-ghost-sm" type="button" id="logBeautyWeight">记录</button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -2321,6 +2969,7 @@ a { text-decoration: none; }
 
   </div>
 </main>
+</div>
 </div>
 
 <!-- ========================================================
@@ -2583,6 +3232,154 @@ a { text-decoration: none; }
 <div class="toast" id="toast"></div>
 
 <script>
+/* ==========================================================
+   零、登录与首次健康信息填写
+   ========================================================== */
+const loginView = document.getElementById('loginView');
+const onboardingView = document.getElementById('onboardingView');
+const appShell = document.getElementById('appShell');
+
+// 演示账号
+const DEMO_ACCOUNT = 'AAA';
+const DEMO_PASSWORD = '123456';
+
+document.getElementById('loginForm').addEventListener('submit', function (event) {
+  event.preventDefault();
+
+  const account = document.getElementById('loginAccount').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const error = document.getElementById('loginError');
+
+  if (account === DEMO_ACCOUNT && password === DEMO_PASSWORD) {
+    error.hidden = true;
+    loginView.hidden = true;
+    onboardingView.hidden = false;
+    window.scrollTo(0, 0);
+    document.getElementById('obName').focus();
+  } else {
+    error.hidden = false;
+    error.textContent = '账号或密码不正确，请使用演示账号 AAA / 123456';
+  }
+});
+
+// 页面打开时聚焦账号输入框
+window.addEventListener('load', function () {
+  document.getElementById('loginAccount').focus();
+});
+
+// 标签式多选（健康状况、忌口）
+document.querySelectorAll('.pref-chips').forEach(function (group) {
+  group.addEventListener('click', function (event) {
+    const chip = event.target.closest('.pref-chip');
+    if (!chip) return;
+
+    const noneChip = group.querySelector('.pref-chip[data-value="无"]');
+
+    if (chip.dataset.value === '无') {
+      group.querySelectorAll('.pref-chip').forEach(function (item) {
+        item.classList.remove('selected');
+      });
+      chip.classList.add('selected');
+      return;
+    }
+
+    if (noneChip) noneChip.classList.remove('selected');
+    chip.classList.toggle('selected');
+
+    // 一个都没选时，自动回到「无」
+    if (!group.querySelector('.pref-chip.selected') && noneChip) {
+      noneChip.classList.add('selected');
+    }
+  });
+});
+
+function getChipValues(groupId) {
+  return Array.from(document.querySelectorAll('#' + groupId + ' .pref-chip.selected'))
+    .map(function (chip) { return chip.dataset.value; })
+    .filter(function (value) { return value !== '无'; });
+}
+
+function enterApp() {
+  loginView.hidden = true;
+  onboardingView.hidden = true;
+  appShell.hidden = false;
+  window.scrollTo(0, 0);
+}
+
+// 跳过填写，直接进入系统
+document.getElementById('skipOnboarding').addEventListener('click', function () {
+  enterApp();
+});
+
+// 保存基本信息、健康情况与饮食偏好
+document.getElementById('onboardingForm').addEventListener('submit', function (event) {
+  event.preventDefault();
+
+  const name = document.getElementById('obName').value.trim() || '张三';
+  const gender = document.getElementById('obGender').value;
+  const height = parseFloat(document.getElementById('obHeight').value);
+  const weight = parseFloat(document.getElementById('obWeight').value);
+  const goal = document.getElementById('obGoal').value;
+  const taste = document.getElementById('obTaste').value;
+  const dietType = document.getElementById('obDietType').value;
+  const restrictions = getChipValues('obRestrictions');
+
+  // 同步到侧边栏
+  document.getElementById('sideUserName').textContent = name;
+  document.getElementById('sideUserSub').textContent =
+    gender + ' · ' + (height > 0 ? height + 'cm' : '未填写身高');
+
+  // 同步到个人信息弹窗
+  document.getElementById('pName').value = name;
+  document.getElementById('pGender').value = gender;
+  if (height > 0) document.getElementById('pHeight').value = height;
+  if (weight > 0) document.getElementById('pWeight').value = weight.toFixed(1);
+
+  // 同步到核心体征并重算 BMI
+  if (weight > 0) {
+    document.getElementById('weightValue').textContent = weight.toFixed(1);
+  }
+  if (height > 0 && weight > 0) {
+    const bmi = weight / Math.pow(height / 100, 2);
+    document.getElementById('bmiValue').textContent = bmi.toFixed(1);
+
+    const badge = document.getElementById('bmiBadge');
+    if (bmi < 18.5) {
+      badge.textContent = '偏瘦';
+      badge.className = 'badge warn';
+    } else if (bmi < 24) {
+      badge.textContent = '正常';
+      badge.className = 'badge';
+    } else {
+      badge.textContent = '偏高';
+      badge.className = 'badge warn';
+    }
+  }
+
+  // 性别联动女性健康档案
+  currentGender = gender;
+  applyGenderView();
+
+  // 健康目标联动「科学变美」计划类型
+  const beautyType = document.getElementById('beautyType');
+  if (goal === '增肌紧致') {
+    beautyType.value = '增肌塑形';
+  } else if (goal === '改善体态') {
+    beautyType.value = '体态改善';
+  } else {
+    beautyType.value = '健身减脂';
+  }
+
+  // 饮食偏好联动饮食建议
+  document.getElementById('dietTipText').textContent =
+    '根据你的' + taste + '口味与' + dietType + '偏好' +
+    (restrictions.length ? '（忌口：' + restrictions.join('、') + '）' : '') +
+    '，建议三餐规律、优先选择天然食材，并保证每日蛋白质摄入。';
+
+  enterApp();
+  showToast('健康档案已保存');
+});
+
 /* ==========================================================
    一、顶部导航：切换六个页面
    ========================================================== */
@@ -3024,6 +3821,165 @@ document.getElementById('stopSport').addEventListener('click', function () {
   const name = document.getElementById('activeSportName').textContent;
   document.getElementById('activeSport').hidden = true;
   showToast('已结束运动：' + name);
+});
+
+// ---------- 科学变美：目标与计划 ----------
+const beautyState = {
+  type: '',
+  startWeight: 0,
+  currentWeight: 0,
+  targetWeight: 0,
+  weeks: 0,
+  times: 0
+};
+
+const beautyDays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+
+// 每周运动次数对应的训练日
+const beautyDayIndexes = {
+  2: [0, 3],
+  3: [0, 2, 4],
+  4: [0, 2, 4, 6],
+  5: [0, 1, 3, 5, 6],
+  6: [0, 1, 2, 4, 5, 6],
+  7: [0, 1, 2, 3, 4, 5, 6]
+};
+
+const beautyActivityPools = {
+  '健身减脂': ['健走 40 分钟 + 拉伸', '力量训练 30 分钟', '户外骑行 45 分钟', '跳绳 20 分钟', '瑜伽拉伸 30 分钟'],
+  '增肌塑形': ['上肢力量训练 30 分钟', '下肢力量训练 30 分钟', '核心训练 25 分钟', '游泳 30 分钟', '蛋白质补充 + 拉伸'],
+  '体态改善': ['肩颈拉伸 15 分钟', '核心稳定训练 25 分钟', '瑜伽 30 分钟', '靠墙站立 10 分钟', '散步 30 分钟']
+};
+
+function updateBeautyProgress() {
+  let percent = 0;
+
+  if (beautyState.type === '健身减脂' && beautyState.startWeight > beautyState.targetWeight) {
+    percent = (beautyState.startWeight - beautyState.currentWeight) /
+      (beautyState.startWeight - beautyState.targetWeight) * 100;
+  } else if (beautyState.type === '增肌塑形' && beautyState.targetWeight > beautyState.startWeight) {
+    percent = (beautyState.currentWeight - beautyState.startWeight) /
+      (beautyState.targetWeight - beautyState.startWeight) * 100;
+  }
+
+  percent = Math.max(0, Math.min(100, percent));
+  document.getElementById('beautyProgress').style.width = percent.toFixed(0) + '%';
+  document.getElementById('beautyProgressText').textContent =
+    beautyState.type === '体态改善' ? '进行中' : Math.round(percent) + '%';
+}
+
+document.getElementById('generatePlan').addEventListener('click', function () {
+  const type = document.getElementById('beautyType').value;
+  const target = parseFloat(document.getElementById('beautyTarget').value);
+  const weeks = parseInt(document.getElementById('beautyWeeks').value, 10);
+  const times = parseInt(document.getElementById('beautyTimes').value, 10);
+  const current = parseFloat(document.getElementById('weightValue').textContent) || 65.2;
+
+  if (!target || target < 20 || target > 200) {
+    showToast('请输入 20-200 kg 的目标体重');
+    return;
+  }
+  if (!weeks || weeks < 2 || weeks > 52) {
+    showToast('目标周期请设置在 2-52 周');
+    return;
+  }
+  if (!times || times < 2 || times > 7) {
+    showToast('每周运动次数请设置在 2-7 次');
+    return;
+  }
+  if (type === '健身减脂' && target >= current) {
+    showToast('减脂目标体重应低于当前体重');
+    return;
+  }
+  if (type === '增肌塑形' && target <= current) {
+    showToast('增肌目标体重应高于当前体重');
+    return;
+  }
+
+  beautyState.type = type;
+  beautyState.startWeight = current;
+  beautyState.currentWeight = current;
+  beautyState.targetWeight = target;
+  beautyState.weeks = weeks;
+  beautyState.times = times;
+
+  const weeklyChange = Math.abs(current - target) / weeks;
+  const dailyCalories = Math.round(weeklyChange * 7700 / 7);
+
+  document.getElementById('beautyCurrent').textContent = current.toFixed(1);
+  document.getElementById('beautyTargetText').textContent = target.toFixed(1);
+  document.getElementById('beautyWeekly').textContent = weeklyChange.toFixed(1);
+  document.getElementById('beautyDeficit').textContent =
+    type === '体态改善' ? '—' : (type === '健身减脂' ? '-' : '+') + dailyCalories;
+
+  let summary = '';
+  if (type === '健身减脂') {
+    summary = '按每周约 ' + weeklyChange.toFixed(1) + ' kg 的节奏，预计 ' + weeks +
+      ' 周达到目标体重。建议每周运动 ' + times +
+      ' 次，有氧与力量结合，每日保持约 ' + dailyCalories + ' kcal 的热量缺口，并保证蛋白质摄入。';
+    if (weeklyChange > 1) {
+      summary += ' 当前目标略激进，建议把周期适当拉长，避免过度节食。';
+    }
+  } else if (type === '增肌塑形') {
+    summary = '按每周约 ' + weeklyChange.toFixed(1) + ' kg 的节奏，预计 ' + weeks +
+      ' 周达到目标。建议每周运动 ' + times +
+      ' 次，以力量训练为主，每日增加约 ' + dailyCalories + ' kcal 的热量与充足蛋白质。';
+    if (weeklyChange > 1) {
+      summary += ' 体重增长过快容易增加脂肪，建议适当放缓。';
+    }
+  } else {
+    summary = '以体态改善为主，建议每周训练 ' + times +
+      ' 次，重点加强核心、肩背与拉伸放松；体重目标仅作为参考，不必过度追求数字。';
+  }
+  document.getElementById('beautySummary').textContent = summary;
+
+  // 生成一周计划
+  const activeDays = beautyDayIndexes[times] || [0, 2, 4, 6];
+  const pool = beautyActivityPools[type] || beautyActivityPools['健身减脂'];
+  const weekEl = document.getElementById('beautyWeek');
+  weekEl.innerHTML = '';
+
+  beautyDays.forEach(function (day, index) {
+    const slot = activeDays.indexOf(index);
+    const row = document.createElement('div');
+    row.className = 'plan-day';
+
+    const dayEl = document.createElement('span');
+    dayEl.textContent = day;
+
+    const activityEl = document.createElement('span');
+    activityEl.textContent = slot === -1 ? '休息 / 轻松散步' : pool[slot % pool.length];
+
+    row.appendChild(dayEl);
+    row.appendChild(activityEl);
+    weekEl.appendChild(row);
+  });
+
+  document.getElementById('beautyEmpty').hidden = true;
+  document.getElementById('beautyResultBody').hidden = false;
+  document.getElementById('beautyWeightNow').value = '';
+
+  updateBeautyProgress();
+  showToast('已生成' + type + '计划');
+});
+
+// 记录当前体重并更新目标进度
+document.getElementById('logBeautyWeight').addEventListener('click', function () {
+  const value = parseFloat(document.getElementById('beautyWeightNow').value);
+
+  if (!beautyState.startWeight) {
+    showToast('请先生成变美计划');
+    return;
+  }
+  if (!value || value < 20 || value > 200) {
+    showToast('请输入正确的体重');
+    return;
+  }
+
+  beautyState.currentWeight = value;
+  document.getElementById('beautyCurrent').textContent = value.toFixed(1);
+  updateBeautyProgress();
+  showToast('已记录当前体重：' + value.toFixed(1) + ' kg');
 });
 
 /* ==========================================================
