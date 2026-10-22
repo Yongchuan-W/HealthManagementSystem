@@ -11,6 +11,7 @@
   - VS Code 打开本文件，点击右上角 ▶ 运行；
   - 或在终端执行：python web.py
   - 启动后浏览器会自动打开 http://127.0.0.1:8000/
+  - 手机与电脑连接同一 Wi-Fi 后，可通过终端显示的局域网地址登录
 
 停止服务：在终端按 Ctrl + C。
 """
@@ -38,13 +39,13 @@ PAGE_HTML = r"""<!DOCTYPE html>
 [hidden] { display: none !important; }
 
 :root {
-  --teal: #4ecdc4;
-  --teal-dark: #2fbf9b;
-  --text: #2c3648;
-  --muted: #8a94a6;
-  --line: #eef0f5;
-  --bg: #f6f7fb;
-  --shadow: 0 2px 14px rgba(30, 42, 70, 0.06);
+  --teal: #8b4a22;
+  --teal-dark: #6e3a18;
+  --text: #433326;
+  --muted: #8b7d70;
+  --line: #e4ece4;
+  --bg: #edf5ee;
+  --shadow: 0 2px 14px rgba(74, 53, 37, 0.06);
 }
 
 body {
@@ -1325,6 +1326,8 @@ a { text-decoration: none; }
   flex: none;
 }
 
+.sport-avatar .icon { width: 17px; height: 17px; stroke-width: 1.9; }
+
 .sport-name { font-size: 13px; font-weight: 600; color: #39404f; }
 .sport-cal { font-size: 10px; color: #8a94a6; margin-top: 2px; }
 
@@ -1455,6 +1458,21 @@ a { text-decoration: none; }
 }
 
 .login-hint b { color: #4a5568; letter-spacing: 1px; }
+
+.mobile-hint {
+  margin-top: 10px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: #8b7d70;
+  text-align: center;
+  word-break: break-all;
+}
+
+.mobile-hint a { color: #8b4a22; text-decoration: underline; }
+
+/* 睡眠板块并入健康数据 */
+.sleep-inline { margin-top: 20px; }
+.sleep-inline .sleep-card { padding: 34px 32px 32px; }
 
 /* ==========================================================
    登录后的基本信息填写
@@ -2149,6 +2167,241 @@ a { text-decoration: none; }
 }
 
 /* ==========================================================
+   主题配色：棕 / 薄荷 / 浅绿 / 浅蓝
+   ========================================================== */
+body { color: var(--text); }
+
+/* 侧边栏 */
+.sidebar { background: #e6f1e7; border-right-color: #d6e6d9; }
+.side-brand { color: #6e3a18; }
+.logo { background: linear-gradient(135deg, #8b4a22, #a9653a); }
+.side-nav button { color: #6f6154; }
+.side-nav button:hover { background: #dcebdc; color: #4a3525; }
+.side-nav button.active { background: #d7e8b9; color: #6e3a18; }
+.side-nav button.active::before { background: #8b4a22; }
+.avatar { background: #cfe4f2; color: #4f7898; }
+.side-user-name, .onboarding-card h2, .news-title { color: #4a3525; }
+.ring .num { color: #4a3525; }
+
+/* 顶部横幅 */
+.hero {
+  background: linear-gradient(110deg, #d9edc1 0%, #c6e4c8 48%, #9fc6e4 100%);
+  color: #6e3a18;
+  box-shadow: 0 8px 24px rgba(139, 74, 34, 0.14);
+}
+.hero h1 {
+  font-family: Georgia, "Times New Roman", "Songti SC", "SimSun", serif;
+}
+.hero p { color: #7d5438; opacity: 1; }
+.score .row { color: #6e3a18; }
+.bar { background: rgba(139, 74, 34, 0.18); }
+.bar i { background: linear-gradient(90deg, #8b4a22, #b06a3a); }
+
+/* 图标 */
+.heart { color: #8b4a22; }
+.fork { color: #b06a3a; }
+.activity-icon { color: #5f8fae; }
+
+/* 核心体征 */
+.vital { background: #f4f8f1; }
+.vital:hover { background: #eef5e9; }
+.vital .value { color: #4a3525; }
+.badge { color: #6b8f3f; background: #e8f2d8; }
+.badge.warn { color: #a9653a; background: #f8ece3; }
+.report-link { color: #8b4a22; }
+
+/* 按钮 */
+.btn-primary {
+  background: linear-gradient(135deg, #8b4a22, #a9653a);
+  box-shadow: 0 6px 14px rgba(139, 74, 34, 0.25);
+}
+.btn-primary:hover { box-shadow: 0 9px 18px rgba(139, 74, 34, 0.32); }
+.btn-soft { border-color: #e3d3c4; color: #8b4a22; }
+.btn-soft:hover { background: #fdf7f2; }
+.btn-mini { background: #8b4a22; }
+.btn-ghost-sm:hover { border-color: #c8dcae; color: #6e3a18; }
+.btn-cancel { background: #f2efe9; color: #7c7065; }
+.btn-cancel:hover { background: #ebe6de; }
+.btn-save { background: #8b4a22; }
+.btn-save:hover { background: #a9653a; }
+
+/* 饮食 */
+.macro { background: #fbf3e9; }
+.macro .label { color: #a08066; }
+.macro .value { color: #8b4a22; }
+.meal-tag.morning { background: #e3eff8; color: #4f7898; }
+.meal-tag.noon { background: #edf5df; color: #6b8f3f; }
+.meal-tag.night { background: #f6ede4; color: #8b4a22; }
+.meal input { background: #f5f8f1; }
+.meal input:focus { box-shadow: 0 0 0 2px #d7e8b9; }
+.tip-card { background: #f1f8e9; border-color: #dfeacd; }
+.tip-card .icon, .tip-card b { color: #6e3a18; }
+.tip-card p { color: #7a6b4c; }
+
+/* 运动 */
+.tabs { border-bottom-color: #e4ece4; }
+.tabs button { color: #8b7d70; }
+.tabs button.active { color: #4a3525; }
+.ex-stat { background: #f4f8f1; }
+.ex-stat .value { color: #4a3525; }
+.ico-flame { color: #b06a3a; }
+.ico-step { color: #6b8f3f; }
+.ico-clock { color: #5f8fae; }
+.mood { background: #fbf6e8; border-color: #f1e7cd; }
+.mood-title { color: #6f5a3a; }
+.mood-title .icon { color: #a9653a; }
+.mood textarea::placeholder { color: #b3a58c; }
+
+/* 运动类型 */
+.sport-option { background: #f5f8f1; border-color: #e4ece4; }
+.sport-option:hover { border-color: #cfdcc7; }
+.sport-option.selected {
+  background: #e8f2d8;
+  border-color: #c8dcae;
+  box-shadow: 0 0 0 2px #edf5df;
+}
+.active-sport {
+  background: #e8f2d8;
+  border-color: #d5e6bd;
+  color: #6e3a18;
+}
+.active-sport b { color: #8b4a22; }
+
+.sport-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 16px;
+}
+
+.sport-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #f1f7e8;
+  color: #6e3a18;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+.sport-pill .icon { width: 15px; height: 15px; color: #8b4a22; }
+
+/* 科学变美 */
+.beauty-result { background: #f4f8f1; }
+.goal-stat .value { color: #4a3525; }
+.progress-label b { color: #8b4a22; }
+.progress-bar { background: #e4ece0; }
+.progress-bar i { background: linear-gradient(90deg, #8b4a22, #9fc6e4); }
+.plan-summary { color: #7a6b4c; }
+.plan-day { color: #4a3525; }
+
+/* 女性健康 */
+.female-card { background: #f1f7e8; border-color: #dfeacd; }
+.female-title .icon, .f-item .icon, .status-title .icon { color: #8b4a22; }
+.female-title { color: #4a3525; }
+.f-item b { color: #4a3525; }
+.f-item select { color: #4a3525; }
+.tag { background: #e4f0cf; color: #6e3a18; }
+.tag.add { background: #fff; border-color: #c9dcae; color: #8b6b4a; }
+.tag.add:hover { background: #f8fbef; }
+.tip-pink { background: #f3f8ea; color: #7a6b4c; }
+.tag-option.selected { background: #e4f0cf; border-color: #c9dcae; color: #6e3a18; }
+.tag .x:hover { background: rgba(110, 58, 24, 0.12); }
+
+/* 家人健康 */
+.family-card { background: #eaf3fb; border-color: #d8e7f4; }
+.family-title .icon { color: #5f8fae; }
+.family-card .btn-soft { border-color: #cfe0ef; color: #4f7898; }
+.family-card .btn-soft:hover { background: #f6faff; }
+.family-card .tag { background: #dcecf8; color: #4f7898; }
+.family-card .tag.add { background: #fff; border-color: #c5daf7; color: #86a6ce; }
+.family-card .tag-option.selected { background: #dcecf8; border-color: #c5daf7; color: #4f7898; }
+.tip-blue { background: #eef6fd; color: #5f7f96; }
+.reminder-count { background: #f6ede4; color: #8b4a22; }
+.reminder-badge.today { background: #f6ede4; color: #8b4a22; }
+.reminder-check { border-color: #cfd8c5; }
+.reminder-item.done .reminder-check {
+  background: #8b4a22;
+  border-color: #8b4a22;
+  color: #fff;
+}
+
+/* 睡眠 */
+.sleep-card {
+  background: linear-gradient(135deg, #8b4a22, #6e3a18);
+  box-shadow: 0 18px 40px rgba(110, 58, 24, 0.28);
+}
+.sleep-icon { background: rgba(255, 255, 255, 0.1); color: #d7e8b9; }
+.sleep-card p { color: #eadfce; }
+.btn-sleep { background: #d7e8b9; color: #6e3a18; }
+.btn-sleep:hover { background: #e2f0c9; }
+
+/* 科普 */
+.news-img.purple { background: linear-gradient(135deg, #f7ece2, #f1e1d4); color: #8b4a22; }
+.news-cat.purple { color: #8b4a22; }
+
+/* 上传与识别 */
+.upload-box { background: #f5f8f1; border-color: #dbe6d8; }
+.upload-box:hover { border-color: #c8dcae; background: #f8fbf3; }
+.upload-status.scanning { color: #8b4a22; }
+.upload-status.scanning::before {
+  border-color: #f0e4d7;
+  border-top-color: #8b4a22;
+}
+.chip { background: #e4f0cf; color: #6e3a18; }
+.report-summary { background: #f1f8e9; border-color: #dfeacd; color: #6e5a3a; }
+.report-item { background: #f4f8f1; }
+.report-item .value { color: #4a3525; }
+
+/* 弹窗与表单 */
+.modal-head { background: linear-gradient(135deg, #8b4a22, #a9653a); }
+.field input:focus, .field select:focus {
+  border-color: #c8a585;
+  box-shadow: 0 0 0 2px #f6ede4;
+}
+.modal { box-shadow: 0 24px 60px rgba(74, 53, 37, 0.25); }
+.tag-menu { border-color: #e4ece4; box-shadow: 0 14px 34px rgba(74, 53, 37, 0.16); }
+.tag-menu h4 { color: #8b7d70; }
+
+/* 登录与资料填写 */
+.auth-layer {
+  background:
+    radial-gradient(circle at 12% 18%, rgba(201, 227, 167, 0.45), transparent 42%),
+    radial-gradient(circle at 88% 24%, rgba(147, 189, 224, 0.35), transparent 40%),
+    #eef6ef;
+}
+.login-brand { color: #6e3a18; }
+.login-card { box-shadow: 0 20px 50px rgba(74, 53, 37, 0.12); }
+.login-card h1 { color: #4a3525; }
+.login-field input:focus {
+  border-color: #c8a585;
+  box-shadow: 0 0 0 3px #f3e8dd;
+}
+.login-hint { background: #eef6ef; color: #8b7d70; }
+.login-hint b { color: #8b4a22; }
+.login-error { color: #b3482f; }
+.pref-chip { background: #f5f8f1; border-color: #e4ece4; color: #6f6154; }
+.pref-chip.selected { background: #e4f0cf; border-color: #c8dcae; color: #6e3a18; }
+.ob-field input:focus, .ob-field select:focus { border-color: #c8a585; }
+
+/* 聊天 */
+.fab {
+  background: linear-gradient(135deg, #8b4a22, #a9653a);
+  box-shadow: 0 10px 24px rgba(139, 74, 34, 0.35);
+}
+.chat-head { background: linear-gradient(135deg, #8b4a22, #a9653a); }
+.msg.user { background: #8b4a22; }
+.chat-send { background: #8b4a22; }
+.chat-send:hover { background: #a9653a; }
+.chat-input input:focus { border-color: #c8a585; }
+.chat-body { background: #f5f8f1; }
+.msg.bot { color: #5c4d40; }
+
+/* 轻提示 */
+.toast { background: rgba(74, 53, 37, 0.94); }
+
+/* ==========================================================
    14. 响应式适配（窄屏）
    ========================================================== */
 @media (max-width: 900px) {
@@ -2245,6 +2498,13 @@ a { text-decoration: none; }
   <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-3.9-.9L3 21l1.9-5a8.4 8.4 0 0 1-.9-3.9 8.4 8.4 0 0 1 8.4-8.4 8.4 8.4 0 0 1 8.6 8.3z"/><line x1="8" y1="12" x2="8.01" y2="12"/><line x1="12" y1="12" x2="12.01" y2="12"/><line x1="16" y1="12" x2="16.01" y2="12"/></symbol>
   <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></symbol>
   <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></symbol>
+  <symbol id="i-ball" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.2l3 2.2-1.1 3.4h-3.8L9 9.4l3-2.2z"/><path d="M12 3.2v4M4.3 9.6l4.7 1.6M19.7 9.6L15 11.2M7.2 20.1l2-4.3M16.8 20.1l-2-4.3"/></symbol>
+  <symbol id="i-bike" viewBox="0 0 24 24"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M5.5 17.5h5l3-7h-3M14.5 17.5l-2-7M12 7h3M15 6l3.5 11.5"/></symbol>
+  <symbol id="i-run" viewBox="0 0 24 24"><circle cx="15" cy="4.5" r="2"/><path d="M13 8l-3 5 4 2 1 6M10 13l-4 3M14 15l4 2M9 21l2-6"/></symbol>
+  <symbol id="i-swim" viewBox="0 0 24 24"><circle cx="7" cy="8" r="2"/><path d="M9 10l5 2 3-2M3 17c2-1.5 4-1.5 6 0s4 1.5 6 0 4-1.5 6 0"/><path d="M3 21c2-1.5 4-1.5 6 0s4 1.5 6 0 4-1.5 6 0"/></symbol>
+  <symbol id="i-yoga" viewBox="0 0 24 24"><circle cx="12" cy="4.5" r="2"/><path d="M12 7v5M12 12l-5 3M12 12l5 3M7 21l5-6M17 21l-5-6"/></symbol>
+  <symbol id="i-mountain" viewBox="0 0 24 24"><path d="M3 20l6-11 4 6 3-4 5 9H3z"/><circle cx="18" cy="5" r="2"/></symbol>
+  <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M20 4c-8 0-14 5-14 11 0 2 1 4 3 5 6 0 11-6 11-16z"/><path d="M4 21c2-5 6-9 11-12"/></symbol>
 </svg>
 
 <!-- ========================================================
@@ -2275,6 +2535,7 @@ a { text-decoration: none; }
       </form>
 
       <div class="login-hint">演示账号：<b>AAA</b>　密码：<b>123456</b></div>
+      <div class="mobile-hint">手机与电脑连接同一 Wi-Fi 后访问：<br><a href="__MOBILE_URL__">__MOBILE_URL__</a></div>
     </div>
   </div>
 </div>
@@ -2440,7 +2701,6 @@ a { text-decoration: none; }
     <button data-page="diet"><svg class="icon"><use href="#i-fork"/></svg>饮食</button>
     <button data-page="sport"><svg class="icon"><use href="#i-dumbbell"/></svg>运动</button>
     <button data-page="family"><svg class="icon"><use href="#i-heart"/></svg>家人健康</button>
-    <button data-page="sleep"><svg class="icon"><use href="#i-moon"/></svg>睡眠</button>
     <button data-page="news"><svg class="icon"><use href="#i-book"/></svg>科普资讯</button>
   </nav>
 
@@ -2594,6 +2854,16 @@ a { text-decoration: none; }
         </div>
       </div>
 
+      <!-- 睡眠板块（并入健康数据） -->
+      <div class="sleep-inline" id="sleepSection">
+        <div class="sleep-card">
+          <div class="sleep-icon"><svg class="icon"><use href="#i-moon"/></svg></div>
+          <h2>优质睡眠，恢复活力</h2>
+          <p>连接你的智能手表或手动记录，分析睡眠周期与质量。</p>
+          <button class="btn-sleep" data-toast="已开始记录睡眠，请保持设备佩戴">开始记录睡眠</button>
+        </div>
+      </div>
+
       <!-- 女性用户专属：女性健康档案（男性用户会自动隐藏） -->
       <div class="female-health" id="femaleHealthSection">
         <div class="female-card">
@@ -2741,6 +3011,16 @@ a { text-decoration: none; }
             <svg class="icon"><use href="#i-activity"/></svg>
             <span>当前运动：<b id="activeSportName"></b></span>
             <button class="end" type="button" id="stopSport">结束</button>
+          </div>
+
+          <!-- 运动元素 -->
+          <div class="sport-strip">
+            <span class="sport-pill"><svg class="icon"><use href="#i-ball"/></svg>球类</span>
+            <span class="sport-pill"><svg class="icon"><use href="#i-bike"/></svg>骑行</span>
+            <span class="sport-pill"><svg class="icon"><use href="#i-run"/></svg>跑步</span>
+            <span class="sport-pill"><svg class="icon"><use href="#i-swim"/></svg>游泳</span>
+            <span class="sport-pill"><svg class="icon"><use href="#i-mountain"/></svg>登山</span>
+            <span class="sport-pill"><svg class="icon"><use href="#i-yoga"/></svg>瑜伽</span>
           </div>
 
           <!-- 今日 / 本周 数据切换 -->
@@ -2920,21 +3200,7 @@ a { text-decoration: none; }
     </section>
 
     <!-- ====================================================
-         页面五：睡眠
-         ==================================================== -->
-    <section class="page" id="page-sleep">
-      <div class="sleep-wrap">
-        <div class="sleep-card">
-          <div class="sleep-icon"><svg class="icon"><use href="#i-moon"/></svg></div>
-          <h2>优质睡眠，恢复活力</h2>
-          <p>连接你的智能手表或手动记录，分析睡眠周期与质量。</p>
-          <button class="btn-sleep" data-toast="已开始记录睡眠，请保持设备佩戴">开始记录睡眠</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- ====================================================
-         页面六：科普资讯
+         页面五：科普资讯
          ==================================================== -->
     <section class="page" id="page-news">
       <div class="news-grid">
@@ -3730,18 +3996,18 @@ document.querySelectorAll('#sportTabs button').forEach(function (btn) {
 
 // ---------- 运动类型选择 ----------
 const sportTypes = [
-  { name: '户外活动', cal: '约 200 kcal/小时', color: '#3fc7a4' },
-  { name: '健走', cal: '约 280 kcal/小时', color: '#5b8def' },
-  { name: '户外骑行', cal: '约 350 kcal/小时', color: '#6b7cf0' },
-  { name: '徒步', cal: '约 320 kcal/小时', color: '#4fb6cf' },
-  { name: '跑步', cal: '约 450 kcal/小时', color: '#f08a4b' },
-  { name: '游泳', cal: '约 500 kcal/小时', color: '#4aa8e8' },
-  { name: '瑜伽', cal: '约 180 kcal/小时', color: '#c47ad6' },
-  { name: '跳绳', cal: '约 600 kcal/小时', color: '#e0718a' },
-  { name: '球类运动', cal: '约 400 kcal/小时', color: '#d9a340' },
-  { name: '登山', cal: '约 420 kcal/小时', color: '#7a9b5c' },
-  { name: '健身操', cal: '约 300 kcal/小时', color: '#e58f5c' },
-  { name: '拉伸放松', cal: '约 120 kcal/小时', color: '#8a94a6' }
+  { name: '户外活动', cal: '约 200 kcal/小时', color: '#7a9b5c', icon: 'i-leaf' },
+  { name: '健走', cal: '约 280 kcal/小时', color: '#6b8f3f', icon: 'i-footprints' },
+  { name: '户外骑行', cal: '约 350 kcal/小时', color: '#5f8fae', icon: 'i-bike' },
+  { name: '徒步', cal: '约 320 kcal/小时', color: '#4f7898', icon: 'i-mountain' },
+  { name: '跑步', cal: '约 450 kcal/小时', color: '#b06a3a', icon: 'i-run' },
+  { name: '游泳', cal: '约 500 kcal/小时', color: '#4f7898', icon: 'i-swim' },
+  { name: '瑜伽', cal: '约 180 kcal/小时', color: '#9c7a4f', icon: 'i-yoga' },
+  { name: '跳绳', cal: '约 600 kcal/小时', color: '#a9653a', icon: 'i-activity' },
+  { name: '球类运动', cal: '约 400 kcal/小时', color: '#8b4a22', icon: 'i-ball' },
+  { name: '登山', cal: '约 420 kcal/小时', color: '#6e3a18', icon: 'i-mountain' },
+  { name: '健身操', cal: '约 300 kcal/小时', color: '#c08a5a', icon: 'i-dumbbell' },
+  { name: '拉伸放松', cal: '约 120 kcal/小时', color: '#8b7d70', icon: 'i-activity' }
 ];
 
 const sportMask = document.getElementById('sportMask');
@@ -3759,7 +4025,7 @@ function renderSportGrid() {
     const avatar = document.createElement('span');
     avatar.className = 'sport-avatar';
     avatar.style.background = sport.color;
-    avatar.textContent = sport.name.charAt(0);
+    avatar.innerHTML = '<svg class="icon"><use href="#' + sport.icon + '"></use></svg>';
 
     const info = document.createElement('span');
     const name = document.createElement('span');
@@ -4859,12 +5125,17 @@ document.addEventListener('keydown', function (event) {
 class HealthPageHandler(BaseHTTPRequestHandler):
     """处理浏览器请求：根路径返回页面，其余路径返回 404。"""
 
+    # 供登录页显示的手机访问地址，由 main() 启动时写入
+    mobile_url = "http://127.0.0.1:8000/"
+
     def do_GET(self):
         # 去掉查询参数，例如 /?x=1 → /
         path = self.path.split("?")[0]
 
         if path in ("/", "/index.html"):
-            body = PAGE_HTML.encode("utf-8")
+            # 把登录页中的占位符替换为实际局域网地址
+            html = PAGE_HTML.replace("__MOBILE_URL__", self.mobile_url)
+            body = html.encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
             self.send_header("Content-Length", str(len(body)))
@@ -4892,25 +5163,48 @@ def find_free_port(start=8000, end=8100):
     for port in range(start, end + 1):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             try:
-                sock.bind(("127.0.0.1", port))
+                sock.bind(("0.0.0.0", port))
                 return port
             except OSError:
                 continue
     raise RuntimeError("8000-8100 端口均被占用，请手动修改端口范围")
 
 
+def get_lan_ip():
+    """获取本机在局域网中的 IP，供手机访问。"""
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        # 不会真正发送数据，仅用于让系统选择出口网卡
+        sock.connect(("8.8.8.8", 80))
+        return sock.getsockname()[0]
+    except OSError:
+        return "127.0.0.1"
+    finally:
+        sock.close()
+
+
 def main():
     port = find_free_port()
-    url = "http://127.0.0.1:%d/" % port
+    local_url = "http://127.0.0.1:%d/" % port
+
+    lan_ip = get_lan_ip()
+    mobile_url = "http://%s:%d/" % (lan_ip, port) if lan_ip != "127.0.0.1" else local_url
+
+    # 登录页展示手机访问链接
+    HealthPageHandler.mobile_url = mobile_url
 
     # 服务启动后 0.8 秒自动打开浏览器
-    threading.Timer(0.8, lambda: webbrowser.open(url)).start()
+    threading.Timer(0.8, lambda: webbrowser.open(local_url)).start()
 
-    server = ThreadingHTTPServer(("127.0.0.1", port), HealthPageHandler)
-    print("=" * 50)
-    print("健康管理系统已启动：", url)
+    # 监听 0.0.0.0，手机与电脑在同一 Wi-Fi 下即可访问
+    server = ThreadingHTTPServer(("0.0.0.0", port), HealthPageHandler)
+    print("=" * 58)
+    print("健康管理系统已启动")
+    print("电脑访问：", local_url)
+    print("手机访问：", mobile_url, "（需连接同一 Wi-Fi）")
+    print("提示：若 Windows 防火墙弹窗，请允许 Python 访问专用网络")
     print("按 Ctrl + C 停止服务")
-    print("=" * 50)
+    print("=" * 58)
 
     try:
         server.serve_forever()
