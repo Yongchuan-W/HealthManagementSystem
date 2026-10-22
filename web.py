@@ -5,6 +5,7 @@
 将小组设计的功能界面草稿提供给AI，得到「健康管理系统」基础网页，包含：
   1. 健康数据（女性用户含女性健康档案）  2. 饮食  3. 运动  4. 家人健康  5. 睡眠  6. 科普资讯
   7. 个人信息档案弹窗  8. AI 健康小管家（悬浮聊天窗）
+  9. 餐食图片识别  10. 体检报告图片识别  11. 侧边导航与运动类型选择
 
 运行方式（无需安装任何第三方库，仅使用 Python 标准库）：
   - VS Code 打开本文件，点击右上角 ▶ 运行；
@@ -33,6 +34,8 @@ PAGE_HTML = r"""<!DOCTYPE html>
    1. 全局基础样式
    ========================================================== */
 * { margin: 0; padding: 0; box-sizing: border-box; }
+
+[hidden] { display: none !important; }
 
 :root {
   --teal: #4ecdc4;
@@ -77,28 +80,29 @@ a { text-decoration: none; }
 }
 
 /* ==========================================================
-   2. 顶部导航栏
+   2. 侧边导航
    ========================================================== */
-.topbar {
-  position: sticky;
+.sidebar {
+  position: fixed;
   top: 0;
+  left: 0;
+  bottom: 0;
   z-index: 50;
+  width: 220px;
+  padding: 22px 16px 18px;
   background: #fff;
-  box-shadow: 0 1px 0 var(--line);
-}
-
-.topbar .inner {
-  height: 64px;
+  border-right: 1px solid var(--line);
   display: flex;
-  align-items: center;
-  gap: 36px;
+  flex-direction: column;
+  gap: 26px;
 }
 
-.brand {
+.side-brand {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 18px;
+  padding: 0 8px;
+  font-size: 17px;
   font-weight: 700;
   white-space: nowrap;
 }
@@ -112,67 +116,109 @@ a { text-decoration: none; }
   display: flex;
   align-items: center;
   justify-content: center;
+  flex: none;
 }
 
 .logo .icon { width: 19px; height: 19px; stroke-width: 2.2; }
 
-.nav {
+.side-nav {
   display: flex;
-  gap: 34px;
+  flex-direction: column;
+  gap: 6px;
   flex: 1;
 }
 
-.nav button {
+.side-nav button {
   position: relative;
-  background: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 11px 12px;
   border: 0;
-  font-size: 14px;
+  border-radius: 10px;
+  background: transparent;
   color: #6b7688;
-  padding: 22px 0;
-  transition: color 0.2s;
+  font-size: 14px;
+  text-align: left;
+  transition: background 0.2s, color 0.2s;
 }
 
-.nav button:hover { color: var(--text); }
-.nav button.active { color: #1f2d3d; font-weight: 600; }
+.side-nav button .icon { opacity: 0.8; }
 
-/* 当前页签下方的绿色短线 */
-.nav button.active::after {
+.side-nav button:hover { background: #f5f8f7; color: var(--text); }
+
+.side-nav button.active {
+  background: #eefaf6;
+  color: #1f2d3d;
+  font-weight: 600;
+}
+
+.side-nav button.active::before {
   content: '';
   position: absolute;
   left: 0;
-  right: 0;
-  bottom: 12px;
-  height: 2px;
-  border-radius: 2px;
+  top: 9px;
+  bottom: 9px;
+  width: 3px;
+  border-radius: 3px;
   background: var(--teal);
 }
 
-.user {
+.side-user {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 5px 7px;
-  border-radius: 20px;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 12px;
   cursor: pointer;
   transition: background 0.2s;
-  flex: none;
 }
 
-.user:hover { background: #f5f7fa; }
+.side-user:hover { background: #f5f7fa; }
 
 .avatar {
-  width: 30px;
-  height: 30px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   background: #e3e8ef;
   color: #7b8798;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex: none;
 }
 
 .avatar .icon { width: 16px; height: 16px; }
+
+.side-user-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.side-user-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #39404f;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.side-user-sub {
+  font-size: 11px;
+  color: #8a94a6;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .caret { width: 14px; height: 14px; color: #8a94a6; }
+
+.main-area { margin-left: 220px; min-height: 100vh; }
 
 /* ==========================================================
    3. 顶部渐变横幅
@@ -1078,6 +1124,235 @@ a { text-decoration: none; }
 
 .family-card .family-records { margin-top: 0; }
 
+/* 图片上传与识别 */
+.upload-box {
+  background: #f8f9fc;
+  border: 1px dashed #d8dee9;
+  border-radius: 12px;
+  padding: 16px;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.upload-box:hover {
+  border-color: #9fe3d5;
+  background: #f7fbfa;
+}
+
+.upload-empty { text-align: center; color: #8a94a6; font-size: 12px; }
+
+.upload-empty .icon {
+  width: 30px;
+  height: 30px;
+  color: #aab7c8;
+  margin-bottom: 8px;
+}
+
+.upload-empty p { line-height: 1.7; margin-bottom: 10px; }
+
+.upload-preview {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.upload-preview img {
+  width: 120px;
+  height: 92px;
+  object-fit: cover;
+  border-radius: 10px;
+  background: #e9edf3;
+  flex: none;
+}
+
+.upload-info { flex: 1; min-width: 0; }
+
+.upload-file {
+  font-size: 12px;
+  font-weight: 600;
+  color: #4a5568;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.upload-status { font-size: 12px; color: #8a94a6; margin-top: 6px; }
+
+.upload-status.scanning { color: #2fbf9b; }
+
+.upload-status.scanning::before {
+  content: '';
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-right: 6px;
+  border: 2px solid #d9f3ec;
+  border-top-color: #2fbf9b;
+  border-radius: 50%;
+  vertical-align: -2px;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.upload-result {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #4a5568;
+  line-height: 1.9;
+}
+
+.chip {
+  display: inline-block;
+  background: #e8f8f2;
+  color: #2b9a7d;
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 11px;
+  margin: 0 6px 6px 0;
+}
+
+.upload-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+
+.btn-ghost-sm {
+  background: #fff;
+  border: 1px solid #d8dee9;
+  color: #6b7688;
+  border-radius: 7px;
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+.btn-ghost-sm:hover { border-color: #9fe3d5; color: #2fbf9b; }
+
+/* 体检报告分析 */
+.report-card { margin-top: 20px; }
+
+.report-sub { font-size: 12px; color: #8a94a6; }
+
+.report-result {
+  margin-top: 16px;
+  border-top: 1px solid #f0f2f7;
+  padding-top: 16px;
+}
+
+.report-meta {
+  font-size: 12px;
+  font-weight: 600;
+  color: #4a5568;
+  margin-bottom: 10px;
+}
+
+.report-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+
+.report-item {
+  background: #f8f9fc;
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+.report-item .label { font-size: 11px; color: #8a94a6; }
+
+.report-item .value {
+  font-size: 17px;
+  font-weight: 700;
+  color: #222f3e;
+  margin-top: 6px;
+}
+
+.report-item .value .unit {
+  font-size: 11px;
+  color: #8a94a6;
+  font-weight: 400;
+  margin-left: 3px;
+}
+
+.report-summary {
+  margin-top: 12px;
+  background: #f0fbf6;
+  border: 1px solid #d8f3e7;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 12px;
+  color: #5c7a72;
+  line-height: 1.8;
+}
+
+.report-actions { display: flex; justify-content: flex-end; margin-top: 12px; }
+
+/* 运动类型选择 */
+.sport-modal { width: 560px; }
+
+.sport-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.sport-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+  background: #f8f9fc;
+  border: 1px solid #eef0f5;
+  border-radius: 10px;
+  padding: 10px 12px;
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+}
+
+.sport-option:hover { border-color: #cfd8e5; }
+
+.sport-option.selected {
+  background: #eefaf6;
+  border-color: #9fe3d5;
+  box-shadow: 0 0 0 2px #e6faf5;
+}
+
+.sport-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  flex: none;
+}
+
+.sport-name { font-size: 13px; font-weight: 600; color: #39404f; }
+.sport-cal { font-size: 10px; color: #8a94a6; margin-top: 2px; }
+
+.active-sport {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #eefaf6;
+  border: 1px solid #d8f3e7;
+  font-size: 12px;
+  color: #2b9a7d;
+}
+
+.active-sport b { color: #1f8f75; }
+
+.active-sport .end {
+  margin-left: auto;
+  background: none;
+  border: 0;
+  color: #8a94a6;
+  font-size: 12px;
+}
+
+.active-sport .end:hover { color: #d9534f; }
+
 /* ==========================================================
    9. 睡眠页
    ========================================================== */
@@ -1499,16 +1774,39 @@ a { text-decoration: none; }
    14. 响应式适配（窄屏）
    ========================================================== */
 @media (max-width: 900px) {
-  .brand span { display: none; }
-  .topbar .inner { gap: 18px; }
-  .nav { gap: 20px; overflow-x: auto; }
-  .nav::-webkit-scrollbar { display: none; }
-  .nav button { white-space: nowrap; }
+  .sidebar {
+    position: static;
+    width: auto;
+    height: auto;
+    padding: 10px 14px;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    overflow-x: auto;
+  }
+  .side-brand { padding: 0; }
+  .side-brand span { display: none; }
+  .side-nav {
+    flex-direction: row;
+    gap: 4px;
+    flex: 1;
+    overflow-x: auto;
+  }
+  .side-nav button { width: auto; padding: 8px 10px; white-space: nowrap; }
+  .side-nav button.active::before { display: none; }
+  .side-user { padding: 4px; margin-left: auto; }
+  .side-user-info { display: none; }
+  .main-area { margin-left: 0; }
 
   .health-card { flex-direction: column; }
   .ring-box { width: 100%; flex: none; }
   .report-link { align-self: flex-end; }
   .vitals { grid-template-columns: repeat(2, 1fr); }
+  .report-grid { grid-template-columns: repeat(2, 1fr); }
+  .sport-modal { width: 100%; }
+  .sport-grid { grid-template-columns: repeat(2, 1fr); }
 
   .ex-stats { grid-template-columns: repeat(2, 1fr); }
   .female-grid { grid-template-columns: 1fr; }
@@ -1565,31 +1863,34 @@ a { text-decoration: none; }
 </svg>
 
 <!-- ========================================================
-     顶部导航
+     侧边导航
      ======================================================== -->
-<header class="topbar">
-  <div class="container inner">
-    <div class="brand">
-      <div class="logo"><svg class="icon"><use href="#i-pulse"/></svg></div>
-      <span>健康管理系统</span>
-    </div>
-
-    <nav class="nav" id="nav">
-      <button class="active" data-page="data">健康数据</button>
-      <button data-page="diet">饮食</button>
-      <button data-page="sport">运动</button>
-      <button data-page="family" id="navFamily">家人健康</button>
-      <button data-page="sleep">睡眠</button>
-      <button data-page="news">科普资讯</button>
-    </nav>
-
-    <div class="user" id="userBtn" title="个人信息">
-      <div class="avatar"><svg class="icon"><use href="#i-user"/></svg></div>
-      <svg class="icon caret"><use href="#i-chevron"/></svg>
-    </div>
+<aside class="sidebar">
+  <div class="side-brand">
+    <div class="logo"><svg class="icon"><use href="#i-pulse"/></svg></div>
+    <span>健康管理系统</span>
   </div>
-</header>
 
+  <nav class="side-nav" id="nav">
+    <button class="active" data-page="data"><svg class="icon"><use href="#i-pulse"/></svg>健康数据</button>
+    <button data-page="diet"><svg class="icon"><use href="#i-fork"/></svg>饮食</button>
+    <button data-page="sport"><svg class="icon"><use href="#i-dumbbell"/></svg>运动</button>
+    <button data-page="family"><svg class="icon"><use href="#i-heart"/></svg>家人健康</button>
+    <button data-page="sleep"><svg class="icon"><use href="#i-moon"/></svg>睡眠</button>
+    <button data-page="news"><svg class="icon"><use href="#i-book"/></svg>科普资讯</button>
+  </nav>
+
+  <div class="side-user" id="userBtn" title="个人信息">
+    <div class="avatar"><svg class="icon"><use href="#i-user"/></svg></div>
+    <div class="side-user-info">
+      <span class="side-user-name" id="sideUserName">张三</span>
+      <span class="side-user-sub" id="sideUserSub">女 · 165cm</span>
+    </div>
+    <svg class="icon caret"><use href="#i-chevron"/></svg>
+  </div>
+</aside>
+
+<div class="main-area">
 <main class="container">
 
   <!-- 所有页面共用的渐变横幅 -->
@@ -1623,7 +1924,7 @@ a { text-decoration: none; }
             </div>
             <div class="vital">
               <div class="label">体脂率</div>
-              <div class="value">18.5<span class="unit">%</span></div>
+              <div class="value"><span id="fatValue">18.5</span><span class="unit">%</span></div>
             </div>
             <div class="vital">
               <div class="label">BMI</div>
@@ -1634,18 +1935,18 @@ a { text-decoration: none; }
             </div>
             <div class="vital">
               <div class="label">血压</div>
-              <div class="value">110/70<span class="unit">mmHg</span></div>
+              <div class="value"><span id="bpValue">110/70</span><span class="unit">mmHg</span></div>
             </div>
             <div class="vital">
               <div class="label">血糖（空腹）</div>
-              <div class="value">5.2<span class="unit">mmol/L</span></div>
+              <div class="value"><span id="glucoseValue">5.2</span><span class="unit">mmol/L</span></div>
             </div>
           </div>
         </div>
 
         <!-- 右侧环形评分 -->
         <div class="ring-box">
-          <button class="report-link" data-toast="体检报告分析：各项指标均在正常范围，继续保持！">体检报告分析 ›</button>
+          <button class="report-link" id="quickReportUpload">上传体检报告 ›</button>
           <div class="ring">
             <svg width="140" height="140" viewBox="0 0 120 120">
               <defs>
@@ -1665,6 +1966,67 @@ a { text-decoration: none; }
             </div>
           </div>
           <div class="ring-note">较上月提升 2%</div>
+        </div>
+      </div>
+
+      <!-- 体检报告分析：上传图片并识别关键指标 -->
+      <div class="card report-card" id="reportCard">
+        <div class="card-head">
+          <div class="card-title">
+            <svg class="icon"><use href="#i-book"/></svg>体检报告分析
+          </div>
+          <span class="report-sub">上传报告图片，自动识别关键指标</span>
+        </div>
+
+        <div class="upload-box" id="reportUploadBox">
+          <input type="file" id="reportImageInput" accept="image/*" hidden>
+
+          <div class="upload-empty" id="reportUploadEmpty">
+            <svg class="icon"><use href="#i-image"/></svg>
+            <p>上传体检报告照片，识别体重、体脂、BMI、血压、血糖等指标</p>
+            <button class="btn-soft" type="button" id="reportChooseBtn">选择图片</button>
+          </div>
+
+          <div class="upload-preview" id="reportPreview" hidden>
+            <img id="reportPreviewImg" alt="体检报告照片">
+            <div class="upload-info">
+              <div class="upload-file" id="reportFileName"></div>
+              <div class="upload-status" id="reportStatus"></div>
+              <div class="upload-actions">
+                <button class="btn-ghost-sm" type="button" id="reportReselect">重新上传</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="report-result" id="reportResult" hidden>
+          <div class="report-meta">识别结果 · 报告日期 <span id="reportDateText">2026年10月20日</span></div>
+          <div class="report-grid">
+            <div class="report-item">
+              <div class="label">体重</div>
+              <div class="value">64.8<span class="unit">kg</span></div>
+            </div>
+            <div class="report-item">
+              <div class="label">体脂率</div>
+              <div class="value">18.2<span class="unit">%</span></div>
+            </div>
+            <div class="report-item">
+              <div class="label">BMI</div>
+              <div class="value">21.2</div>
+            </div>
+            <div class="report-item">
+              <div class="label">血压</div>
+              <div class="value">112/72<span class="unit">mmHg</span></div>
+            </div>
+            <div class="report-item">
+              <div class="label">血糖</div>
+              <div class="value">5.0<span class="unit">mmol/L</span></div>
+            </div>
+          </div>
+          <div class="report-summary">综合分析：各项指标总体处于正常范围。建议保持每周 3 次有氧运动，晚餐适当补充优质蛋白，并在 3 个月后复查。</div>
+          <div class="report-actions">
+            <button class="btn-primary" id="applyReport">同步到核心体征</button>
+          </div>
         </div>
       </div>
 
@@ -1758,6 +2120,32 @@ a { text-decoration: none; }
             <input data-meal="晚餐" placeholder="记录晚餐...">
           </div>
 
+          <h3 class="sub-title">餐食图片识别</h3>
+
+          <!-- 上传餐食照片，识别食物与热量 -->
+          <div class="upload-box" id="dietUploadBox">
+            <input type="file" id="dietImageInput" accept="image/*" hidden>
+
+            <div class="upload-empty" id="dietUploadEmpty">
+              <svg class="icon"><use href="#i-image"/></svg>
+              <p>上传餐食照片，自动识别食物种类与大致热量</p>
+              <button class="btn-soft" type="button" id="dietChooseBtn">选择图片</button>
+            </div>
+
+            <div class="upload-preview" id="dietPreview" hidden>
+              <img id="dietPreviewImg" alt="餐食照片">
+              <div class="upload-info">
+                <div class="upload-file" id="dietFileName"></div>
+                <div class="upload-status" id="dietStatus"></div>
+                <div class="upload-result" id="dietResult" hidden></div>
+                <div class="upload-actions">
+                  <button class="btn-ghost-sm" type="button" id="dietReselect">重新上传</button>
+                  <button class="btn-ghost-sm" type="button" id="dietFillMeal" hidden>填入午餐记录</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="tip-card">
             <svg class="icon"><use href="#i-spark"/></svg>
             <div>
@@ -1779,9 +2167,16 @@ a { text-decoration: none; }
             <div class="card-title">
               <svg class="icon activity-icon"><use href="#i-activity"/></svg>运动与心理状态
             </div>
-            <button class="btn-primary" data-toast="已开始记录运动，加油！">
+            <button class="btn-primary" id="startSport">
               <svg class="icon"><use href="#i-play"/></svg>开始运动
             </button>
+          </div>
+
+          <!-- 当前正在进行的运动 -->
+          <div class="active-sport" id="activeSport" hidden>
+            <svg class="icon"><use href="#i-activity"/></svg>
+            <span>当前运动：<b id="activeSportName"></b></span>
+            <button class="end" type="button" id="stopSport">结束</button>
           </div>
 
           <!-- 今日 / 本周 数据切换 -->
@@ -1926,6 +2321,7 @@ a { text-decoration: none; }
 
   </div>
 </main>
+</div>
 
 <!-- ========================================================
      个人信息档案弹窗
@@ -2129,6 +2525,29 @@ a { text-decoration: none; }
 </div>
 
 <!-- ========================================================
+     运动类型选择弹窗
+     ======================================================== -->
+<div class="mask" id="sportMask">
+  <div class="modal sport-modal">
+    <div class="modal-head">
+      <svg class="icon"><use href="#i-dumbbell"/></svg>选择运动类型
+      <button class="modal-close" id="sportClose" aria-label="关闭">
+        <svg class="icon"><use href="#i-close"/></svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="sport-grid" id="sportGrid"></div>
+    </div>
+
+    <div class="modal-foot">
+      <button class="btn-cancel" id="sportCancel">取消</button>
+      <button class="btn-save" id="sportConfirm">开始运动</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================
      悬浮客服按钮与 AI 聊天窗口
      ======================================================== -->
 <button class="fab" id="fab" aria-label="打开健康小管家">
@@ -2267,6 +2686,8 @@ document.getElementById('saveProfile').addEventListener('click', function () {
   }
 
   document.getElementById('userBtn').title = '个人信息 · ' + name + '（' + gender + '）';
+  document.getElementById('sideUserName').textContent = name;
+  document.getElementById('sideUserSub').textContent = gender + ' · ' + height + 'cm';
 
   // 根据性别显示/隐藏「健康数据」页中的女性健康档案
   currentGender = gender;
@@ -2287,6 +2708,195 @@ document.querySelectorAll('.meal input').forEach(function (input) {
     showToast('已记录' + input.dataset.meal + '：' + value);
     input.value = '';
   });
+});
+
+/* ==========================================================
+   四之二、图片上传与识别
+   说明：当前为前端演示识别（根据文件名关键词匹配 / 预置报告数据），
+        接入 OCR 服务后可替换为真实识别接口。
+   ========================================================== */
+
+// 常见食物关键词与热量估算
+const foodKeywords = [
+  { keys: ['牛奶', '奶'], name: '牛奶 250ml', kcal: 120 },
+  { keys: ['面包', '吐司'], name: '全麦面包 2片', kcal: 180 },
+  { keys: ['沙拉', '蔬菜'], name: '蔬菜沙拉', kcal: 150 },
+  { keys: ['米饭', '饭'], name: '米饭 1碗', kcal: 230 },
+  { keys: ['面条', '拉面', '意面', '米粉'], name: '面食 1碗', kcal: 280 },
+  { keys: ['鸡蛋', '蛋'], name: '水煮蛋 2个', kcal: 140 },
+  { keys: ['水果', '苹果', '香蕉'], name: '水果拼盘', kcal: 90 },
+  { keys: ['汉堡', '炸鸡'], name: '汉堡套餐', kcal: 550 },
+  { keys: ['咖啡'], name: '咖啡 1杯', kcal: 20 }
+];
+
+const defaultFoods = [
+  { name: '米饭 1碗', kcal: 230 },
+  { name: '时蔬', kcal: 80 },
+  { name: '鸡胸肉', kcal: 210 }
+];
+
+// ---------- 餐食图片识别 ----------
+const dietImageInput = document.getElementById('dietImageInput');
+const dietPreview = document.getElementById('dietPreview');
+const dietUploadEmpty = document.getElementById('dietUploadEmpty');
+const dietPreviewImg = document.getElementById('dietPreviewImg');
+const dietFileName = document.getElementById('dietFileName');
+const dietStatus = document.getElementById('dietStatus');
+const dietResult = document.getElementById('dietResult');
+const dietFillMeal = document.getElementById('dietFillMeal');
+
+let dietImageUrl = null;
+
+function chooseDietImage() {
+  dietImageInput.value = '';
+  dietImageInput.click();
+}
+
+document.getElementById('dietChooseBtn').addEventListener('click', chooseDietImage);
+document.getElementById('dietReselect').addEventListener('click', chooseDietImage);
+
+// 点击空白上传区也能选择图片
+dietUploadEmpty.addEventListener('click', function (event) {
+  if (event.target.tagName !== 'BUTTON') chooseDietImage();
+});
+
+dietImageInput.addEventListener('change', function () {
+  const file = dietImageInput.files[0];
+  if (!file) return;
+
+  if (!file.type || file.type.indexOf('image/') !== 0) {
+    showToast('请选择图片文件');
+    return;
+  }
+
+  // 预览图片
+  if (dietImageUrl) URL.revokeObjectURL(dietImageUrl);
+  dietImageUrl = URL.createObjectURL(file);
+  dietPreviewImg.src = dietImageUrl;
+  dietFileName.textContent = file.name;
+  dietUploadEmpty.hidden = true;
+  dietPreview.hidden = false;
+
+  dietStatus.className = 'upload-status scanning';
+  dietStatus.textContent = 'AI 正在识别餐食内容...';
+  dietResult.hidden = true;
+  dietFillMeal.hidden = true;
+
+  const lowerName = file.name.toLowerCase();
+  let matchedFoods = foodKeywords.filter(function (food) {
+    return food.keys.some(function (key) {
+      return lowerName.indexOf(key) !== -1;
+    });
+  });
+  if (!matchedFoods.length) matchedFoods = defaultFoods;
+
+  setTimeout(function () {
+    const totalKcal = matchedFoods.reduce(function (sum, food) {
+      return sum + food.kcal;
+    }, 0);
+
+    dietStatus.className = 'upload-status';
+    dietStatus.textContent = '识别完成，共识别 ' + matchedFoods.length + ' 种食物';
+
+    dietResult.innerHTML = '';
+    matchedFoods.forEach(function (food) {
+      const chip = document.createElement('span');
+      chip.className = 'chip';
+      chip.textContent = food.name + ' · ' + food.kcal + ' kcal';
+      dietResult.appendChild(chip);
+    });
+
+    const totalLine = document.createElement('div');
+    totalLine.textContent = '预计总热量约 ' + totalKcal + ' kcal，建议结合实际份量调整。';
+    dietResult.appendChild(totalLine);
+    dietResult.hidden = false;
+
+    dietFillMeal.hidden = false;
+    dietFillMeal.dataset.foods = matchedFoods.map(function (food) {
+      return food.name;
+    }).join('、');
+  }, 900);
+});
+
+// 把识别结果填入午餐记录
+dietFillMeal.addEventListener('click', function () {
+  const lunchInput = document.querySelector('.meal input[data-meal="午餐"]');
+  if (!lunchInput) return;
+  lunchInput.value = dietFillMeal.dataset.foods || '';
+  showToast('已将识别结果填入午餐记录');
+});
+
+// ---------- 体检报告图片识别 ----------
+const reportImageInput = document.getElementById('reportImageInput');
+const reportPreview = document.getElementById('reportPreview');
+const reportUploadEmpty = document.getElementById('reportUploadEmpty');
+const reportPreviewImg = document.getElementById('reportPreviewImg');
+const reportFileName = document.getElementById('reportFileName');
+const reportStatus = document.getElementById('reportStatus');
+const reportResult = document.getElementById('reportResult');
+
+let reportImageUrl = null;
+
+function chooseReportImage() {
+  reportImageInput.value = '';
+  reportImageInput.click();
+}
+
+document.getElementById('reportChooseBtn').addEventListener('click', chooseReportImage);
+document.getElementById('reportReselect').addEventListener('click', chooseReportImage);
+
+reportUploadEmpty.addEventListener('click', function (event) {
+  if (event.target.tagName !== 'BUTTON') chooseReportImage();
+});
+
+// 核心体征右上角的快捷入口
+document.getElementById('quickReportUpload').addEventListener('click', function () {
+  chooseReportImage();
+  document.getElementById('reportCard').scrollIntoView({ behavior: 'smooth', block: 'center' });
+});
+
+reportImageInput.addEventListener('change', function () {
+  const file = reportImageInput.files[0];
+  if (!file) return;
+
+  if (!file.type || file.type.indexOf('image/') !== 0) {
+    showToast('请选择图片文件');
+    return;
+  }
+
+  if (reportImageUrl) URL.revokeObjectURL(reportImageUrl);
+  reportImageUrl = URL.createObjectURL(file);
+  reportPreviewImg.src = reportImageUrl;
+  reportFileName.textContent = file.name;
+  reportUploadEmpty.hidden = true;
+  reportPreview.hidden = false;
+
+  reportStatus.className = 'upload-status scanning';
+  reportStatus.textContent = 'AI 正在识别报告指标...';
+  reportResult.hidden = true;
+
+  setTimeout(function () {
+    reportStatus.className = 'upload-status';
+    reportStatus.textContent = '识别完成，已提取 5 项关键指标';
+    reportResult.hidden = false;
+    document.getElementById('reportDateText').textContent = formatYMD(new Date());
+    showToast('体检报告识别完成');
+  }, 1100);
+});
+
+// 将识别结果同步到核心体征
+document.getElementById('applyReport').addEventListener('click', function () {
+  document.getElementById('weightValue').textContent = '64.8';
+  document.getElementById('fatValue').textContent = '18.2';
+  document.getElementById('bmiValue').textContent = '21.2';
+  document.getElementById('bpValue').textContent = '112/72';
+  document.getElementById('glucoseValue').textContent = '5.0';
+
+  const badge = document.getElementById('bmiBadge');
+  badge.textContent = '正常';
+  badge.className = 'badge';
+
+  showToast('体检指标已同步到核心体征');
 });
 
 /* ==========================================================
@@ -2319,6 +2929,101 @@ document.querySelectorAll('#sportTabs button').forEach(function (btn) {
     });
     renderExercise(btn.dataset.tab);
   });
+});
+
+// ---------- 运动类型选择 ----------
+const sportTypes = [
+  { name: '户外活动', cal: '约 200 kcal/小时', color: '#3fc7a4' },
+  { name: '健走', cal: '约 280 kcal/小时', color: '#5b8def' },
+  { name: '户外骑行', cal: '约 350 kcal/小时', color: '#6b7cf0' },
+  { name: '徒步', cal: '约 320 kcal/小时', color: '#4fb6cf' },
+  { name: '跑步', cal: '约 450 kcal/小时', color: '#f08a4b' },
+  { name: '游泳', cal: '约 500 kcal/小时', color: '#4aa8e8' },
+  { name: '瑜伽', cal: '约 180 kcal/小时', color: '#c47ad6' },
+  { name: '跳绳', cal: '约 600 kcal/小时', color: '#e0718a' },
+  { name: '球类运动', cal: '约 400 kcal/小时', color: '#d9a340' },
+  { name: '登山', cal: '约 420 kcal/小时', color: '#7a9b5c' },
+  { name: '健身操', cal: '约 300 kcal/小时', color: '#e58f5c' },
+  { name: '拉伸放松', cal: '约 120 kcal/小时', color: '#8a94a6' }
+];
+
+const sportMask = document.getElementById('sportMask');
+let selectedSport = '';
+
+function renderSportGrid() {
+  const grid = document.getElementById('sportGrid');
+  grid.innerHTML = '';
+
+  sportTypes.forEach(function (sport) {
+    const option = document.createElement('button');
+    option.type = 'button';
+    option.className = 'sport-option' + (selectedSport === sport.name ? ' selected' : '');
+
+    const avatar = document.createElement('span');
+    avatar.className = 'sport-avatar';
+    avatar.style.background = sport.color;
+    avatar.textContent = sport.name.charAt(0);
+
+    const info = document.createElement('span');
+    const name = document.createElement('span');
+    name.className = 'sport-name';
+    name.textContent = sport.name;
+    const cal = document.createElement('span');
+    cal.className = 'sport-cal';
+    cal.textContent = sport.cal;
+    info.appendChild(name);
+    info.appendChild(cal);
+
+    option.appendChild(avatar);
+    option.appendChild(info);
+
+    option.addEventListener('click', function () {
+      selectedSport = sport.name;
+      grid.querySelectorAll('.sport-option').forEach(function (item) {
+        item.classList.remove('selected');
+      });
+      option.classList.add('selected');
+    });
+
+    grid.appendChild(option);
+  });
+}
+
+document.getElementById('startSport').addEventListener('click', function () {
+  const activeName = document.getElementById('activeSportName').textContent;
+  selectedSport = activeName || '';
+  renderSportGrid();
+  openMask(sportMask);
+});
+
+document.getElementById('sportClose').addEventListener('click', function () {
+  closeMask(sportMask);
+});
+
+document.getElementById('sportCancel').addEventListener('click', function () {
+  closeMask(sportMask);
+});
+
+sportMask.addEventListener('click', function (event) {
+  if (event.target === sportMask) closeMask(sportMask);
+});
+
+document.getElementById('sportConfirm').addEventListener('click', function () {
+  if (!selectedSport) {
+    showToast('请先选择一种运动类型');
+    return;
+  }
+
+  document.getElementById('activeSportName').textContent = selectedSport;
+  document.getElementById('activeSport').hidden = false;
+  closeMask(sportMask);
+  showToast('已开始运动：' + selectedSport);
+});
+
+document.getElementById('stopSport').addEventListener('click', function () {
+  const name = document.getElementById('activeSportName').textContent;
+  document.getElementById('activeSport').hidden = true;
+  showToast('已结束运动：' + name);
 });
 
 /* ==========================================================
@@ -3183,6 +3888,7 @@ document.addEventListener('keydown', function (event) {
   closeMask(familyMask);
   closeMask(memberMask);
   closeMask(reminderMask);
+  closeMask(sportMask);
   closeTagMenus();
 });
 </script>
