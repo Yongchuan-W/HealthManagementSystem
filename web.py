@@ -2464,6 +2464,386 @@ body { color: var(--text); }
   .goal-stats { grid-template-columns: 1fr; }
   .plan-week { grid-template-columns: 1fr; }
 }
+/* ==========================================================
+   12. 新增功能样式：体征编辑 / 体重曲线 / 每日计划勾选 /
+       饮食营养 / 每日心情 / 运动目标 / 科普详情 / 提醒删除
+   ========================================================== */
+
+/* 体征编辑 */
+.vital-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.vital-edit {
+  border: none;
+  background: transparent;
+  color: #a98a72;
+  font-size: 11px;
+  padding: 0;
+  cursor: pointer;
+}
+
+.vital-edit:hover { color: #8b4a22; }
+
+.vital-edit-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.vital-edit-box input {
+  width: 62px;
+  height: 32px;
+  border: 1px solid #e2d6c8;
+  border-radius: 8px;
+  padding: 0 8px;
+  font-size: 13px;
+  color: #4a3525;
+  background: #fff;
+}
+
+.vital-edit-box button {
+  border: none;
+  border-radius: 8px;
+  background: #8b4a22;
+  color: #fff;
+  font-size: 12px;
+  padding: 7px 12px;
+  cursor: pointer;
+}
+
+.vital-edit-box button.ghost { background: #f1ece5; color: #8b6b52; }
+
+/* 体重趋势图 */
+.weight-chart {
+  margin-top: 14px;
+  background: #fbf7f1;
+  border-radius: 12px;
+  padding: 10px 8px 6px;
+}
+
+.weight-chart svg { width: 100%; height: 140px; display: block; }
+.weight-chart svg text { font-size: 9px; fill: #a08d7d; }
+
+.weight-chart-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: #8b7d70;
+  padding: 0 6px 4px;
+}
+
+.weight-chart-head b { color: #8b4a22; }
+
+.weight-chart-empty {
+  font-size: 12px;
+  color: #a08d7d;
+  text-align: center;
+  padding: 18px 6px;
+  line-height: 1.8;
+}
+
+/* 每日计划勾选 */
+.plan-day {
+  display: grid;
+  grid-template-columns: 22px 40px 1fr;
+  align-items: center;
+  justify-content: initial;
+}
+
+.plan-check {
+  width: 20px;
+  height: 20px;
+  border: 1.5px solid #d3c4b2;
+  border-radius: 6px;
+  background: #fff;
+  color: transparent;
+  font-size: 11px;
+  line-height: 1;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.plan-day.done .plan-check {
+  background: #8b4a22;
+  border-color: #8b4a22;
+  color: #fff;
+}
+
+.plan-day.done span:last-child {
+  text-decoration: line-through;
+  color: #b3a595;
+}
+
+/* 科学变美：饮食种类推荐 */
+.beauty-diet {
+  margin-top: 14px;
+  background: #f4f9ea;
+  border: 1px solid #e2ecd0;
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+.beauty-diet b { font-size: 13px; color: #5d7a35; }
+
+.beauty-diet ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  color: #6f7b57;
+  font-size: 12px;
+  line-height: 1.9;
+}
+
+/* 饮食：每日营养摄入 */
+.nutri-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.nutri-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #7a6b5c;
+  margin-bottom: 5px;
+}
+
+.nutri-head b { color: #8b4a22; }
+
+.nutri-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: #f0eae2;
+  overflow: hidden;
+}
+
+.nutri-bar i {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #8b4a22, #c08a5a);
+  transition: width 0.35s ease;
+}
+
+.nutri-bar.over i { background: linear-gradient(90deg, #b06a3a, #d9a340); }
+
+/* 饮食：今日记录标签 */
+.meal-log {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.meal-log-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f8f2e9;
+  color: #7a6350;
+  font-size: 12px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  line-height: 1.6;
+}
+
+.meal-log-item button {
+  border: none;
+  background: transparent;
+  color: #b99b85;
+  font-size: 13px;
+  line-height: 1;
+  padding: 0;
+  cursor: pointer;
+}
+
+.meal-log-item button:hover { color: #b0402f; }
+
+.meal-log-empty {
+  font-size: 12px;
+  color: #a08d7d;
+  padding: 4px 0;
+}
+
+/* 饮食：两周对比 */
+.week-compare table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.week-compare th,
+.week-compare td {
+  padding: 8px 4px;
+  text-align: center;
+  border-bottom: 1px solid #f1eae0;
+  color: #7a6b5c;
+}
+
+.week-compare th { color: #a08d7d; font-weight: 600; }
+.week-compare td.up { color: #b06a3a; }
+.week-compare td.down { color: #6b8f3f; }
+
+.mini-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  height: 86px;
+  margin-top: 14px;
+}
+
+.mini-bar {
+  flex: 1;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  height: 100%;
+  gap: 4px;
+}
+
+.mini-bar i {
+  display: block;
+  border-radius: 5px 5px 0 0;
+  background: linear-gradient(180deg, #c08a5a, #8b4a22);
+  min-height: 4px;
+}
+
+.mini-bar span { font-size: 10px; color: #a08d7d; }
+
+.mini-bar em { font-style: normal; font-size: 10px; color: #8b4a22; }
+
+/* 运动：目标与数据填写 */
+.sport-inputs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.sport-inputs .field label { font-size: 12px; color: #8b7d70; }
+
+.sport-inputs input {
+  width: 100%;
+  height: 38px;
+  border: 1px solid #e6dbcd;
+  border-radius: 10px;
+  background: #fbf8f4;
+  padding: 0 10px;
+  font-size: 13px;
+  color: #4a3525;
+}
+
+.sport-actions {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* 每日心情 */
+.mood-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.mood-opt {
+  border: 1px solid #efe4cd;
+  background: #fff;
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-size: 12px;
+  color: #7a6b5c;
+  cursor: pointer;
+}
+
+.mood-opt.selected {
+  background: #8b4a22;
+  border-color: #8b4a22;
+  color: #fff;
+}
+
+.mood-tip {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #7a6b5c;
+  line-height: 1.85;
+  background: #fffdf7;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+/* 科普资讯详情 */
+.news-detail { max-width: 720px; }
+
+.news-article h4 {
+  font-size: 14px;
+  color: #4a3525;
+  margin: 16px 0 6px;
+}
+
+.news-article p {
+  font-size: 13px;
+  color: #6b5c4c;
+  line-height: 1.9;
+  margin: 6px 0;
+}
+
+.news-article ul {
+  margin: 6px 0 6px 18px;
+  color: #6b5c4c;
+  font-size: 13px;
+  line-height: 1.9;
+}
+
+.news-article .note {
+  font-size: 12px;
+  color: #a08d7d;
+  border-top: 1px dashed #e8ded0;
+  padding-top: 10px;
+  margin-top: 14px;
+}
+
+.news-body .read-more {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 12px;
+  color: #8b4a22;
+  font-weight: 600;
+}
+
+/* 关怀提醒删除 */
+.reminder-del {
+  flex: none;
+  border: none;
+  background: transparent;
+  color: #c0a895;
+  font-size: 12px;
+  padding: 2px 4px;
+  cursor: pointer;
+  margin-left: 4px;
+}
+
+.reminder-del:hover { color: #b0402f; }
+
+@media (max-width: 700px) {
+  .sport-inputs { grid-template-columns: 1fr; }
+  .plan-day { grid-template-columns: 22px 36px 1fr; }
+}
 </style>
 </head>
 <body>
@@ -2758,14 +3138,35 @@ body { color: var(--text); }
               </div>
             </div>
             <div class="vital">
-              <div class="label">血压</div>
+              <div class="vital-head">
+                <div class="label">血压</div>
+                <button class="vital-edit" type="button" data-edit="bp">修改</button>
+              </div>
               <div class="value"><span id="bpValue">110/70</span><span class="unit">mmHg</span></div>
+              <div class="vital-edit-box" id="bpEditBox" hidden>
+                <input id="bpSystolic" type="number" min="60" max="220" placeholder="收缩压">
+                <span>/</span>
+                <input id="bpDiastolic" type="number" min="40" max="140" placeholder="舒张压">
+                <button type="button" data-save="bp">保存</button>
+                <button type="button" class="ghost" data-cancel="bp">取消</button>
+              </div>
             </div>
             <div class="vital">
-              <div class="label">血糖（空腹）</div>
+              <div class="vital-head">
+                <div class="label">血糖（空腹）</div>
+                <button class="vital-edit" type="button" data-edit="glucose">修改</button>
+              </div>
               <div class="value"><span id="glucoseValue">5.2</span><span class="unit">mmol/L</span></div>
+              <div class="vital-edit-box" id="glucoseEditBox" hidden>
+                <input id="glucoseInput" type="number" step="0.1" min="1" max="30" placeholder="mmol/L">
+                <button type="button" data-save="glucose">保存</button>
+                <button type="button" class="ghost" data-cancel="glucose">取消</button>
+              </div>
             </div>
           </div>
+
+          <!-- 体重变化曲线：记录体重后自动重绘 -->
+          <div class="weight-chart" id="weightChartData"></div>
         </div>
 
         <!-- 右侧环形评分 -->
@@ -2929,13 +3330,13 @@ body { color: var(--text); }
             </div>
           </div>
 
-          <!-- 每日营养目标 -->
+          <!-- 每日营养目标：数值由 JavaScript 根据个人资料自动计算 -->
           <div class="macros">
-            <div class="macro"><div class="label">蛋白质</div><div class="value">60g</div></div>
-            <div class="macro"><div class="label">碳水</div><div class="value">150g</div></div>
-            <div class="macro"><div class="label">纤维素</div><div class="value">25g</div></div>
-            <div class="macro"><div class="label">脂肪</div><div class="value">45g</div></div>
-            <div class="macro"><div class="label">总热量</div><div class="value">1800k</div></div>
+            <div class="macro"><div class="label">蛋白质</div><div class="value" id="macroProtein">0g</div></div>
+            <div class="macro"><div class="label">碳水</div><div class="value" id="macroCarb">0g</div></div>
+            <div class="macro"><div class="label">纤维素</div><div class="value" id="macroFiber">0g</div></div>
+            <div class="macro"><div class="label">脂肪</div><div class="value" id="macroFat">0g</div></div>
+            <div class="macro"><div class="label">总热量</div><div class="value" id="macroKcal">0k</div></div>
           </div>
 
           <h3 class="sub-title">今日饮食记录</h3>
@@ -2953,6 +3354,15 @@ body { color: var(--text); }
             <span class="meal-tag night">晚</span>
             <input data-meal="晚餐" placeholder="记录晚餐...">
           </div>
+
+          <!-- 今日已记录的食物，可单条删除 -->
+          <div class="meal-log" id="mealLog"></div>
+
+          <h3 class="sub-title">今日营养摄入</h3>
+          <div class="nutri-list" id="nutriList"></div>
+
+          <h3 class="sub-title">近两周饮食分析</h3>
+          <div class="week-compare" id="weekCompare"></div>
 
           <h3 class="sub-title">餐食图片识别</h3>
 
@@ -3060,12 +3470,59 @@ body { color: var(--text); }
             </div>
           </div>
 
-          <!-- 心理情绪记录 -->
+          <!-- 目标与数据由用户自行填写，完成度自动计算 -->
+          <h3 class="sub-title">目标设置</h3>
+          <div class="sport-inputs">
+            <div class="field">
+              <label for="goalKcal">每日热量目标（kcal）</label>
+              <input id="goalKcal" type="number" min="50" max="3000" step="10" value="500">
+            </div>
+            <div class="field">
+              <label for="goalSteps">每日步数目标</label>
+              <input id="goalSteps" type="number" min="1000" max="50000" step="100" value="8000">
+            </div>
+            <div class="field">
+              <label for="goalMinutes">每日运动时长（分钟）</label>
+              <input id="goalMinutes" type="number" min="5" max="300" step="5" value="60">
+            </div>
+          </div>
+
+          <h3 class="sub-title">今日数据录入</h3>
+          <div class="sport-inputs">
+            <div class="field">
+              <label for="todayKcal">已消耗（kcal）</label>
+              <input id="todayKcal" type="number" min="0" max="5000" step="10" value="320">
+            </div>
+            <div class="field">
+              <label for="todaySteps">今日步数</label>
+              <input id="todaySteps" type="number" min="0" max="80000" step="100" value="6540">
+            </div>
+            <div class="field">
+              <label for="todayMinutes">活动时长（分钟）</label>
+              <input id="todayMinutes" type="number" min="0" max="600" step="5" value="45">
+            </div>
+          </div>
+          <div class="sport-actions">
+            <button class="btn-primary" type="button" id="saveSportData">保存并计算完成度</button>
+          </div>
+
+          <!-- 每日心情 -->
           <div class="mood">
             <div class="mood-title">
-              <svg class="icon"><use href="#i-smile"/></svg>心理情绪记录
+              <svg class="icon"><use href="#i-smile"/></svg>每日心情
             </div>
-            <textarea placeholder="今天心情怎么样？记录一下吧..."></textarea>
+            <div class="mood-picker" id="moodPicker">
+              <button class="mood-opt" type="button" data-mood="开心">开心</button>
+              <button class="mood-opt" type="button" data-mood="平静">平静</button>
+              <button class="mood-opt" type="button" data-mood="疲惫">疲惫</button>
+              <button class="mood-opt" type="button" data-mood="焦虑">焦虑</button>
+              <button class="mood-opt" type="button" data-mood="低落">低落</button>
+            </div>
+            <textarea id="moodNote" placeholder="今天心情怎么样？发生了什么？记录一下吧..."></textarea>
+            <div class="sport-actions">
+              <button class="btn-soft" type="button" id="saveMood">保存今日心情</button>
+            </div>
+            <div class="mood-tip" id="moodTip">选择今天的心情后，这里会给出对应的小贴士。</div>
           </div>
         </div>
 
@@ -3140,8 +3597,14 @@ body { color: var(--text); }
                   <div class="progress-bar"><i id="beautyProgress"></i></div>
                 </div>
 
+                <!-- 体重变化曲线：每次记录体重后自动重绘 -->
+                <div class="weight-chart" id="weightChart"></div>
+
                 <div class="plan-summary" id="beautySummary"></div>
                 <div class="plan-week" id="beautyWeek"></div>
+
+                <!-- 按计划类型推荐的饮食种类 -->
+                <div class="beauty-diet" id="beautyDietTip" hidden></div>
 
                 <div class="weight-log">
                   <label for="beautyWeightNow">记录当前体重</label>
@@ -3204,30 +3667,43 @@ body { color: var(--text); }
          ==================================================== -->
     <section class="page" id="page-news">
       <div class="news-grid">
-        <article class="news-card">
+        <article class="news-card" data-article="diet">
           <div class="news-img green"><svg class="icon"><use href="#i-fork"/></svg></div>
           <div class="news-body">
             <div class="news-cat green">饮食营养</div>
             <div class="news-title">如何科学搭配三餐饮食？</div>
             <p class="news-desc">合理的饮食搭配不仅能提供充足的能量，还能帮助预防慢性疾病，让身体保持良好状态。</p>
+            <span class="read-more">点击查看全文 ›</span>
           </div>
         </article>
 
-        <article class="news-card">
+        <article class="news-card" data-article="stretch">
           <div class="news-img blue"><svg class="icon"><use href="#i-dumbbell"/></svg></div>
           <div class="news-body">
             <div class="news-cat blue">运动指南</div>
             <div class="news-title">久坐族的5分钟拉伸指南</div>
             <p class="news-desc">长时间面对电脑工作，肩颈酸痛？这几个动作帮你缓解疲劳，恢复身体活力。</p>
+            <span class="read-more">点击查看全文 ›</span>
           </div>
         </article>
 
-        <article class="news-card">
+        <article class="news-card" data-article="sleep">
           <div class="news-img purple"><svg class="icon"><use href="#i-moon"/></svg></div>
           <div class="news-body">
             <div class="news-cat purple">睡眠健康</div>
             <div class="news-title">为什么你总是睡不够？</div>
             <p class="news-desc">了解深度睡眠的重要性，以及如何通过改善卧室环境提升睡眠质量，找回好状态。</p>
+            <span class="read-more">点击查看全文 ›</span>
+          </div>
+        </article>
+
+        <article class="news-card" data-article="bp">
+          <div class="news-img green"><svg class="icon"><use href="#i-heart"/></svg></div>
+          <div class="news-body">
+            <div class="news-cat green">慢病管理</div>
+            <div class="news-title">血压血糖，家庭自测怎么做才准？</div>
+            <p class="news-desc">测压姿势、测量时间、记录方式都会影响结果，掌握几个细节让数据更可信。</p>
+            <span class="read-more">点击查看全文 ›</span>
           </div>
         </article>
       </div>
@@ -3458,6 +3934,23 @@ body { color: var(--text); }
     <div class="modal-foot">
       <button class="btn-cancel" id="sportCancel">取消</button>
       <button class="btn-save" id="sportConfirm">开始运动</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================
+     科普资讯详情弹窗：点击资讯卡片后展示正文
+     ======================================================== -->
+<div class="mask" id="newsMask">
+  <div class="modal news-detail">
+    <div class="modal-head">
+      <svg class="icon"><use href="#i-book"/></svg><span id="newsTitle">科普详情</span>
+      <button class="modal-close" id="newsClose" aria-label="关闭">
+        <svg class="icon"><use href="#i-close"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="news-article" id="newsBody"></div>
     </div>
   </div>
 </div>
@@ -3731,6 +4224,7 @@ document.getElementById('saveProfile').addEventListener('click', function () {
 
   // 体重
   document.getElementById('weightValue').textContent = weight.toFixed(1);
+  addWeightRecord(weight);
 
   // BMI = 体重(kg) / 身高(m) 的平方
   const bmi = weight / Math.pow(height / 100, 2);
@@ -3756,6 +4250,9 @@ document.getElementById('saveProfile').addEventListener('click', function () {
   currentGender = gender;
   applyGenderView();
 
+  // 营养目标与体重相关，档案变化后重新计算
+  refreshDietViews();
+
   closeProfile();
   showToast(gender === '男' ? '个人信息已保存，女性健康档案已隐藏' : '个人信息已保存');
 });
@@ -3766,9 +4263,7 @@ document.getElementById('saveProfile').addEventListener('click', function () {
 document.querySelectorAll('.meal input').forEach(function (input) {
   input.addEventListener('keydown', function (event) {
     if (event.key !== 'Enter') return;
-    const value = input.value.trim();
-    if (!value) return;
-    showToast('已记录' + input.dataset.meal + '：' + value);
+    recordMealEntry(input.dataset.meal, input.value);
     input.value = '';
   });
 });
@@ -3955,6 +4450,12 @@ document.getElementById('applyReport').addEventListener('click', function () {
   document.getElementById('bpValue').textContent = '112/72';
   document.getElementById('glucoseValue').textContent = '5.0';
 
+  // 体检同步的体重也进入趋势记录
+  addWeightRecord(64.8);
+  saveData('bp', { systolic: 112, diastolic: 72 });
+  saveData('glucose', 5.0);
+  refreshDietViews();
+
   const badge = document.getElementById('bmiBadge');
   badge.textContent = '正常';
   badge.className = 'badge';
@@ -3963,27 +4464,119 @@ document.getElementById('applyReport').addEventListener('click', function () {
 });
 
 /* ==========================================================
-   五、运动页：今日 / 本周 数据切换
+   五、运动页：目标与数据由用户填写，完成度自动计算
    ========================================================== */
-const exerciseData = {
-  today: { kcal: '320', steps: '6,540', minutes: '45', percent: 65 },
-  week:  { kcal: '2,240', steps: '45,870', minutes: '315', percent: 72 }
-};
+const sportState = loadData('sport', {
+  goal: { kcal: 500, steps: 8000, minutes: 60 },
+  history: {}
+});
 
 // 小圆环半径 18，周长 = 2πr ≈ 113.1
 const gaugeLength = 2 * Math.PI * 18;
 
+// 今日实际数据：按日期存在 history 里，换天自动从 0 开始
+function todaySport() {
+  return sportState.history[toISODate(new Date())] || { kcal: 0, steps: 0, minutes: 0 };
+}
+
+// 本周合计：从本周一到今天
+function weekSport() {
+  const today = new Date();
+  const monday = addDays(today, -((today.getDay() + 6) % 7));
+  const startStr = toISODate(monday);
+  const endStr = toISODate(today);
+  const total = { kcal: 0, steps: 0, minutes: 0 };
+
+  Object.keys(sportState.history).forEach(function (date) {
+    if (date >= startStr && date <= endStr) {
+      total.kcal += sportState.history[date].kcal || 0;
+      total.steps += sportState.history[date].steps || 0;
+      total.minutes += sportState.history[date].minutes || 0;
+    }
+  });
+  return total;
+}
+
+// 完成率 = 热量 50% + 步数 30% + 时长 20%，三项分别封顶 100%
+function sportPercent(actual, goal) {
+  function ratio(value, target) {
+    if (!target || target <= 0) return 0;
+    return Math.min(1, (value || 0) / target);
+  }
+  return Math.round((ratio(actual.kcal, goal.kcal) * 0.5 +
+    ratio(actual.steps, goal.steps) * 0.3 +
+    ratio(actual.minutes, goal.minutes) * 0.2) * 100);
+}
+
+function formatNumber(value) {
+  return Number(value || 0).toLocaleString('zh-CN');
+}
+
 function renderExercise(key) {
-  const data = exerciseData[key];
-  document.getElementById('exKcal').textContent = data.kcal;
-  document.getElementById('exSteps').textContent = data.steps;
-  document.getElementById('exMinutes').textContent = data.minutes;
-  document.getElementById('exPercent').textContent = data.percent + '%';
+  const isWeek = key === 'week';
+  const data = isWeek ? weekSport() : todaySport();
+
+  // 本周目标按已过天数折算，避免周初完成率永远很低
+  const elapsed = isWeek ? ((new Date().getDay() + 6) % 7) + 1 : 1;
+  const goal = {
+    kcal: sportState.goal.kcal * elapsed,
+    steps: sportState.goal.steps * elapsed,
+    minutes: sportState.goal.minutes * elapsed
+  };
+  const percent = sportPercent(data, goal);
+
+  document.getElementById('exKcal').textContent = formatNumber(data.kcal);
+  document.getElementById('exSteps').textContent = formatNumber(data.steps);
+  document.getElementById('exMinutes').textContent = formatNumber(data.minutes);
+  document.getElementById('exPercent').textContent = percent + '%';
 
   const arc = document.getElementById('exGaugeArc');
   // 通过虚线偏移量控制圆弧长度
-  arc.setAttribute('stroke-dashoffset', (gaugeLength * (1 - data.percent / 100)).toFixed(1));
+  arc.setAttribute('stroke-dashoffset', (gaugeLength * (1 - percent / 100)).toFixed(1));
 }
+
+// 把已保存的目标与实际数据回填到输入框
+function fillSportInputs() {
+  document.getElementById('goalKcal').value = sportState.goal.kcal;
+  document.getElementById('goalSteps').value = sportState.goal.steps;
+  document.getElementById('goalMinutes').value = sportState.goal.minutes;
+
+  const today = todaySport();
+  document.getElementById('todayKcal').value = today.kcal;
+  document.getElementById('todaySteps').value = today.steps;
+  document.getElementById('todayMinutes').value = today.minutes;
+}
+
+document.getElementById('saveSportData').addEventListener('click', function () {
+  const goal = {
+    kcal: parseInt(document.getElementById('goalKcal').value, 10),
+    steps: parseInt(document.getElementById('goalSteps').value, 10),
+    minutes: parseInt(document.getElementById('goalMinutes').value, 10)
+  };
+  const today = {
+    kcal: parseInt(document.getElementById('todayKcal').value, 10) || 0,
+    steps: parseInt(document.getElementById('todaySteps').value, 10) || 0,
+    minutes: parseInt(document.getElementById('todayMinutes').value, 10) || 0
+  };
+
+  if (!goal.kcal || !goal.steps || !goal.minutes ||
+      goal.kcal <= 0 || goal.steps <= 0 || goal.minutes <= 0) {
+    showToast('目标值需要大于 0');
+    return;
+  }
+  if (today.kcal < 0 || today.steps < 0 || today.minutes < 0) {
+    showToast('实际数据不能为负数');
+    return;
+  }
+
+  sportState.goal = goal;
+  sportState.history[toISODate(new Date())] = today;
+  saveData('sport', sportState);
+
+  const activeTab = document.querySelector('#sportTabs button.active');
+  renderExercise(activeTab ? activeTab.dataset.tab : 'today');
+  showToast('运动数据已保存，完成度已更新');
+});
 
 document.querySelectorAll('#sportTabs button').forEach(function (btn) {
   btn.addEventListener('click', function () {
@@ -4210,12 +4803,23 @@ document.getElementById('generatePlan').addEventListener('click', function () {
     const row = document.createElement('div');
     row.className = 'plan-day';
 
+    // 每天计划前的勾选框：完成后划线标记
+    const check = document.createElement('button');
+    check.type = 'button';
+    check.className = 'plan-check';
+    check.textContent = '✓';
+    check.title = '标记今天是否完成';
+    check.addEventListener('click', function () {
+      row.classList.toggle('done');
+    });
+
     const dayEl = document.createElement('span');
     dayEl.textContent = day;
 
     const activityEl = document.createElement('span');
     activityEl.textContent = slot === -1 ? '休息 / 轻松散步' : pool[slot % pool.length];
 
+    row.appendChild(check);
     row.appendChild(dayEl);
     row.appendChild(activityEl);
     weekEl.appendChild(row);
@@ -4224,6 +4828,10 @@ document.getElementById('generatePlan').addEventListener('click', function () {
   document.getElementById('beautyEmpty').hidden = true;
   document.getElementById('beautyResultBody').hidden = false;
   document.getElementById('beautyWeightNow').value = '';
+
+  // 生成计划后同步推荐饮食种类与体重曲线
+  renderBeautyDietTip(type);
+  renderWeightChart();
 
   updateBeautyProgress();
   showToast('已生成' + type + '计划');
@@ -4244,6 +4852,7 @@ document.getElementById('logBeautyWeight').addEventListener('click', function ()
 
   beautyState.currentWeight = value;
   document.getElementById('beautyCurrent').textContent = value.toFixed(1);
+  addWeightRecord(value);
   updateBeautyProgress();
   showToast('已记录当前体重：' + value.toFixed(1) + ' kg');
 });
@@ -4552,8 +5161,8 @@ let familyRecords = [
   }
 ];
 
-// 关怀提醒：默认给出「今天」与「三天后」两条示例
-let reminders = [
+// 关怀提醒：默认给出「今天」与「三天后」两条示例，之后读取本地保存的数据
+let reminders = loadData('reminders', [
   {
     id: 'r1',
     memberId: 'm1',
@@ -4568,7 +5177,7 @@ let reminders = [
     date: toISODate(addDays(todayDate, 3)),
     done: false
   }
-];
+]);
 
 function getMember(memberId) {
   return familyMembers.filter(function (member) {
@@ -4748,6 +5357,7 @@ function renderReminders() {
     check.title = reminder.done ? '标记为未完成' : '标记为已完成';
     check.addEventListener('click', function () {
       reminder.done = !reminder.done;
+      saveData('reminders', reminders);
       renderReminders();
       renderFamilyMembers();
       showToast(reminder.done ? '已完成这条关怀提醒' : '已恢复为待办');
@@ -4785,9 +5395,26 @@ function renderReminders() {
       badge.textContent = formatMD(target);
     }
 
+    // 删除这条提醒
+    const del = document.createElement('button');
+    del.type = 'button';
+    del.className = 'reminder-del';
+    del.textContent = '删除';
+    del.title = '删除这条关怀提醒';
+    del.addEventListener('click', function () {
+      const index = reminders.indexOf(reminder);
+      if (index === -1) return;
+      reminders.splice(index, 1);
+      saveData('reminders', reminders);
+      renderReminders();
+      renderFamilyMembers();
+      showToast('已删除这条关怀提醒');
+    });
+
     item.appendChild(check);
     item.appendChild(main);
     item.appendChild(badge);
+    item.appendChild(del);
     list.appendChild(item);
   });
 }
@@ -4978,6 +5605,7 @@ document.getElementById('reminderSave').addEventListener('click', function () {
     date: toISODate(date),
     done: false
   });
+  saveData('reminders', reminders);
 
   renderReminders();
   renderFamilyMembers();
@@ -4992,6 +5620,681 @@ renderMemberOptions();
 renderFamilyMembers();
 renderFamilyRecords();
 renderReminders();
+
+/* ==========================================================
+   六之三、本地数据层与新增功能
+   ========================================================== */
+
+// ---------- localStorage 读写 ----------
+function loadData(key, fallback) {
+  try {
+    const raw = window.localStorage.getItem('hm_' + key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch (error) {
+    return fallback;
+  }
+}
+
+function saveData(key, value) {
+  try {
+    window.localStorage.setItem('hm_' + key, JSON.stringify(value));
+  } catch (error) {
+    // 无痕模式等场景下写入失败，忽略即可
+  }
+}
+
+// ---------- 血压 / 血糖：用户可修改 ----------
+const bpEditBox = document.getElementById('bpEditBox');
+const glucoseEditBox = document.getElementById('glucoseEditBox');
+
+document.querySelectorAll('[data-edit]').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    if (btn.dataset.edit === 'bp') {
+      const parts = document.getElementById('bpValue').textContent.split('/');
+      document.getElementById('bpSystolic').value = parts[0] || '';
+      document.getElementById('bpDiastolic').value = parts[1] || '';
+      bpEditBox.hidden = false;
+    } else {
+      document.getElementById('glucoseInput').value = document.getElementById('glucoseValue').textContent;
+      glucoseEditBox.hidden = false;
+    }
+  });
+});
+
+document.querySelectorAll('[data-cancel]').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    if (btn.dataset.cancel === 'bp') bpEditBox.hidden = true;
+    else glucoseEditBox.hidden = true;
+  });
+});
+
+document.querySelectorAll('[data-save]').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    if (btn.dataset.save === 'bp') {
+      const systolic = parseInt(document.getElementById('bpSystolic').value, 10);
+      const diastolic = parseInt(document.getElementById('bpDiastolic').value, 10);
+
+      if (!systolic || !diastolic || systolic < 60 || systolic > 220 ||
+          diastolic < 40 || diastolic > 140 || diastolic >= systolic) {
+        showToast('请输入正确的血压，例如 110/70');
+        return;
+      }
+
+      document.getElementById('bpValue').textContent = systolic + '/' + diastolic;
+      saveData('bp', { systolic: systolic, diastolic: diastolic });
+      bpEditBox.hidden = true;
+      showToast('血压已更新为 ' + systolic + '/' + diastolic + ' mmHg');
+    } else {
+      const value = parseFloat(document.getElementById('glucoseInput').value);
+
+      if (!value || value < 1 || value > 30) {
+        showToast('请输入 1-30 之间的血糖值');
+        return;
+      }
+
+      document.getElementById('glucoseValue').textContent = value.toFixed(1);
+      saveData('glucose', value);
+      glucoseEditBox.hidden = true;
+      showToast('血糖已更新为 ' + value.toFixed(1) + ' mmol/L');
+    }
+  });
+});
+
+// 恢复上次保存的血压与血糖
+const savedBp = loadData('bp', null);
+if (savedBp && savedBp.systolic && savedBp.diastolic) {
+  document.getElementById('bpValue').textContent = savedBp.systolic + '/' + savedBp.diastolic;
+}
+const savedGlucose = loadData('glucose', null);
+if (savedGlucose) {
+  document.getElementById('glucoseValue').textContent = Number(savedGlucose).toFixed(1);
+}
+
+// ---------- 体重历史与趋势曲线 ----------
+const weightHistory = loadData('weightHistory', []);
+
+function addWeightRecord(weight) {
+  if (!weight || weight < 20 || weight > 200) return;
+
+  const date = toISODate(new Date());
+  const last = weightHistory[weightHistory.length - 1];
+
+  // 同一天只保留最后一次记录
+  if (last && last.date === date) last.weight = weight;
+  else weightHistory.push({ date: date, weight: weight });
+
+  while (weightHistory.length > 60) weightHistory.shift();
+  saveData('weightHistory', weightHistory);
+  renderWeightChart();
+}
+
+function renderWeightChart() {
+  const boxes = ['weightChart', 'weightChartData'].map(function (id) {
+    return document.getElementById(id);
+  }).filter(Boolean);
+  if (!boxes.length) return;
+
+  let html = '';
+
+  if (!weightHistory.length) {
+    html = '<div class="weight-chart-empty">在「科学变美 · 记录当前体重」中记录后，这里会画出体重变化曲线。</div>';
+  } else {
+    const data = weightHistory.slice(-14);
+    const latest = data[data.length - 1].weight;
+    const head = '<div class="weight-chart-head"><span>近 ' + data.length + ' 次体重记录</span><b>' +
+      latest.toFixed(1) + ' kg</b></div>';
+
+    if (data.length === 1) {
+      html = head + '<div class="weight-chart-empty">再记录一次体重，就能看到趋势曲线。</div>';
+    } else {
+      const width = 320;
+      const height = 140;
+      const left = 32;
+      const right = 12;
+      const top = 16;
+      const bottom = 26;
+      const plotW = width - left - right;
+      const plotH = height - top - bottom;
+
+      const weights = data.map(function (item) { return item.weight; });
+      const max = Math.max.apply(null, weights);
+      const min = Math.min.apply(null, weights);
+      const span = Math.max(1, max - min);
+
+      function xFor(index) {
+        return left + plotW * index / (data.length - 1);
+      }
+
+      function yFor(weight) {
+        return top + plotH * (1 - (weight - min) / span);
+      }
+
+      let svg = '<svg viewBox="0 0 ' + width + ' ' + height + '">';
+
+      // 最高 / 中间 / 最低三条参考线
+      [max, (max + min) / 2, min].forEach(function (value, index) {
+        const y = yFor(value).toFixed(1);
+        svg += '<line x1="' + left + '" y1="' + y + '" x2="' + (width - right) + '" y2="' + y +
+          '" stroke="#e9dfd2" stroke-width="1"' +
+          (index === 1 ? ' stroke-dasharray="3 3"' : '') + '/>';
+        svg += '<text x="4" y="' + (Number(y) + 3).toFixed(1) + '">' + value.toFixed(1) + '</text>';
+      });
+
+      const points = data.map(function (item, index) {
+        return xFor(index).toFixed(1) + ',' + yFor(item.weight).toFixed(1);
+      }).join(' ');
+
+      svg += '<polyline points="' + points + '" fill="none" stroke="#8b4a22" stroke-width="2" ' +
+        'stroke-linejoin="round" stroke-linecap="round"/>';
+
+      data.forEach(function (item, index) {
+        svg += '<circle cx="' + xFor(index).toFixed(1) + '" cy="' + yFor(item.weight).toFixed(1) +
+          '" r="3" fill="#fff" stroke="#8b4a22" stroke-width="1.6"/>';
+      });
+
+      svg += '<text x="' + left + '" y="' + (height - 6) + '">' + data[0].date.slice(5) + '</text>';
+      svg += '<text x="' + (width - right) + '" y="' + (height - 6) + '" text-anchor="end">' +
+        data[data.length - 1].date.slice(5) + '</text>';
+      svg += '</svg>';
+
+      html = head + svg;
+    }
+  }
+
+  boxes.forEach(function (box) {
+    box.innerHTML = html;
+  });
+}
+
+// ---------- 饮食：食物营养估算 ----------
+// 说明：按常见食物给出每人份的估算值，用户可直接输入食物名称记录
+const nutritionTable = [
+  { keys: ['米饭', '白饭'], name: '米饭 1碗', kcal: 230, protein: 4, carb: 50, fat: 1, fiber: 1 },
+  { keys: ['面条', '拉面', '意面', '米粉', '馄饨', '饺子'], name: '面食 1碗', kcal: 280, protein: 8, carb: 55, fat: 3, fiber: 2 },
+  { keys: ['鸡蛋', '水煮蛋', '煎蛋', '蛋花'], name: '鸡蛋 2个', kcal: 140, protein: 12, carb: 1, fat: 10, fiber: 0 },
+  { keys: ['牛奶', '酸奶'], name: '奶制品 250ml', kcal: 130, protein: 8, carb: 12, fat: 5, fiber: 0 },
+  { keys: ['鸡胸', '鸡肉', '瘦肉', '牛肉', '排骨'], name: '瘦肉 100g', kcal: 165, protein: 25, carb: 0, fat: 6, fiber: 0 },
+  { keys: ['鱼', '虾'], name: '鱼虾 100g', kcal: 120, protein: 20, carb: 0, fat: 4, fiber: 0 },
+  { keys: ['豆腐', '豆浆', '豆制品', '黄豆'], name: '豆制品 1份', kcal: 110, protein: 10, carb: 6, fat: 5, fiber: 2 },
+  { keys: ['蔬菜', '青菜', '西兰花', '菠菜', '沙拉', '生菜', '番茄', '黄瓜', '蘑菇'], name: '蔬菜 1份', kcal: 80, protein: 4, carb: 10, fat: 2, fiber: 5 },
+  { keys: ['水果', '苹果', '香蕉', '蓝莓', '橙', '葡萄', '西瓜'], name: '水果 1份', kcal: 90, protein: 1, carb: 22, fat: 1, fiber: 3 },
+  { keys: ['面包', '吐司'], name: '全麦面包 2片', kcal: 180, protein: 7, carb: 30, fat: 3, fiber: 4 },
+  { keys: ['燕麦', '粥'], name: '燕麦粥 1碗', kcal: 160, protein: 6, carb: 27, fat: 3, fiber: 4 },
+  { keys: ['坚果', '花生', '核桃'], name: '坚果 1小把', kcal: 180, protein: 5, carb: 6, fat: 15, fiber: 2 },
+  { keys: ['汉堡', '炸鸡', '薯条', '披萨'], name: '快餐 1份', kcal: 550, protein: 20, carb: 50, fat: 28, fiber: 3 },
+  { keys: ['奶茶', '可乐', '蛋糕', '甜品', '冰淇淋'], name: '含糖饮品 / 甜点', kcal: 300, protein: 3, carb: 45, fat: 10, fiber: 0 },
+  { keys: ['咖啡'], name: '咖啡 1杯', kcal: 20, protein: 1, carb: 3, fat: 0, fiber: 0 }
+];
+
+const defaultNutrition = { kcal: 150, protein: 6, carb: 20, fat: 5, fiber: 2 };
+
+// 根据输入文字匹配食物，未匹配到则按普通一餐估算
+function estimateNutrition(text) {
+  const result = { kcal: 0, protein: 0, carb: 0, fat: 0, fiber: 0 };
+  let matched = 0;
+
+  nutritionTable.forEach(function (food) {
+    const hit = food.keys.some(function (key) {
+      return text.indexOf(key) !== -1;
+    });
+    if (!hit) return;
+
+    result.kcal += food.kcal;
+    result.protein += food.protein;
+    result.carb += food.carb;
+    result.fat += food.fat;
+    result.fiber += food.fiber;
+    matched += 1;
+  });
+
+  if (!matched) {
+    result.kcal = defaultNutrition.kcal;
+    result.protein = defaultNutrition.protein;
+    result.carb = defaultNutrition.carb;
+    result.fat = defaultNutrition.fat;
+    result.fiber = defaultNutrition.fiber;
+  }
+  return result;
+}
+
+// ---------- 饮食记录（保留最近 30 天，支持两周对比） ----------
+let mealLog = loadData('mealLog', []);
+
+function recordMealEntry(meal, rawText) {
+  const text = (rawText || '').trim();
+  if (!text) return;
+
+  const nutrition = estimateNutrition(text);
+  mealLog.push({
+    date: toISODate(new Date()),
+    meal: meal,
+    text: text,
+    kcal: nutrition.kcal,
+    protein: nutrition.protein,
+    carb: nutrition.carb,
+    fat: nutrition.fat,
+    fiber: nutrition.fiber
+  });
+
+  // 只保留最近 30 天，避免数据无限增长
+  const cutoff = toISODate(addDays(new Date(), -30));
+  mealLog = mealLog.filter(function (item) {
+    return item.date >= cutoff;
+  });
+  saveData('mealLog', mealLog);
+
+  renderMealLog();
+  refreshDietViews();
+  showToast('已记录' + meal + '：' + text);
+}
+
+function renderMealLog() {
+  const box = document.getElementById('mealLog');
+  if (!box) return;
+  box.innerHTML = '';
+
+  const today = toISODate(new Date());
+  const items = mealLog.filter(function (item) { return item.date === today; });
+
+  if (!items.length) {
+    box.innerHTML = '<div class="meal-log-empty">今天还没有记录，在上面的早餐 / 午餐 / 晚餐输入框输入食物后按回车即可添加。</div>';
+    return;
+  }
+
+  items.forEach(function (item) {
+    const chip = document.createElement('span');
+    chip.className = 'meal-log-item';
+    chip.textContent = item.meal + ' · ' + item.text + '（约 ' + Math.round(item.kcal) + ' kcal）';
+
+    const del = document.createElement('button');
+    del.type = 'button';
+    del.textContent = '×';
+    del.title = '删除这条记录';
+    del.addEventListener('click', function () {
+      const index = mealLog.indexOf(item);
+      if (index === -1) return;
+      mealLog.splice(index, 1);
+      saveData('mealLog', mealLog);
+      renderMealLog();
+      refreshDietViews();
+      showToast('已删除这条饮食记录');
+    });
+
+    chip.appendChild(del);
+    box.appendChild(chip);
+  });
+}
+
+// 按个人资料计算每日营养目标（Mifflin-St Jeor，年龄按 22 岁估算）
+function getNutritionTargets() {
+  const weight = parseFloat(document.getElementById('pWeight').value) || 65;
+  const height = parseFloat(document.getElementById('pHeight').value) || 165;
+  const gender = document.getElementById('pGender').value || '女';
+
+  const bmr = gender === '男'
+    ? 10 * weight + 6.25 * height - 5 * 22 + 5
+    : 10 * weight + 6.25 * height - 5 * 22 - 161;
+  const kcal = Math.round(bmr * 1.3 / 10) * 10;
+
+  return {
+    kcal: kcal,
+    protein: Math.round(weight * 1.2),
+    carb: Math.round(kcal * 0.5 / 4),
+    fat: Math.round(weight * 0.8),
+    fiber: 25
+  };
+}
+
+// 统计某个日期区间的营养合计与记录天数
+function dateRangeSum(startStr, endStr) {
+  const total = { kcal: 0, protein: 0, carb: 0, fat: 0, fiber: 0 };
+  const days = {};
+
+  mealLog.forEach(function (item) {
+    if (item.date < startStr || item.date > endStr) return;
+    total.kcal += item.kcal;
+    total.protein += item.protein;
+    total.carb += item.carb;
+    total.fat += item.fat;
+    total.fiber += item.fiber;
+    days[item.date] = true;
+  });
+
+  return { total: total, days: Object.keys(days).length };
+}
+
+function renderNutrition() {
+  const targets = getNutritionTargets();
+  const today = toISODate(new Date());
+  const eaten = dateRangeSum(today, today).total;
+
+  document.getElementById('macroProtein').textContent = Math.round(eaten.protein) + '/' + targets.protein + 'g';
+  document.getElementById('macroCarb').textContent = Math.round(eaten.carb) + '/' + targets.carb + 'g';
+  document.getElementById('macroFiber').textContent = Math.round(eaten.fiber) + '/' + targets.fiber + 'g';
+  document.getElementById('macroFat').textContent = Math.round(eaten.fat) + '/' + targets.fat + 'g';
+  document.getElementById('macroKcal').textContent = Math.round(eaten.kcal) + '/' + targets.kcal + 'k';
+
+  const rows = [
+    { label: '蛋白质', value: eaten.protein, target: targets.protein, unit: 'g' },
+    { label: '碳水化合物', value: eaten.carb, target: targets.carb, unit: 'g' },
+    { label: '膳食纤维', value: eaten.fiber, target: targets.fiber, unit: 'g' },
+    { label: '脂肪', value: eaten.fat, target: targets.fat, unit: 'g' },
+    { label: '总热量', value: eaten.kcal, target: targets.kcal, unit: 'kcal' }
+  ];
+
+  const box = document.getElementById('nutriList');
+  box.innerHTML = '';
+
+  rows.forEach(function (row) {
+    const percent = row.target ? Math.min(100, row.value / row.target * 100) : 0;
+    const item = document.createElement('div');
+    item.innerHTML =
+      '<div class="nutri-head"><span>' + row.label + '</span><span><b>' +
+      Math.round(row.value) + '</b> / ' + row.target + ' ' + row.unit + '</span></div>' +
+      '<div class="nutri-bar' + (percent >= 100 ? ' over' : '') +
+      '"><i style="width:' + percent.toFixed(1) + '%"></i></div>';
+    box.appendChild(item);
+  });
+}
+
+// 蛋白质达标天数（达到目标的 80%）
+function countProteinDays(startStr, endStr, target) {
+  const byDate = {};
+
+  mealLog.forEach(function (item) {
+    if (item.date < startStr || item.date > endStr) return;
+    byDate[item.date] = (byDate[item.date] || 0) + item.protein;
+  });
+
+  return Object.keys(byDate).filter(function (date) {
+    return byDate[date] >= target * 0.8;
+  }).length;
+}
+
+// 蔬果记录次数
+function countVegFruit(startStr, endStr) {
+  const keys = ['蔬菜', '青菜', '西兰花', '菠菜', '沙拉', '生菜', '水果', '苹果', '香蕉', '蓝莓', '橙'];
+  return mealLog.filter(function (item) {
+    if (item.date < startStr || item.date > endStr) return false;
+    return keys.some(function (key) { return item.text.indexOf(key) !== -1; });
+  }).length;
+}
+
+// 本周 vs 上周对比
+function renderWeekCompare() {
+  const box = document.getElementById('weekCompare');
+  if (!box) return;
+
+  const today = new Date();
+  const todayStr = toISODate(today);
+  const thisStart = toISODate(addDays(today, -6));
+  const lastEnd = toISODate(addDays(today, -7));
+  const lastStart = toISODate(addDays(today, -13));
+
+  const current = dateRangeSum(thisStart, todayStr);
+  const previous = dateRangeSum(lastStart, lastEnd);
+  const targets = getNutritionTargets();
+
+  const curAvgKcal = current.days ? current.total.kcal / current.days : 0;
+  const prevAvgKcal = previous.days ? previous.total.kcal / previous.days : 0;
+  const curAvgProtein = current.days ? current.total.protein / current.days : 0;
+  const prevAvgProtein = previous.days ? previous.total.protein / previous.days : 0;
+  const curHit = countProteinDays(thisStart, todayStr, targets.protein);
+  const prevHit = countProteinDays(lastStart, lastEnd, targets.protein);
+  const curVeg = countVegFruit(thisStart, todayStr);
+  const prevVeg = countVegFruit(lastStart, lastEnd);
+
+  function diffCell(value, unit) {
+    if (!value) return '<td>持平</td>';
+    const cls = value > 0 ? 'up' : 'down';
+    const sign = value > 0 ? '+' : '';
+    return '<td class="' + cls + '">' + sign + Math.round(value) + ' ' + unit + '</td>';
+  }
+
+  let html = '<table><thead><tr><th>指标</th><th>本周</th><th>上周</th><th>变化</th></tr></thead><tbody>';
+  html += '<tr><td>平均每日热量</td><td>' + Math.round(curAvgKcal) + ' kcal</td><td>' +
+    Math.round(prevAvgKcal) + ' kcal</td>' + diffCell(curAvgKcal - prevAvgKcal, 'kcal') + '</tr>';
+  html += '<tr><td>平均每日蛋白质</td><td>' + Math.round(curAvgProtein) + ' g</td><td>' +
+    Math.round(prevAvgProtein) + ' g</td>' + diffCell(curAvgProtein - prevAvgProtein, 'g') + '</tr>';
+  html += '<tr><td>蛋白质达标天数</td><td>' + curHit + ' 天</td><td>' + prevHit + ' 天</td>' +
+    diffCell(curHit - prevHit, '天') + '</tr>';
+  html += '<tr><td>蔬果记录次数</td><td>' + curVeg + ' 次</td><td>' + prevVeg + ' 次</td>' +
+    diffCell(curVeg - prevVeg, '次') + '</tr>';
+  html += '<tr><td>有记录天数</td><td>' + current.days + ' 天</td><td>' + previous.days + ' 天</td>' +
+    diffCell(current.days - previous.days, '天') + '</tr>';
+  html += '</tbody></table>';
+
+  // 近 7 天热量柱状图
+  const days = [];
+  for (let offset = 6; offset >= 0; offset--) {
+    const day = addDays(today, -offset);
+    const key = toISODate(day);
+    days.push({
+      label: (day.getMonth() + 1) + '/' + day.getDate(),
+      kcal: dateRangeSum(key, key).total.kcal
+    });
+  }
+
+  const maxKcal = Math.max.apply(null, days.map(function (day) {
+    return day.kcal;
+  }).concat([targets.kcal, 1]));
+
+  html += '<div class="mini-bars">';
+  days.forEach(function (day) {
+    const height = day.kcal ? Math.max(4, Math.round(day.kcal / maxKcal * 64)) : 4;
+    html += '<div class="mini-bar"><em>' + (day.kcal ? Math.round(day.kcal) : '') +
+      '</em><i style="height:' + height + 'px"></i><span>' + day.label + '</span></div>';
+  });
+  html += '</div>';
+
+  box.innerHTML = html;
+}
+
+// 根据今日摄入自动生成建议
+function buildDietAdvice() {
+  const targets = getNutritionTargets();
+  const today = toISODate(new Date());
+  const eaten = dateRangeSum(today, today);
+
+  if (!eaten.days) {
+    return '今天还没有饮食记录。输入早餐、午餐或晚餐后按回车，系统会自动估算营养并给出建议。';
+  }
+
+  const tips = [];
+  if (eaten.total.protein < targets.protein * 0.8) {
+    tips.push('蛋白质还差约 ' + Math.round(targets.protein - eaten.total.protein) +
+      'g，晚餐可以加一份鸡胸肉、鱼虾或豆腐。');
+  }
+  if (eaten.total.fiber < targets.fiber * 0.6) {
+    tips.push('膳食纤维不足，建议再增加两份深色蔬菜和一份水果。');
+  }
+  if (eaten.total.kcal > targets.kcal * 1.15) {
+    tips.push('今日热量已超出目标约 ' + Math.round(eaten.total.kcal - targets.kcal) +
+      ' kcal，晚餐尽量清淡，少油少糖。');
+  }
+  if (eaten.total.carb < targets.carb * 0.6) {
+    tips.push('碳水偏少可能影响精力，主食可以选择糙米、燕麦或红薯。');
+  }
+  if (!tips.length) {
+    tips.push('今天的营养搭配比较均衡，注意多喝水、规律作息，继续保持。');
+  }
+  return tips.join('');
+}
+
+function refreshDietViews() {
+  renderNutrition();
+  renderWeekCompare();
+  document.getElementById('dietTipText').textContent = buildDietAdvice();
+}
+
+// ---------- 科学变美：按计划类型推荐饮食种类 ----------
+const beautyDietTips = {
+  '健身减脂': [
+    '优质蛋白：鸡胸肉、鱼虾、鸡蛋、无糖酸奶、豆腐，每餐一掌心',
+    '复合碳水：糙米、燕麦、玉米、红薯，每餐一拳大小',
+    '高纤维蔬菜：西兰花、菠菜、生菜、彩椒，每餐两拳',
+    '低糖水果：苹果、蓝莓、猕猴桃，每日 200-350g',
+    '少油少糖：以蒸煮为主，减少奶茶、油炸食品和夜宵'
+  ],
+  '增肌塑形': [
+    '蛋白质加量：每日约 1.5-1.8g/kg 体重，分 4-5 餐摄入',
+    '训练后 30 分钟内补充：乳清蛋白或牛奶 + 香蕉',
+    '主食充足：燕麦、米饭、全麦面包，保证训练能量',
+    '健康脂肪：坚果、牛油果、深海鱼',
+    '补钙与维生素 D：牛奶、酸奶、蛋黄、深绿叶菜'
+  ],
+  '体态改善': [
+    '足量蛋白：鸡蛋、豆制品、鱼肉，维持肌肉量',
+    '钙 + 维生素 D：牛奶 300ml/天、豆制品、深绿叶菜',
+    '抗氧化蔬果：番茄、彩椒、蓝莓、橙子',
+    '少盐少钠：减少腌制食品，帮助减轻水肿',
+    '规律三餐，避免长时间空腹或暴饮暴食'
+  ]
+};
+
+function renderBeautyDietTip(type) {
+  const box = document.getElementById('beautyDietTip');
+  if (!box) return;
+
+  const tips = beautyDietTips[type] || beautyDietTips['健身减脂'];
+  box.innerHTML = '<b>推荐饮食种类 · ' + type + '</b><ul>' +
+    tips.map(function (tip) { return '<li>' + tip + '</li>'; }).join('') + '</ul>';
+  box.hidden = false;
+}
+
+// ---------- 每日心情与小贴士 ----------
+const moodTips = {
+  '开心': '好心情值得被记住：把让你开心的事写下来，低落时回看会很有力量。也别忘了保持规律作息和运动，让好状态延续。',
+  '平静': '平稳的一天适合做长期有益的事：散步 20 分钟、拉伸肩颈，或者比平时提前半小时入睡。',
+  '疲惫': '身体在提醒你需要恢复。今晚尽量提前 30 分钟休息，睡前少看手机；明天把剧烈运动换成散步或拉伸。',
+  '焦虑': '试试 4-7-8 呼吸法：吸气 4 秒、屏息 7 秒、呼气 8 秒，重复 4 轮。把担心的事写成清单，只处理今天能做的第一件。',
+  '低落': '允许自己慢下来，先做一件很小的事（喝水、洗脸、出门走 5 分钟）。如果低落持续两周以上，建议寻求专业心理支持。'
+};
+
+let currentMood = '';
+
+document.querySelectorAll('#moodPicker .mood-opt').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    currentMood = btn.dataset.mood;
+    document.querySelectorAll('#moodPicker .mood-opt').forEach(function (item) {
+      item.classList.toggle('selected', item === btn);
+    });
+    document.getElementById('moodTip').textContent = moodTips[currentMood];
+  });
+});
+
+document.getElementById('saveMood').addEventListener('click', function () {
+  if (!currentMood) {
+    showToast('请先选择今天的心情');
+    return;
+  }
+
+  const log = loadData('moodLog', {});
+  log[toISODate(new Date())] = {
+    mood: currentMood,
+    note: document.getElementById('moodNote').value.trim()
+  };
+  saveData('moodLog', log);
+  document.getElementById('moodTip').textContent = moodTips[currentMood];
+  showToast('今日心情已保存：' + currentMood);
+});
+
+// 回显今天已保存的心情
+const savedMood = loadData('moodLog', {})[toISODate(new Date())];
+if (savedMood) {
+  currentMood = savedMood.mood;
+  document.getElementById('moodNote').value = savedMood.note || '';
+  const moodBtn = document.querySelector('#moodPicker .mood-opt[data-mood="' + savedMood.mood + '"]');
+  if (moodBtn) moodBtn.classList.add('selected');
+  document.getElementById('moodTip').textContent = moodTips[savedMood.mood] || '';
+}
+
+// ---------- 科普资讯：点击卡片查看正文 ----------
+const newsArticles = {
+  diet: {
+    title: '如何科学搭配三餐饮食？',
+    html: '<p>《中国居民膳食指南》建议，每天的食物应尽量覆盖谷薯类、蔬菜水果、畜禽鱼蛋奶和豆类四大类，平均每天摄入 12 种以上食物，每周 25 种以上。</p>' +
+      '<h4>一、三餐怎么分配</h4>' +
+      '<p>早餐占全天能量的 25%-30%，午餐 30%-40%，晚餐 30%-35%。早餐建议包含主食 + 蛋白质 + 蔬果，例如燕麦牛奶配一个鸡蛋和半个苹果。</p>' +
+      '<h4>二、餐盘比例</h4>' +
+      '<ul><li>一半是蔬菜和水果，深色蔬菜应占蔬菜总量的一半</li>' +
+      '<li>四分之一是主食，优先选择全谷物、杂豆和薯类</li>' +
+      '<li>四分之一是优质蛋白，鱼、禽、蛋、瘦肉、豆制品轮换</li></ul>' +
+      '<h4>三、几个容易忽略的细节</h4>' +
+      '<p>每天食盐不超过 5g，烹调油 25-30g，添加糖最好控制在 25g 以内。喝水 1500-1700ml，少喝含糖饮料。进食顺序上先吃蔬菜、再吃蛋白质、最后吃主食，有助于平稳餐后血糖。</p>' +
+      '<p class="note">以上为一般人群的健康建议。若有慢性疾病或特殊饮食需求，请遵医嘱或咨询注册营养师。</p>'
+  },
+  stretch: {
+    title: '久坐族的5分钟拉伸指南',
+    html: '<p>连续久坐超过 60 分钟，肩颈和腰背的肌肉会持续处于紧张状态。每坐 45-60 分钟起身活动 3-5 分钟，比一次性长时间拉伸更有效。</p>' +
+      '<h4>动作一：颈部侧屈（每侧 20 秒）</h4>' +
+      '<p>坐直，右手轻扶头部左侧，缓慢向右侧倾斜，感受左侧颈部拉伸，不要耸肩，保持均匀呼吸后换另一侧。</p>' +
+      '<h4>动作二：肩胛后缩（15 次）</h4>' +
+      '<p>双臂自然下垂，肩胛骨向后向下收紧，像把两侧肩胛骨夹在一起，保持 2 秒再放松，可改善圆肩驼背。</p>' +
+      '<h4>动作三：胸椎伸展（10 次）</h4>' +
+      '<p>双手交叉抱头，手肘打开，缓慢向后仰 10-15 度，感受胸椎伸展，避免腰部代偿。</p>' +
+      '<h4>动作四：站立体前屈（30 秒）</h4>' +
+      '<p>双脚与髋同宽，膝盖微屈，身体缓慢前屈，双手自然下垂，放松腰背。起身时要慢，避免头晕。</p>' +
+      '<p class="note">拉伸以轻微牵拉感为宜，出现明显疼痛应立即停止。有颈椎、腰椎疾病者请先咨询医生。</p>'
+  },
+  sleep: {
+    title: '为什么你总是睡不够？',
+    html: '<p>成年人建议每晚睡 7-9 小时，但“睡够时长”并不等于“睡得好”。一整夜会经历 4-6 个睡眠周期，每个周期包含浅睡、深睡和快速眼动睡眠。</p>' +
+      '<h4>深睡决定恢复质量</h4>' +
+      '<p>深睡阶段身体修复组织、分泌生长激素、巩固免疫记忆。频繁被打断、睡前饮酒、卧室过亮或过热，都会压缩深睡时间。</p>' +
+      '<h4>四个可执行的改善方法</h4>' +
+      '<ul><li>固定起床时间，比固定入睡时间更容易坚持</li>' +
+      '<li>睡前一小时调暗灯光，减少手机等强光刺激</li>' +
+      '<li>卧室温度保持在 18-22℃，保持安静与遮光</li>' +
+      '<li>下午三点后避免咖啡、浓茶，睡前避免大量进食和饮酒</li></ul>' +
+      '<h4>什么时候需要就医</h4>' +
+      '<p>如果每周至少 3 晚入睡困难或早醒，持续 3 个月以上，或伴随明显打鼾、呼吸暂停、白天嗜睡，建议到睡眠专科就诊。</p>' +
+      '<p class="note">本页内容为健康科普，不能替代医生的诊断与治疗。</p>'
+  },
+  bp: {
+    title: '血压血糖，家庭自测怎么做才准？',
+    html: '<p>家庭自测能反映日常状态，比诊室单次测量更有参考价值。建议固定在早晨起床后 1 小时内、排尿后、早餐和服药前测量。</p>' +
+      '<h4>测血压的四个要点</h4>' +
+      '<ul><li>测量前安静坐 5 分钟，不说话、不翘腿</li>' +
+      '<li>袖带与心脏同高，手臂平放在桌面上</li>' +
+      '<li>每次测 2-3 遍，间隔 1 分钟，取平均值</li>' +
+      '<li>连续记录 7 天，去掉第一天，取后 6 天平均值</li></ul>' +
+      '<p>家庭血压一般以低于 135/85 mmHg 为参考标准，具体目标应遵医嘱。</p>' +
+      '<h4>测血糖的注意事项</h4>' +
+      '<p>空腹血糖需空腹 8-10 小时；餐后 2 小时血糖从吃第一口饭开始计时。采血前用温水洗手并擦干，不要用力挤压指尖，以免组织液稀释血液影响结果。</p>' +
+      '<h4>记录比单次数值更重要</h4>' +
+      '<p>把日期、时间、数值和当时的状态（是否运动、是否服药）一起记录，复诊时医生才能判断趋势。若出现血压持续高于 180/110 mmHg，或血糖低于 3.9 mmol/L 伴心慌出汗，应及时就医。</p>' +
+      '<p class="note">以上为健康科普内容，用药与治疗请遵循医生意见。</p>'
+  }
+};
+
+const newsMask = document.getElementById('newsMask');
+
+document.querySelectorAll('.news-card').forEach(function (card) {
+  card.addEventListener('click', function () {
+    const article = newsArticles[card.dataset.article];
+    if (!article) return;
+
+    document.getElementById('newsTitle').textContent = article.title;
+    document.getElementById('newsBody').innerHTML = article.html;
+    openMask(newsMask);
+  });
+});
+
+document.getElementById('newsClose').addEventListener('click', function () {
+  closeMask(newsMask);
+});
+
+newsMask.addEventListener('click', function (event) {
+  if (event.target === newsMask) closeMask(newsMask);
+});
+
+// ---------- 新功能初始化 ----------
+renderMealLog();
+refreshDietViews();
+fillSportInputs();
+renderExercise('today');
+renderWeightChart();
 
 /* ==========================================================
    七、AI 健康小管家聊天
@@ -5111,6 +6414,7 @@ document.addEventListener('keydown', function (event) {
   closeMask(memberMask);
   closeMask(reminderMask);
   closeMask(sportMask);
+  closeMask(newsMask);
   closeTagMenus();
 });
 </script>
