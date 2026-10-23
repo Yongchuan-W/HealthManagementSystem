@@ -2840,9 +2840,75 @@ body { color: var(--text); }
 
 .reminder-del:hover { color: #b0402f; }
 
+/* 顶部三项评分：综合 / 饮食 / 运动，随数据自动更新 */
+.score-group {
+  display: flex;
+  gap: 16px;
+  margin-top: 22px;
+}
+
+.score-group .score {
+  flex: 1;
+  margin-top: 0;
+  max-width: none;
+}
+
+.score-group .score .row b { font-weight: 700; }
+.score-group .bar i { width: 0; }
+
+/* 科普资讯搜索 */
+.news-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.news-search {
+  flex: 1;
+  min-width: 200px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 14px;
+  background: #fff;
+  border: 1px solid #e6dbcd;
+  border-radius: 12px;
+}
+
+.news-search .icon {
+  width: 16px;
+  height: 16px;
+  color: #a08d7d;
+  flex: none;
+}
+
+.news-search input {
+  flex: 1;
+  border: 0;
+  outline: none;
+  background: transparent;
+  font-size: 13px;
+  color: #4a3525;
+}
+
+.news-count { font-size: 12px; color: #8b7d70; }
+
+.news-empty {
+  font-size: 13px;
+  color: #a08d7d;
+  text-align: center;
+  padding: 40px 0;
+  background: #fff;
+  border-radius: 14px;
+}
+
 @media (max-width: 700px) {
   .sport-inputs { grid-template-columns: 1fr; }
   .plan-day { grid-template-columns: 22px 36px 1fr; }
+  .score-group { flex-direction: column; gap: 10px; }
 }
 </style>
 </head>
@@ -2877,6 +2943,7 @@ body { color: var(--text); }
   <symbol id="i-smile" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></symbol>
   <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-3.9-.9L3 21l1.9-5a8.4 8.4 0 0 1-.9-3.9 8.4 8.4 0 0 1 8.4-8.4 8.4 8.4 0 0 1 8.6 8.3z"/><line x1="8" y1="12" x2="8.01" y2="12"/><line x1="12" y1="12" x2="12.01" y2="12"/><line x1="16" y1="12" x2="16.01" y2="12"/></symbol>
   <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></symbol>
   <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></symbol>
   <symbol id="i-ball" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.2l3 2.2-1.1 3.4h-3.8L9 9.4l3-2.2z"/><path d="M12 3.2v4M4.3 9.6l4.7 1.6M19.7 9.6L15 11.2M7.2 20.1l2-4.3M16.8 20.1l-2-4.3"/></symbol>
   <symbol id="i-bike" viewBox="0 0 24 24"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M5.5 17.5h5l3-7h-3M14.5 17.5l-2-7M12 7h3M15 6l3.5 11.5"/></symbol>
@@ -3101,9 +3168,19 @@ body { color: var(--text); }
   <section class="hero">
     <h1>科学管理健康</h1>
     <p>遇见更好的自己</p>
-    <div class="score">
-      <div class="row"><span>综合健康评分</span><span>85/100</span></div>
-      <div class="bar"><i></i></div>
+    <div class="score-group">
+      <div class="score">
+        <div class="row"><span>综合健康评分</span><span><b id="scoreTotal">0</b>/100</span></div>
+        <div class="bar"><i id="scoreTotalBar"></i></div>
+      </div>
+      <div class="score">
+        <div class="row"><span>饮食健康评分</span><span><b id="scoreDiet">0</b>/100</span></div>
+        <div class="bar"><i id="scoreDietBar"></i></div>
+      </div>
+      <div class="score">
+        <div class="row"><span>运动完成评分</span><span><b id="scoreSport">0</b>/100</span></div>
+        <div class="bar"><i id="scoreSportBar"></i></div>
+      </div>
     </div>
   </section>
 
@@ -3181,16 +3258,16 @@ body { color: var(--text); }
                 </linearGradient>
               </defs>
               <circle cx="60" cy="60" r="52" fill="none" stroke="#eef1f5" stroke-width="10"/>
-              <!-- 周长 ≈ 326.7，85% 对应的偏移量 ≈ 49 -->
+              <!-- 周长 ≈ 326.7，偏移量由综合评分动态计算 -->
               <circle cx="60" cy="60" r="52" fill="none" stroke="url(#ringGrad)" stroke-width="10"
-                      stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="49"/>
+                      stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="326.7" id="ringArc"/>
             </svg>
             <div class="center">
-              <div class="num">85%</div>
+              <div class="num" id="ringScore">0%</div>
               <div class="txt">综合健康度</div>
             </div>
           </div>
-          <div class="ring-note">较上月提升 2%</div>
+          <div class="ring-note">根据饮食、运动与体重实时更新</div>
         </div>
       </div>
 
@@ -3666,6 +3743,16 @@ body { color: var(--text); }
          页面五：科普资讯
          ==================================================== -->
     <section class="page" id="page-news">
+      <!-- 资讯搜索：按标题、摘要和正文关键词过滤 -->
+      <div class="news-toolbar">
+        <label class="news-search">
+          <svg class="icon"><use href="#i-search"/></svg>
+          <input id="newsSearch" type="search" placeholder="搜索科普内容，例如：睡眠、血压、拉伸、蛋白质">
+        </label>
+        <span class="news-count" id="newsCount"></span>
+      </div>
+      <div class="news-empty" id="newsEmpty" hidden>没有找到相关内容，换个关键词试试。</div>
+
       <div class="news-grid">
         <article class="news-card" data-article="diet">
           <div class="news-img green"><svg class="icon"><use href="#i-fork"/></svg></div>
@@ -4575,6 +4662,8 @@ document.getElementById('saveSportData').addEventListener('click', function () {
 
   const activeTab = document.querySelector('#sportTabs button.active');
   renderExercise(activeTab ? activeTab.dataset.tab : 'today');
+  // 运动量变化会改变活动系数与运动评分
+  refreshDietViews();
   showToast('运动数据已保存，完成度已更新');
 });
 
@@ -5726,6 +5815,9 @@ function addWeightRecord(weight) {
   while (weightHistory.length > 60) weightHistory.shift();
   saveData('weightHistory', weightHistory);
   renderWeightChart();
+
+  // 体重变化后重新计算营养目标与评分
+  refreshDietViews();
 }
 
 function renderWeightChart() {
@@ -5925,24 +6017,123 @@ function renderMealLog() {
   });
 }
 
-// 按个人资料计算每日营养目标（Mifflin-St Jeor，年龄按 22 岁估算）
+// 当前体重：优先取最近一次体重记录，其次取个人档案
+function getCurrentWeight() {
+  if (weightHistory.length) {
+    return weightHistory[weightHistory.length - 1].weight;
+  }
+  return parseFloat(document.getElementById('pWeight').value) || 65;
+}
+
+// 活动系数：根据本周已填写的运动时长自动调整热量与蛋白质目标
+function getActivityFactor() {
+  const elapsed = ((new Date().getDay() + 6) % 7) + 1;
+  const avgMinutes = (weekSport().minutes || 0) / elapsed;
+
+  if (avgMinutes >= 60) return { factor: 1.55, proteinPerKg: 1.5 };
+  if (avgMinutes >= 30) return { factor: 1.4, proteinPerKg: 1.35 };
+  if (avgMinutes > 0) return { factor: 1.3, proteinPerKg: 1.25 };
+  return { factor: 1.25, proteinPerKg: 1.2 };
+}
+
+// 按个人资料 + 体重变化 + 运动量计算每日营养目标（Mifflin-St Jeor，年龄按 22 岁估算）
 function getNutritionTargets() {
-  const weight = parseFloat(document.getElementById('pWeight').value) || 65;
+  const weight = getCurrentWeight();
   const height = parseFloat(document.getElementById('pHeight').value) || 165;
   const gender = document.getElementById('pGender').value || '女';
+  const activity = getActivityFactor();
 
   const bmr = gender === '男'
     ? 10 * weight + 6.25 * height - 5 * 22 + 5
     : 10 * weight + 6.25 * height - 5 * 22 - 161;
-  const kcal = Math.round(bmr * 1.3 / 10) * 10;
+  const kcal = Math.round(bmr * activity.factor / 10) * 10;
 
   return {
     kcal: kcal,
-    protein: Math.round(weight * 1.2),
+    protein: Math.round(weight * activity.proteinPerKg),
     carb: Math.round(kcal * 0.5 / 4),
     fat: Math.round(weight * 0.8),
     fiber: 25
   };
+}
+
+/* ---------- 顶部三项评分：随饮食、运动、体重数据自动更新 ---------- */
+// 单项达成度：落在目标的 80%-120% 记满分，偏离越多扣分越多
+function ratioScore(value, target) {
+  if (!target) return 0;
+  const ratio = value / target;
+
+  if (ratio >= 0.8 && ratio <= 1.2) return 100;
+  if (ratio < 0.8) return Math.max(0, ratio / 0.8 * 100);
+  return Math.max(0, 100 - (ratio - 1.2) * 150);
+}
+
+// 饮食评分：取近 7 天有记录日期的平均达成度，没有记录则为 0
+function computeDietScore() {
+  const targets = getNutritionTargets();
+  const today = new Date();
+  let sum = 0;
+  let days = 0;
+
+  for (let offset = 0; offset < 7; offset++) {
+    const key = toISODate(addDays(today, -offset));
+    const day = dateRangeSum(key, key);
+    if (!day.days) continue;
+
+    sum += (ratioScore(day.total.protein, targets.protein) +
+      ratioScore(day.total.carb, targets.carb) +
+      ratioScore(day.total.fiber, targets.fiber) +
+      ratioScore(day.total.fat, targets.fat) +
+      ratioScore(day.total.kcal, targets.kcal)) / 5;
+    days += 1;
+  }
+
+  return days ? Math.round(sum / days) : 0;
+}
+
+// 运动评分：今日目标完成率
+function computeSportScore() {
+  return sportPercent(todaySport(), sportState.goal);
+}
+
+// BMI 评分：正常区间满分，偏瘦 / 超重按程度扣分
+function computeBmiScore() {
+  const height = (parseFloat(document.getElementById('pHeight').value) || 165) / 100;
+  const bmi = getCurrentWeight() / (height * height);
+
+  if (bmi >= 18.5 && bmi < 24) return 100;
+  if (bmi >= 24 && bmi < 28) return 80;
+  if (bmi >= 17 && bmi < 18.5) return 75;
+  return 60;
+}
+
+function setScore(id, value) {
+  const num = Math.max(0, Math.min(100, Math.round(value)));
+  const textEl = document.getElementById(id);
+  const barEl = document.getElementById(id + 'Bar');
+  if (textEl) textEl.textContent = num;
+  if (barEl) barEl.style.width = num + '%';
+}
+
+function updateScores() {
+  const diet = computeDietScore();
+  const sport = computeSportScore();
+  const bmi = computeBmiScore();
+  const total = diet * 0.4 + sport * 0.4 + bmi * 0.2;
+
+  setScore('scoreDiet', diet);
+  setScore('scoreSport', sport);
+  setScore('scoreTotal', total);
+
+  // 核心体征右侧环形评分同步
+  const ringScore = document.getElementById('ringScore');
+  const ringArc = document.getElementById('ringArc');
+  if (ringScore) ringScore.textContent = Math.round(total) + '%';
+  if (ringArc) {
+    const circumference = 2 * Math.PI * 52;
+    ringArc.setAttribute('stroke-dashoffset',
+      (circumference * (1 - total / 100)).toFixed(1));
+  }
 }
 
 // 统计某个日期区间的营养合计与记录天数
@@ -6125,6 +6316,8 @@ function refreshDietViews() {
   renderNutrition();
   renderWeekCompare();
   document.getElementById('dietTipText').textContent = buildDietAdvice();
+  // 营养目标变化也会影响顶部评分
+  updateScores();
 }
 
 // ---------- 科学变美：按计划类型推荐饮食种类 ----------
@@ -6288,6 +6481,28 @@ document.getElementById('newsClose').addEventListener('click', function () {
 newsMask.addEventListener('click', function (event) {
   if (event.target === newsMask) closeMask(newsMask);
 });
+
+// ---------- 科普资讯搜索：按标题、摘要与正文关键词过滤 ----------
+const newsSearch = document.getElementById('newsSearch');
+
+function filterNews() {
+  const keyword = newsSearch.value.trim().toLowerCase();
+  let visible = 0;
+
+  document.querySelectorAll('.news-card').forEach(function (card) {
+    const article = newsArticles[card.dataset.article];
+    const text = (card.textContent + (article ? article.html : '')).toLowerCase();
+    const matched = !keyword || text.indexOf(keyword) !== -1;
+
+    card.style.display = matched ? '' : 'none';
+    if (matched) visible += 1;
+  });
+
+  document.getElementById('newsCount').textContent = keyword ? '找到 ' + visible + ' 条' : '';
+  document.getElementById('newsEmpty').hidden = visible > 0;
+}
+
+newsSearch.addEventListener('input', filterNews);
 
 // ---------- 新功能初始化 ----------
 renderMealLog();
