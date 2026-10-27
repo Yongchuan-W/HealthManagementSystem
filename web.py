@@ -432,7 +432,7 @@ a { text-decoration: none; }
 /* ==========================================================
    6. 饮食页
    ========================================================== */
-.diet-wrap { max-width: 720px; margin: 0 auto; }
+.diet-wrap { max-width: none; margin: 0; }
 
 .fork { color: #d98b5f; }
 
@@ -526,7 +526,7 @@ a { text-decoration: none; }
 /* ==========================================================
    7. 运动页
    ========================================================== */
-.exercise-wrap { max-width: 780px; margin: 0 auto; }
+.exercise-wrap { max-width: none; margin: 0; }
 
 .activity-icon { color: #6b7cf0; }
 
@@ -1026,7 +1026,7 @@ a { text-decoration: none; }
 .female-health .female-card { padding: 24px 28px; }
 
 /* 家人健康页：关怀提醒 */
-.family-wrap { max-width: 760px; margin: 0 auto; }
+.family-wrap { max-width: none; margin: 0; }
 
 .reminder-card {
   background: #fff;
@@ -3177,6 +3177,72 @@ body { color: var(--text); }
   color: #8b7d70;
 }
 
+/* 评分可点击查看分析 */
+.score { cursor: pointer; }
+.score:hover .row span:first-child { text-decoration: underline; }
+
+/* 常用提醒 */
+.quick-reminders {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  font-size: 12px;
+  color: #a08d7d;
+}
+
+.quick-chip {
+  border: 1px solid #e6dbcd;
+  background: #fbf8f4;
+  color: #8b6b52;
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.quick-chip:hover { border-color: #c9a98d; background: #f7eee4; }
+
+/* 家人卡片上的「最近记录」可点击 */
+.family-line.clickable { cursor: pointer; }
+.family-line.clickable:hover b { color: #8b4a22; text-decoration: underline; }
+
+/* 家人记录弹窗 */
+.member-record {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 2px;
+  border-bottom: 1px dashed #f0e9df;
+  font-size: 12px;
+  color: #7a6b5c;
+}
+
+.member-record .date { color: #a08d7d; flex: none; }
+.member-record-empty { font-size: 12px; color: #a08d7d; padding: 8px 0; }
+
+/* 评分分析弹窗 */
+.score-modal { max-width: 560px; }
+
+.score-hero { display: flex; align-items: baseline; gap: 6px; margin-bottom: 14px; }
+.score-hero b { font-size: 34px; color: #8b4a22; line-height: 1; }
+.score-hero span { font-size: 13px; color: #a08d7d; }
+
+.score-hero em {
+  font-style: normal;
+  margin-left: auto;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #f4f9ea;
+  color: #5d7a35;
+}
+
+.score-body p { font-size: 13px; color: #6b5c4c; line-height: 1.9; margin: 6px 0; }
+.score-body h4 { font-size: 13px; color: #4a3525; margin: 14px 0 6px; }
+.score-body ul { margin: 6px 0 6px 18px; font-size: 13px; color: #6b5c4c; line-height: 1.9; }
+
 @media (max-width: 700px) {
   .sport-inputs { grid-template-columns: 1fr; }
   .plan-day { grid-template-columns: 22px 36px 1fr; }
@@ -3468,15 +3534,15 @@ body { color: var(--text); }
     <h1>科学管理健康</h1>
     <p>遇见更好的自己</p>
     <div class="score-group">
-      <div class="score">
+      <div class="score" data-score="total" title="点击查看分析">
         <div class="row"><span>综合健康评分</span><span><b id="scoreTotal">0</b>/100</span></div>
         <div class="bar"><i id="scoreTotalBar"></i></div>
       </div>
-      <div class="score">
+      <div class="score" data-score="diet" title="点击查看分析">
         <div class="row"><span>饮食健康评分</span><span><b id="scoreDiet">0</b>/100</span></div>
         <div class="bar"><i id="scoreDietBar"></i></div>
       </div>
-      <div class="score">
+      <div class="score" data-score="sport" title="点击查看分析">
         <div class="row"><span>运动完成评分</span><span><b id="scoreSport">0</b>/100</span></div>
         <div class="bar"><i id="scoreSportBar"></i></div>
       </div>
@@ -4011,6 +4077,18 @@ body { color: var(--text); }
             </div>
             <button class="btn-soft" id="openReminder">添加提醒</button>
           </div>
+
+          <!-- 常用提醒：点击后自动带入标题，直接选日期保存 -->
+          <div class="quick-reminders">
+            <span>常用提醒</span>
+            <button class="quick-chip" type="button" data-reminder="提醒家人测量血压">测量血压</button>
+            <button class="quick-chip" type="button" data-reminder="提醒家人按时吃药">按时吃药</button>
+            <button class="quick-chip" type="button" data-reminder="陪家人散步 30 分钟">陪伴散步</button>
+            <button class="quick-chip" type="button" data-reminder="预约复诊 / 体检">复诊体检</button>
+            <button class="quick-chip" type="button" data-reminder="提醒家人多喝水">多喝水</button>
+            <button class="quick-chip" type="button" data-reminder="提醒家人注意保暖">注意保暖</button>
+          </div>
+
           <div class="reminder-list" id="reminderList"></div>
         </div>
 
@@ -4026,15 +4104,8 @@ body { color: var(--text); }
             </div>
           </div>
 
-          <!-- 家人卡片由 JavaScript 根据数据动态生成 -->
+          <!-- 家人卡片由 JavaScript 根据数据动态生成，点击「最近记录」查看该家人全部记录 -->
           <div class="family-grid" id="familyGrid"></div>
-
-          <div class="family-record-head">
-            <h3>最近记录</h3>
-          </div>
-          <div class="family-records">
-            <div id="familyRecordList"></div>
-          </div>
         </div>
 
       </div>
@@ -4318,6 +4389,46 @@ body { color: var(--text); }
     <div class="modal-foot">
       <button class="btn-cancel" id="reminderCancel">取消</button>
       <button class="btn-save" id="reminderSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================
+     家人健康记录弹窗：点击家人卡片的「最近记录」查看
+     ======================================================== -->
+<div class="mask" id="memberRecordsMask">
+  <div class="modal">
+    <div class="modal-head">
+      <svg class="icon"><use href="#i-heart"/></svg><span id="memberRecordsTitle">家人健康记录</span>
+      <button class="modal-close" id="memberRecordsClose" aria-label="关闭">
+        <svg class="icon"><use href="#i-close"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div id="memberRecordsList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================
+     健康评分分析弹窗：点击顶部任一评分打开
+     ======================================================== -->
+<div class="mask" id="scoreMask">
+  <div class="modal score-modal">
+    <div class="modal-head">
+      <svg class="icon"><use href="#i-spark"/></svg><span id="scoreModalTitle">健康评分分析</span>
+      <button class="modal-close" id="scoreClose" aria-label="关闭">
+        <svg class="icon"><use href="#i-close"/></svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="score-hero">
+        <b id="scoreModalValue">0</b><span>/100</span>
+        <em id="scoreModalLevel">—</em>
+      </div>
+      <div class="score-body" id="scoreModalBody"></div>
+      <p class="form-hint">分析基于你填写的饮食、运动、体重与心情数据自动生成，数据越完整结论越准确。</p>
     </div>
   </div>
 </div>
@@ -6018,16 +6129,20 @@ function renderFamilyMembers() {
     head.appendChild(info);
     card.appendChild(head);
 
-    // 最近记录
+    // 最近记录：点击查看该家人的全部记录
     const record = latestRecord(member.id);
     const recordLine = document.createElement('div');
-    recordLine.className = 'family-line';
+    recordLine.className = 'family-line clickable';
+    recordLine.title = '点击查看该家人的全部记录';
     recordLine.appendChild(document.createTextNode('最近记录'));
     const recordValue = document.createElement('b');
     recordValue.textContent = record
-      ? formatYMD(parseISODate(record.date)) + ' · ' + record.type
-      : '暂无记录';
+      ? formatYMD(parseISODate(record.date)) + ' · ' + record.type + ' ›'
+      : '暂无记录 ›';
     recordLine.appendChild(recordValue);
+    recordLine.addEventListener('click', function () {
+      openMemberRecords(member);
+    });
     card.appendChild(recordLine);
 
     // 最近提醒
@@ -6055,40 +6170,66 @@ function renderFamilyMembers() {
   });
 }
 
-// 渲染「最近记录」列表
-function renderFamilyRecords() {
-  const list = document.getElementById('familyRecordList');
+// 渲染某位家人的全部记录（在弹窗中展示）
+function renderFamilyRecords(memberId) {
+  const list = document.getElementById('memberRecordsList');
+  if (!list) return;
   list.innerHTML = '';
 
-  if (!familyRecords.length) {
-    const empty = document.createElement('div');
-    empty.className = 'record-empty';
-    empty.textContent = '暂无记录，点击「添加记录」为家人建立健康档案。';
-    list.appendChild(empty);
+  const records = familyRecords.filter(function (record) {
+    return record.memberId === memberId;
+  }).sort(function (a, b) {
+    return b.date.localeCompare(a.date);
+  });
+
+  if (!records.length) {
+    list.innerHTML = '<div class="member-record-empty">暂无记录，点击「添加记录」为家人建立健康档案。</div>';
     return;
   }
 
-  familyRecords.slice().sort(function (a, b) {
-    return b.date.localeCompare(a.date);
-  }).forEach(function (record) {
-    const member = getMember(record.memberId);
-
+  records.forEach(function (record) {
     const item = document.createElement('div');
-    item.className = 'record-item';
+    item.className = 'member-record';
 
     const dateEl = document.createElement('span');
     dateEl.className = 'date';
     dateEl.textContent = formatYMD(parseISODate(record.date));
 
     const textEl = document.createElement('span');
-    textEl.textContent = memberLabel(member) + ' · ' + record.type +
-      (record.content ? ' · ' + record.content : '');
+    textEl.textContent = record.type + (record.content ? ' · ' + record.content : '');
 
     item.appendChild(dateEl);
     item.appendChild(textEl);
     list.appendChild(item);
   });
 }
+
+// 点击家人卡片上的「最近记录」打开记录弹窗
+function openMemberRecords(member) {
+  document.getElementById('memberRecordsTitle').textContent = memberLabel(member) + ' · 健康记录';
+  renderFamilyRecords(member.id);
+  openMask(document.getElementById('memberRecordsMask'));
+}
+
+const memberRecordsMask = document.getElementById('memberRecordsMask');
+
+document.getElementById('memberRecordsClose').addEventListener('click', function () {
+  closeMask(memberRecordsMask);
+});
+
+memberRecordsMask.addEventListener('click', function (event) {
+  if (event.target === memberRecordsMask) closeMask(memberRecordsMask);
+});
+
+// 常用提醒：点击后打开提醒弹窗并带入标题与默认日期
+document.querySelectorAll('.quick-chip').forEach(function (chip) {
+  chip.addEventListener('click', function () {
+    renderMemberOptions();
+    document.getElementById('reminderTitle').value = chip.dataset.reminder;
+    document.getElementById('reminderDate').value = toISODate(addDays(new Date(), 1));
+    openMask(reminderMask);
+  });
+});
 
 // 渲染关怀提醒
 function renderReminders() {
@@ -6280,7 +6421,6 @@ document.getElementById('familySave').addEventListener('click', function () {
   });
 
   renderFamilyMembers();
-  renderFamilyRecords();
 
   document.getElementById('familyContent').value = '';
   closeMask(familyMask);
@@ -6391,7 +6531,6 @@ renderCycle();
 applyGenderView();
 renderMemberOptions();
 renderFamilyMembers();
-renderFamilyRecords();
 renderReminders();
 
 /* ==========================================================
@@ -7085,6 +7224,161 @@ function updateScores() {
   }
 }
 
+// ---------- 点击顶部评分查看分析与建议 ----------
+const scoreMask = document.getElementById('scoreMask');
+
+function scoreLevelText(value) {
+  if (value >= 85) return '优秀';
+  if (value >= 70) return '良好';
+  if (value >= 60) return '一般';
+  return '待改善';
+}
+
+function listHtml(items) {
+  return '<ul>' + items.map(function (item) {
+    return '<li>' + item + '</li>';
+  }).join('') + '</ul>';
+}
+
+function buildDietAnalysis() {
+  const targets = getNutritionTargets();
+  const today = toISODate(new Date());
+  const eaten = dateRangeSum(today, today);
+  const weekStart = toISODate(addDays(new Date(), -6));
+  const week = dateRangeSum(weekStart, today);
+
+  if (!eaten.days) {
+    return '<p>今天还没有饮食记录，暂时无法评估具体营养摄入。</p>' +
+      '<p>建议先记录早餐、午餐或晚餐，评分和本页分析会随记录自动更新。</p>';
+  }
+
+  const html = ['<p>今天摄入约 ' + Math.round(eaten.total.kcal) + ' kcal（目标 ' + targets.kcal +
+    ' kcal），蛋白质 ' + Math.round(eaten.total.protein) + 'g（目标 ' + targets.protein +
+    'g），膳食纤维 ' + Math.round(eaten.total.fiber) + 'g（目标 ' + targets.fiber + 'g）。</p>'];
+
+  const items = [];
+  if (eaten.total.protein < targets.protein * 0.8) {
+    items.push('蛋白质不足，建议增加鸡蛋、鱼虾、鸡胸肉或豆制品。');
+  }
+  if (eaten.total.fiber < targets.fiber * 0.6) {
+    items.push('膳食纤维偏少，建议补充两份深色蔬菜和一份水果。');
+  }
+  if (eaten.total.kcal > targets.kcal * 1.15) {
+    items.push('热量已超出目标，晚餐宜清淡，减少油炸与含糖饮料。');
+  }
+  if (eaten.total.carb < targets.carb * 0.6) {
+    items.push('碳水化合物偏低，可适量补充糙米、燕麦或红薯。');
+  }
+  if (!items.length) {
+    items.push('主要营养指标基本达标，继续保持规律三餐与足量饮水。');
+  }
+
+  html.push('<h4>本日评估</h4>' + listHtml(items));
+  if (week.days) {
+    html.push('<h4>近 7 天</h4><p>共记录 ' + week.days + ' 天，平均每日约 ' +
+      Math.round(week.total.kcal / week.days) + ' kcal，平均蛋白质 ' +
+      Math.round(week.total.protein / week.days) + 'g。</p>');
+  }
+
+  return html.join('');
+}
+
+function buildSportAnalysis() {
+  const actual = todaySport();
+  const goal = sportState.goal;
+  const percent = computeSportScore();
+  const week = weekSport();
+
+  const html = ['<p>今日完成度 ' + percent + '%：消耗 ' + Math.round(actual.kcal) +
+    ' / ' + goal.kcal + ' kcal，步数 ' + formatNumber(actual.steps) + ' / ' +
+    formatNumber(goal.steps) + '，运动时长 ' + Math.round(actual.minutes) +
+    ' / ' + goal.minutes + ' 分钟。</p>'];
+
+  const items = [];
+  if (!actual.minutes) {
+    items.push('今天还没有运动记录，可以先从 20 分钟快走或拉伸开始。');
+  }
+  if (percent < 60) {
+    items.push('距离目标还有差距，建议增加一次 20-30 分钟中等强度运动。');
+  }
+  if (actual.steps < goal.steps * 0.6) {
+    items.push('步数偏少，可以把通勤中的一段路改为步行。');
+  }
+  if (actual.minutes > goal.minutes * 1.5) {
+    items.push('今天运动量较大，注意补水与拉伸，避免连续高强度训练。');
+  }
+  if (!items.length) {
+    items.push('今日目标完成良好，保持每周 3-5 次中等强度运动即可。');
+  }
+
+  html.push('<h4>评估与建议</h4>' + listHtml(items));
+  html.push('<h4>本周累计</h4><p>消耗 ' + Math.round(week.kcal) + ' kcal，步数 ' +
+    formatNumber(week.steps) + '，运动 ' + Math.round(week.minutes) + ' 分钟。</p>');
+
+  return html.join('');
+}
+
+function buildTotalAnalysis() {
+  const diet = computeDietScore();
+  const sport = computeSportScore();
+  const bmi = computeBmiScore();
+  const weight = getCurrentWeight();
+  const height = currentHeightMeters();
+  const bmiValue = weight / (height * height);
+
+  const html = ['<p>综合评分 = 饮食 40% + 运动 40% + BMI 20%。当前：饮食 ' + diet +
+    ' 分、运动 ' + sport + ' 分、BMI ' + bmi + ' 分（' + bmiValue.toFixed(1) + '）。</p>'];
+
+  const items = [];
+  if (diet < 60) items.push('饮食评分偏低：优先补足蛋白质与蔬菜，减少含糖饮料。');
+  if (sport < 60) items.push('运动评分偏低：先把每日步数提升到目标的一半，再逐步增加时长。');
+  if (bmi < 100 && bmiValue >= 24) items.push('BMI 偏高：建议每周 150 分钟中等强度有氧，并控制精制碳水。');
+  if (bmi < 100 && bmiValue < 18.5) items.push('BMI 偏低：适当增加优质蛋白与主食，配合力量训练。');
+  if (!items.length) items.push('各项指标都在良好区间，保持当前作息和运动频率即可。');
+
+  html.push('<h4>优先改善</h4>' + listHtml(items));
+  return html.join('');
+}
+
+function openScoreModal(type) {
+  const values = {
+    total: Number(document.getElementById('scoreTotal').textContent),
+    diet: computeDietScore(),
+    sport: computeSportScore()
+  };
+  const titles = {
+    total: '综合健康评分分析',
+    diet: '饮食健康评分分析',
+    sport: '运动完成评分分析'
+  };
+  const bodies = {
+    total: buildTotalAnalysis,
+    diet: buildDietAnalysis,
+    sport: buildSportAnalysis
+  };
+
+  const value = values[type];
+  document.getElementById('scoreModalTitle').textContent = titles[type];
+  document.getElementById('scoreModalValue').textContent = value;
+  document.getElementById('scoreModalLevel').textContent = scoreLevelText(value);
+  document.getElementById('scoreModalBody').innerHTML = bodies[type]();
+  openMask(scoreMask);
+}
+
+document.querySelectorAll('.score[data-score]').forEach(function (item) {
+  item.addEventListener('click', function () {
+    openScoreModal(item.dataset.score);
+  });
+});
+
+document.getElementById('scoreClose').addEventListener('click', function () {
+  closeMask(scoreMask);
+});
+
+scoreMask.addEventListener('click', function (event) {
+  if (event.target === scoreMask) closeMask(scoreMask);
+});
+
 // 统计某个日期区间的营养合计与记录天数
 function dateRangeSum(startStr, endStr) {
   const total = { kcal: 0, protein: 0, carb: 0, fat: 0, fiber: 0 };
@@ -7677,6 +7971,8 @@ document.addEventListener('keydown', function (event) {
   closeMask(sportDataMask);
   closeMask(vitalMask);
   closeMask(foodMask);
+  closeMask(scoreMask);
+  closeMask(memberRecordsMask);
   closeMask(newsMask);
   closeTagMenus();
 });
