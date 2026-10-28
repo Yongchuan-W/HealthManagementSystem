@@ -1926,6 +1926,52 @@ a { text-decoration: none; }
   gap: 14px;
 }
 
+/* 头像选择器：预设头像 + 当前选中态 */
+.avatar-picker {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+
+.avatar-option {
+  position: relative;
+  height: 48px;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  line-height: 1;
+  color: #fff;
+  transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+
+.avatar-option:hover { transform: translateY(-2px); }
+
+.avatar-option.selected {
+  border-color: #8b4a22;
+  box-shadow: 0 0 0 2px rgba(139, 74, 34, 0.16);
+}
+
+.avatar-option.selected::after {
+  content: '✓';
+  position: absolute;
+  right: -5px;
+  bottom: -5px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #8b4a22;
+  color: #fff;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.side-user .avatar { font-size: 19px; line-height: 1; }
+
 .modal-foot {
   display: flex;
   justify-content: flex-end;
@@ -3300,7 +3346,7 @@ body { color: var(--text); }
       </form>
 
       <div class="login-hint">演示账号：<b>AAA</b>　密码：<b>123456</b></div>
-      <div class="mobile-hint">其他设备打开下面的网址即可访问：<br><a href="https://yongchuan-w.github.io/HealthManagementSystem/">https://yongchuan-w.github.io/HealthManagementSystem/</a></div>
+      <div class="mobile-hint">手机与电脑连接同一 Wi-Fi 后访问：<br><a href="https://yongchuan-w.github.io/HealthManagementSystem/">https://yongchuan-w.github.io/HealthManagementSystem/</a></div>
     </div>
   </div>
 </div>
@@ -3491,7 +3537,7 @@ body { color: var(--text); }
   </nav>
 
   <div class="side-user" id="userBtn" title="个人信息">
-    <div class="avatar"><svg class="icon"><use href="#i-user"/></svg></div>
+    <div class="avatar" id="sideAvatar"><svg class="icon"><use href="#i-user"/></svg></div>
     <div class="side-user-info">
       <span class="side-user-name" id="sideUserName">张三</span>
       <span class="side-user-sub" id="sideUserSub">女 · 165cm</span>
@@ -4161,8 +4207,16 @@ body { color: var(--text); }
 
     <div class="modal-body">
       <div class="field">
-        <label for="pName">姓名</label>
-        <input id="pName" type="text" value="张三">
+        <label>头像</label>
+        <div class="avatar-picker" id="avatarPicker"></div>
+      </div>
+      <div class="field">
+        <label for="pNickname">昵称</label>
+        <input id="pNickname" type="text" value="张三" placeholder="给自己取个昵称">
+      </div>
+      <div class="field">
+        <label for="pName">姓名（选填）</label>
+        <input id="pName" type="text" placeholder="可不填，仅用于档案归档">
       </div>
       <div class="field">
         <label for="pGender">性别</label>
@@ -4712,11 +4766,22 @@ document.getElementById('onboardingForm').addEventListener('submit', function (e
   document.getElementById('sideUserSub').textContent =
     gender + ' · ' + (height > 0 ? height + 'cm' : '未填写身高');
 
-  // 同步到个人信息弹窗
-  document.getElementById('pName').value = name;
+  // 同步到个人信息弹窗（昵称用于展示，姓名选填）
+  document.getElementById('pNickname').value = name;
+  document.getElementById('pName').value = '';
   document.getElementById('pGender').value = gender;
   if (height > 0) document.getElementById('pHeight').value = height;
   if (weight > 0) document.getElementById('pWeight').value = weight.toFixed(1);
+
+  // 保存档案，再次打开系统时沿用昵称、头像与基础信息
+  saveData('profile', {
+    nickname: name,
+    name: '',
+    avatar: currentAvatar,
+    gender: gender,
+    height: height > 0 ? height : 0,
+    weight: weight > 0 ? weight : 0
+  });
 
   // 同步到核心体征并重算 BMI
   if (weight > 0) {
@@ -4814,9 +4879,85 @@ document.querySelectorAll('[data-toast]').forEach(function (el) {
    ========================================================== */
 const profileMask = document.getElementById('profileMask');
 
+/* ---------- 头像预设：用户可自由选择 ---------- */
+const avatarPresets = [
+  { emoji: '🌿', bg: 'linear-gradient(135deg, #8fd9b6, #4ecdc4)' },
+  { emoji: '🌻', bg: 'linear-gradient(135deg, #ffd36e, #f5a623)' },
+  { emoji: '🍑', bg: 'linear-gradient(135deg, #ffb3b3, #ff7a8a)' },
+  { emoji: '🐱', bg: 'linear-gradient(135deg, #a8c8f0, #7aa6e8)' },
+  { emoji: '🐼', bg: 'linear-gradient(135deg, #c9d6e3, #8fa6bd)' },
+  { emoji: '🦊', bg: 'linear-gradient(135deg, #ffbe8a, #f08a4b)' },
+  { emoji: '🐳', bg: 'linear-gradient(135deg, #8fd3f4, #5aa9e6)' },
+  { emoji: '🌙', bg: 'linear-gradient(135deg, #b6a7f0, #8a6cf0)' },
+  { emoji: '☀️', bg: 'linear-gradient(135deg, #ffe08a, #ffb74d)' },
+  { emoji: '🍀', bg: 'linear-gradient(135deg, #9be89b, #5cc46a)' }
+];
+
+let currentAvatar = 0;
+
+function readProfile() {
+  const saved = loadData('profile', null);
+  return saved && typeof saved === 'object' ? saved : {};
+}
+
+// 侧边栏头像：使用所选表情与底色；index 非法时回退到首个头像
+function applyAvatar(index) {
+  const safe = (index >= 0 && index < avatarPresets.length) ? index : 0;
+  currentAvatar = safe;
+  const preset = avatarPresets[safe];
+  const avatar = document.getElementById('sideAvatar');
+  avatar.textContent = preset.emoji;
+  avatar.style.background = preset.bg;
+
+  document.querySelectorAll('.avatar-option').forEach(function (btn) {
+    btn.classList.toggle('selected', Number(btn.dataset.avatar) === safe);
+  });
+}
+
+function renderAvatarPicker() {
+  const picker = document.getElementById('avatarPicker');
+  picker.innerHTML = '';
+  avatarPresets.forEach(function (preset, index) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'avatar-option';
+    btn.dataset.avatar = index;
+    btn.style.background = preset.bg;
+    btn.textContent = preset.emoji;
+    btn.title = '头像 ' + (index + 1);
+    btn.addEventListener('click', function () {
+      applyAvatar(index);
+    });
+    picker.appendChild(btn);
+  });
+}
+
+// 页面加载：回显已保存的昵称、姓名与头像
+function loadProfileView() {
+  const profile = readProfile();
+  const nickname = profile.nickname || '张三';
+  const name = profile.name || '';
+
+  document.getElementById('sideUserName').textContent = nickname;
+  if (profile.gender) {
+    document.getElementById('sideUserSub').textContent =
+      profile.gender + ' · ' + (profile.height ? profile.height + 'cm' : '未填写身高');
+  }
+
+  renderAvatarPicker();
+  applyAvatar(typeof profile.avatar === 'number' ? profile.avatar : 0);
+}
+
 function openProfile() {
-  // 打开弹窗时回显当前性别
+  const profile = readProfile();
+  // 打开弹窗时回显当前资料
+  document.getElementById('pNickname').value = profile.nickname || '张三';
+  document.getElementById('pName').value = profile.name || '';
   document.getElementById('pGender').value = currentGender;
+  if (profile.height) document.getElementById('pHeight').value = profile.height;
+  if (profile.weight) document.getElementById('pWeight').value = profile.weight.toFixed(1);
+  renderAvatarPicker();
+  applyAvatar(currentAvatar);
   profileMask.classList.add('open');
   document.body.style.overflow = 'hidden'; // 弹窗打开时禁止页面滚动
 }
@@ -4836,7 +4977,8 @@ profileMask.addEventListener('click', function (event) {
 
 // 保存档案：同步更新「健康数据」中的体重与 BMI
 document.getElementById('saveProfile').addEventListener('click', function () {
-  const name = document.getElementById('pName').value.trim() || '未命名';
+  const nickname = document.getElementById('pNickname').value.trim() || '健康用户';
+  const name = document.getElementById('pName').value.trim(); // 姓名选填，允许为空
   const gender = document.getElementById('pGender').value;
   const height = parseFloat(document.getElementById('pHeight').value);
   const weight = parseFloat(document.getElementById('pWeight').value);
@@ -4866,9 +5008,20 @@ document.getElementById('saveProfile').addEventListener('click', function () {
     badge.className = 'badge warn';
   }
 
-  document.getElementById('userBtn').title = '个人信息 · ' + name + '（' + gender + '）';
-  document.getElementById('sideUserName').textContent = name;
+  // 昵称用于展示，姓名仅在填写后写入档案
+  document.getElementById('userBtn').title = '个人信息 · ' + nickname + '（' + gender + '）';
+  document.getElementById('sideUserName').textContent = nickname;
   document.getElementById('sideUserSub').textContent = gender + ' · ' + height + 'cm';
+
+  // 头像、昵称、姓名等一并存入本地，刷新后仍然保留
+  saveData('profile', {
+    nickname: nickname,
+    name: name,
+    avatar: currentAvatar,
+    gender: gender,
+    height: height,
+    weight: weight
+  });
 
   // 根据性别显示/隐藏「健康数据」页中的女性健康档案
   currentGender = gender;
@@ -4878,7 +5031,7 @@ document.getElementById('saveProfile').addEventListener('click', function () {
   refreshDietViews();
 
   closeProfile();
-  showToast(gender === '男' ? '个人信息已保存，女性健康档案已隐藏' : '个人信息已保存');
+  showToast(name ? '个人信息已保存' : '个人信息已保存（姓名可稍后补充）');
 });
 
 /* ==========================================================
@@ -7816,6 +7969,7 @@ function filterNews() {
 newsSearch.addEventListener('input', filterNews);
 
 // ---------- 新功能初始化 ----------
+loadProfileView();
 renderMealLog();
 refreshDietViews();
 fillSportInputs();
