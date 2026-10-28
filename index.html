@@ -355,14 +355,27 @@ a { text-decoration: none; }
 
 .badge.warn { color: #d99a3f; background: #fdf3e0; }
 
-.ring-box {
-  width: 190px;
-  flex: 0 0 190px;
+/* 右侧健康参考面板：正常值范围 + 异常提醒 + BMI 公式 */
+.vital-side {
+  width: 330px;
+  flex: 0 0 330px;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  gap: 12px;
   padding-top: 2px;
 }
+
+.range-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #4a3525;
+}
+
+.range-head .report-link { margin: 0; align-self: auto; }
 
 .report-link {
   align-self: flex-end;
@@ -376,32 +389,187 @@ a { text-decoration: none; }
 
 .report-link:hover { text-decoration: underline; }
 
-.ring {
-  position: relative;
-  width: 140px;
-  height: 140px;
-}
-
-.ring > svg { transform: rotate(-90deg); }
-
-.ring .center {
-  position: absolute;
-  inset: 0;
+.range-list {
   display: flex;
   flex-direction: column;
+  gap: 6px;
+}
+
+.range-row {
+  display: grid;
+  grid-template-columns: 58px 1fr auto;
+  gap: 8px;
+  align-items: center;
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: #faf8f3;
+  font-size: 12px;
+}
+
+.rr-name { color: #6f6154; white-space: nowrap; }
+.rr-ref { color: #8b7d70; font-size: 11.5px; }
+
+.rr-state {
+  font-size: 11px;
+  padding: 1px 7px;
+  border-radius: 99px;
+  background: #e8f8f2;
+  color: #278f70;
+  white-space: nowrap;
+}
+
+.rr-state.warn { background: #fdf3e0; color: #c07d20; }
+.rr-state.muted { background: #f0efec; color: #8b7d70; }
+
+.abnormal-box {
+  background: #fff8f2;
+  border: 1px solid #f4e2d3;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 12px;
+  color: #866a58;
+}
+
+.abnormal-box b { display: block; font-size: 12px; color: #b4614a; margin-bottom: 6px; }
+.abnormal-box ul { margin: 0; padding-left: 16px; line-height: 1.7; }
+
+.abnormal-box.ok { background: #f2fbf7; border-color: #d8f3e7; color: #2b9a7d; }
+.abnormal-box.ok b { color: #278f70; }
+
+.bmi-formula {
+  background: #f4f8f0;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 11.5px;
+  line-height: 1.7;
+  color: #7c7367;
+}
+
+.bmi-formula b { color: #6e3a18; font-size: 12px; }
+.bmi-formula .formula-line { color: #6e3a18; font-weight: 600; }
+
+/* 头像上传 + 裁剪 */
+.avatar-option.avatar-upload {
+  background: #f4f1ec;
+  border: 1px dashed #d5c9bb;
+  color: #9c8b7b;
+  font-size: 17px;
+}
+
+.avatar-option img,
+.side-user .avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+  display: block;
+}
+
+.side-user .avatar { overflow: hidden; }
+
+.crop-modal { width: 348px; }
+
+.crop-stage {
+  position: relative;
+  width: 240px;
+  height: 240px;
+  margin: 0 auto 14px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #f1eee9;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.crop-stage.dragging { cursor: grabbing; }
+
+.crop-stage img {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  user-select: none;
+}
+
+.crop-overlay {
+  position: absolute;
+  inset: 12px;
+  pointer-events: none;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2000px rgba(30, 22, 16, 0.38);
+}
+
+.crop-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 2px dashed rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+}
+
+.crop-zoom {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: #6b7688;
+}
+
+.crop-zoom input[type="range"] {
+  flex: 1;
+  accent-color: #8b4a22;
+}
+
+.crop-hint {
+  font-size: 11.5px;
+  color: #9c8b7b;
+  text-align: center;
+  margin-bottom: 4px;
+}
+
+/* AI 树苗标志：轻微摆动，提示为智能体 */
+.fab .ai-sprout {
+  position: relative;
+  display: flex;
   align-items: center;
   justify-content: center;
+  animation: sproutSway 3.4s ease-in-out infinite;
+  transform-origin: 50% 88%;
 }
 
-.ring .num { font-size: 28px; font-weight: 800; color: #2b3648; line-height: 1.1; }
-.ring .txt { font-size: 12px; color: var(--muted); margin-top: 6px; }
-
-.ring-note {
-  font-size: 12px;
-  color: #9aa3b2;
-  margin-top: 12px;
-  text-align: center;
+@keyframes sproutSway {
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(3deg); }
 }
+
+.fab .sprout-svg {
+  width: 27px;
+  height: 27px;
+  fill: none;
+  stroke: #fff;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.fab .sprout-svg .leaf { fill: rgba(255, 255, 255, 0.22); }
+
+.fab .ai-tag {
+  position: absolute;
+  right: -10px;
+  bottom: -4px;
+  padding: 0 3px;
+  border-radius: 4px;
+  background: #fff;
+  color: #2f8f77;
+  font-size: 8px;
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: 0.2px;
+}
+
 
 /* ==========================================================
    6. 饮食页
@@ -1853,6 +2021,9 @@ a { text-decoration: none; }
 .modal {
   width: 380px;
   max-width: 100%;
+  max-height: calc(100vh - 40px);
+  display: flex;
+  flex-direction: column;
   background: #fff;
   border-radius: 14px;
   overflow: hidden;
@@ -1869,6 +2040,7 @@ a { text-decoration: none; }
   display: flex;
   align-items: center;
   gap: 8px;
+  flex: 0 0 auto;
   padding: 12px 16px;
   background: linear-gradient(135deg, #4ed3b0, #3bb8a3);
   color: #fff;
@@ -1888,7 +2060,7 @@ a { text-decoration: none; }
 
 .modal-close .icon { width: 16px; height: 16px; }
 
-.modal-body { padding: 20px 20px 6px; }
+.modal-body { padding: 20px 20px 6px; overflow-y: auto; }
 
 .field { margin-bottom: 14px; }
 
@@ -1929,8 +2101,8 @@ a { text-decoration: none; }
 /* 头像选择器：预设头像 + 当前选中态 */
 .avatar-picker {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 10px;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 9px;
 }
 
 .avatar-option {
@@ -1975,6 +2147,7 @@ a { text-decoration: none; }
 .modal-foot {
   display: flex;
   justify-content: flex-end;
+  flex: 0 0 auto;
   padding: 2px 20px 18px;
 }
 
@@ -2201,7 +2374,6 @@ body { color: var(--text); }
 .side-nav button.active::before { background: #8b4a22; }
 .avatar { background: #cfe4f2; color: #4f7898; }
 .side-user-name, .onboarding-card h2, .news-title { color: #4a3525; }
-.ring .num { color: #4a3525; }
 
 /* 顶部横幅 */
 .hero {
@@ -2452,7 +2624,7 @@ body { color: var(--text); }
   .main-area { margin-left: 0; }
 
   .health-card { flex-direction: column; }
-  .ring-box { width: 100%; flex: none; }
+  .vital-side { width: 100%; flex: none; }
   .report-link { align-self: flex-end; }
   .vitals { grid-template-columns: repeat(2, 1fr); }
   .report-grid { grid-template-columns: repeat(2, 1fr); }
@@ -3393,7 +3565,7 @@ body { color: var(--text); }
             </div>
             <div class="ob-field">
               <label for="obWeight">体重（kg）</label>
-              <input id="obWeight" type="number" step="0.1" value="65.2">
+              <input id="obWeight" type="number" step="0.1" value="60.0">
             </div>
           </div>
         </section>
@@ -3589,14 +3761,14 @@ body { color: var(--text); }
                 <div class="label">体重</div>
                 <button class="vital-edit" type="button" data-vital="weight">修改</button>
               </div>
-              <div class="value"><span id="weightValue">65.2</span><span class="unit">kg</span></div>
+              <div class="value"><span id="weightValue">60.0</span><span class="unit">kg</span></div>
             </div>
             <div class="vital">
               <div class="vital-head">
                 <div class="label">体脂率</div>
                 <button class="vital-edit" type="button" data-vital="fat">修改</button>
               </div>
-              <div class="value"><span id="fatValue">18.5</span><span class="unit">%</span></div>
+              <div class="value"><span id="fatValue">24.0</span><span class="unit">%</span></div>
             </div>
             <div class="vital">
               <div class="vital-head">
@@ -3604,7 +3776,7 @@ body { color: var(--text); }
                 <button class="vital-edit" type="button" data-vital="bmi">修改</button>
               </div>
               <div class="value">
-                <span id="bmiValue">21.3</span>
+                <span id="bmiValue">22.0</span>
                 <span class="badge" id="bmiBadge">正常</span>
               </div>
             </div>
@@ -3625,28 +3797,52 @@ body { color: var(--text); }
           </div>
         </div>
 
-        <!-- 右侧环形评分 -->
-        <div class="ring-box">
-          <button class="report-link" id="quickReportUpload">上传体检报告 ›</button>
-          <div class="ring">
-            <svg width="140" height="140" viewBox="0 0 120 120">
-              <defs>
-                <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0" stop-color="#7ee0c0"/>
-                  <stop offset="1" stop-color="#2fbf9b"/>
-                </linearGradient>
-              </defs>
-              <circle cx="60" cy="60" r="52" fill="none" stroke="#eef1f5" stroke-width="10"/>
-              <!-- 周长 ≈ 326.7，偏移量由综合评分动态计算 -->
-              <circle cx="60" cy="60" r="52" fill="none" stroke="url(#ringGrad)" stroke-width="10"
-                      stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="326.7" id="ringArc"/>
-            </svg>
-            <div class="center">
-              <div class="num" id="ringScore">0%</div>
-              <div class="txt">综合健康度</div>
+        <!-- 右侧：正常值范围、异常提醒与 BMI 公式 -->
+        <div class="vital-side">
+          <div class="range-head">
+            <span>正常值范围</span>
+            <button class="report-link" id="quickReportUpload">上传体检报告 ›</button>
+          </div>
+
+          <div class="range-list">
+            <div class="range-row">
+              <span class="rr-name">体重</span>
+              <span class="rr-ref" id="refWeight">—</span>
+              <span class="rr-state muted" id="stateWeight">—</span>
+            </div>
+            <div class="range-row">
+              <span class="rr-name">BMI</span>
+              <span class="rr-ref">18.5–23.9</span>
+              <span class="rr-state muted" id="stateBmi">—</span>
+            </div>
+            <div class="range-row">
+              <span class="rr-name">体脂率</span>
+              <span class="rr-ref" id="refFat">女 20%–30%</span>
+              <span class="rr-state muted" id="stateFat">—</span>
+            </div>
+            <div class="range-row">
+              <span class="rr-name">血压</span>
+              <span class="rr-ref">＜120/80 mmHg</span>
+              <span class="rr-state muted" id="stateBp">—</span>
+            </div>
+            <div class="range-row">
+              <span class="rr-name">空腹血糖</span>
+              <span class="rr-ref">3.9–6.1 mmol/L</span>
+              <span class="rr-state muted" id="stateGlucose">—</span>
             </div>
           </div>
-          <div class="ring-note">根据饮食、运动与体重实时更新</div>
+
+          <div class="abnormal-box ok" id="abnormalBox">
+            <b>异常提醒</b>
+            <ul id="abnormalList"><li>各项体征均在参考范围内，继续保持。</li></ul>
+          </div>
+
+          <div class="bmi-formula">
+            <b>BMI 计算公式</b><br>
+            <span class="formula-line">BMI = 体重（kg）÷ 身高（m）²</span><br>
+            <span id="bmiFormulaValue">60.0 ÷ 1.65² ≈ 22.0</span><br>
+            <span>参考标准：中国成人 BMI 18.5–23.9 为正常（WS/T 428-2013）；血压、血糖参考《中国高血压防治指南》《中国 2 型糖尿病防治指南》。异常结果请以医院检查为准。</span>
+          </div>
         </div>
       </div>
 
@@ -3689,11 +3885,11 @@ body { color: var(--text); }
             </div>
             <div class="report-item">
               <div class="label">体脂率</div>
-              <div class="value">18.2<span class="unit">%</span></div>
+              <div class="value">24.0<span class="unit">%</span></div>
             </div>
             <div class="report-item">
               <div class="label">BMI</div>
-              <div class="value">21.2</div>
+              <div class="value">23.8</div>
             </div>
             <div class="report-item">
               <div class="label">血压</div>
@@ -4209,6 +4405,7 @@ body { color: var(--text); }
       <div class="field">
         <label>头像</label>
         <div class="avatar-picker" id="avatarPicker"></div>
+        <input type="file" id="avatarUploadInput" accept="image/*" hidden>
       </div>
       <div class="field">
         <label for="pNickname">昵称</label>
@@ -4232,13 +4429,44 @@ body { color: var(--text); }
         </div>
         <div class="field">
           <label for="pWeight">体重（kg）</label>
-          <input id="pWeight" type="number" step="0.1" value="65.2">
+          <input id="pWeight" type="number" step="0.1" value="60.0">
         </div>
       </div>
     </div>
 
     <div class="modal-foot">
       <button class="btn-save" id="saveProfile">保存修改</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================
+     头像裁剪弹窗：拖拽移动 + 滑块缩放
+     ======================================================== -->
+<div class="mask" id="cropMask">
+  <div class="modal crop-modal">
+    <div class="modal-head">
+      <svg class="icon"><use href="#i-image"/></svg>裁剪头像
+      <button class="modal-close" id="cropClose" aria-label="关闭">
+        <svg class="icon"><use href="#i-close"/></svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="crop-stage" id="cropStage">
+        <img id="cropImage" alt="待裁剪头像">
+        <div class="crop-overlay"></div>
+      </div>
+      <div class="crop-hint">拖动图片调整位置，滑动缩放，圆形区域为最终头像</div>
+      <div class="crop-zoom">
+        <span>缩放</span>
+        <input type="range" id="cropZoom" min="100" max="300" value="100">
+      </div>
+    </div>
+
+    <div class="modal-foot">
+      <button class="btn-cancel" id="cropCancel">取消</button>
+      <button class="btn-save" id="cropSave">使用这张头像</button>
     </div>
   </div>
 </div>
@@ -4602,14 +4830,29 @@ body { color: var(--text); }
 <!-- ========================================================
      悬浮客服按钮与 AI 聊天窗口
      ======================================================== -->
-<button class="fab" id="fab" aria-label="打开健康小管家">
-  <svg class="icon"><use href="#i-chat"/></svg>
+<button class="fab" id="fab" aria-label="打开 AI 健康小管家">
+  <span class="ai-sprout">
+    <svg class="sprout-svg" viewBox="0 0 32 32" aria-hidden="true">
+      <path d="M16 27V15"/>
+      <path class="leaf" d="M16 17c-5.5 0-9-3.4-9-7.5 4.6 0 9 2.4 9 7.5z"/>
+      <path class="leaf" d="M16 14c5.5 0 9-3.4 9-7.5-4.6 0-9 2.4-9 7.5z"/>
+      <path d="M10 27h12"/>
+    </svg>
+    <span class="ai-tag">AI</span>
+  </span>
   <span class="dot" id="fabDot"></span>
 </button>
 
 <div class="chat" id="chat">
   <div class="chat-head">
-    <div class="ico"><svg class="icon"><use href="#i-chat"/></svg></div>
+    <div class="ico">
+      <svg class="icon" viewBox="0 0 32 32" style="fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round">
+        <path d="M16 27V15"/>
+        <path d="M16 17c-5.5 0-9-3.4-9-7.5 4.6 0 9 2.4 9 7.5z"/>
+        <path d="M16 14c5.5 0 9-3.4 9-7.5-4.6 0-9 2.4-9 7.5z"/>
+        <path d="M10 27h12"/>
+      </svg>
+    </div>
     <div>
       <div class="t">健康小管家 (AI)</div>
       <div class="s">随时随地问答健康问题</div>
@@ -4778,6 +5021,7 @@ document.getElementById('onboardingForm').addEventListener('submit', function (e
     nickname: name,
     name: '',
     avatar: currentAvatar,
+    avatarImage: customAvatarImage,
     gender: gender,
     height: height > 0 ? height : 0,
     weight: weight > 0 ? weight : 0
@@ -4788,20 +5032,7 @@ document.getElementById('onboardingForm').addEventListener('submit', function (e
     document.getElementById('weightValue').textContent = weight.toFixed(1);
   }
   if (height > 0 && weight > 0) {
-    const bmi = weight / Math.pow(height / 100, 2);
-    document.getElementById('bmiValue').textContent = bmi.toFixed(1);
-
-    const badge = document.getElementById('bmiBadge');
-    if (bmi < 18.5) {
-      badge.textContent = '偏瘦';
-      badge.className = 'badge warn';
-    } else if (bmi < 24) {
-      badge.textContent = '正常';
-      badge.className = 'badge';
-    } else {
-      badge.textContent = '偏高';
-      badge.className = 'badge warn';
-    }
+    setBmiDisplay(weight / Math.pow(height / 100, 2));
   }
 
   // 性别联动女性健康档案
@@ -4825,6 +5056,7 @@ document.getElementById('onboardingForm').addEventListener('submit', function (e
     '，建议三餐规律、优先选择天然食材，并保证每日蛋白质摄入。';
 
   enterApp();
+  renderVitalRanges();
   showToast('健康档案已保存');
 });
 
@@ -4894,24 +5126,48 @@ const avatarPresets = [
 ];
 
 let currentAvatar = 0;
+let customAvatarImage = null; // 用户上传并裁剪后的头像（dataURL）
 
 function readProfile() {
   const saved = loadData('profile', null);
   return saved && typeof saved === 'object' ? saved : {};
 }
 
-// 侧边栏头像：使用所选表情与底色；index 非法时回退到首个头像
+// 侧边栏头像：优先显示用户上传的头像，否则使用预设表情
+function renderSideAvatar() {
+  const avatar = document.getElementById('sideAvatar');
+  if (customAvatarImage) {
+    avatar.innerHTML = '<img src="' + customAvatarImage + '" alt="我的头像">';
+    avatar.style.background = '#f4f1ec';
+    return;
+  }
+  const preset = avatarPresets[currentAvatar] || avatarPresets[0];
+  avatar.textContent = preset.emoji;
+  avatar.style.background = preset.bg;
+}
+
+function updateAvatarSelection() {
+  document.querySelectorAll('.avatar-option').forEach(function (btn) {
+    const isUpload = btn.classList.contains('avatar-upload');
+    btn.classList.toggle('selected', isUpload
+      ? !!customAvatarImage
+      : !customAvatarImage && Number(btn.dataset.avatar) === currentAvatar);
+
+    if (isUpload) {
+      btn.innerHTML = customAvatarImage
+        ? '<img src="' + customAvatarImage + '" alt="自定义头像">'
+        : '＋';
+    }
+  });
+}
+
+// 选择预设头像：会清除已上传的自定义头像
 function applyAvatar(index) {
   const safe = (index >= 0 && index < avatarPresets.length) ? index : 0;
   currentAvatar = safe;
-  const preset = avatarPresets[safe];
-  const avatar = document.getElementById('sideAvatar');
-  avatar.textContent = preset.emoji;
-  avatar.style.background = preset.bg;
-
-  document.querySelectorAll('.avatar-option').forEach(function (btn) {
-    btn.classList.toggle('selected', Number(btn.dataset.avatar) === safe);
-  });
+  customAvatarImage = null;
+  renderSideAvatar();
+  updateAvatarSelection();
 }
 
 function renderAvatarPicker() {
@@ -4930,13 +5186,22 @@ function renderAvatarPicker() {
     });
     picker.appendChild(btn);
   });
+
+  // 最后一个：上传自定义头像
+  const uploadBtn = document.createElement('button');
+  uploadBtn.type = 'button';
+  uploadBtn.className = 'avatar-option avatar-upload';
+  uploadBtn.title = '上传头像';
+  uploadBtn.addEventListener('click', function () {
+    document.getElementById('avatarUploadInput').click();
+  });
+  picker.appendChild(uploadBtn);
 }
 
-// 页面加载：回显已保存的昵称、姓名与头像
+// 页面加载：回显已保存的昵称、姓名、头像与体重
 function loadProfileView() {
   const profile = readProfile();
   const nickname = profile.nickname || '张三';
-  const name = profile.name || '';
 
   document.getElementById('sideUserName').textContent = nickname;
   if (profile.gender) {
@@ -4944,8 +5209,26 @@ function loadProfileView() {
       profile.gender + ' · ' + (profile.height ? profile.height + 'cm' : '未填写身高');
   }
 
+  currentAvatar = typeof profile.avatar === 'number' ? profile.avatar : 0;
+  customAvatarImage = profile.avatarImage || null;
+
   renderAvatarPicker();
-  applyAvatar(typeof profile.avatar === 'number' ? profile.avatar : 0);
+  renderSideAvatar();
+  updateAvatarSelection();
+
+  // 恢复上次保存的身高体重与 BMI
+  if (profile.weight > 0) {
+    document.getElementById('weightValue').textContent = Number(profile.weight).toFixed(1);
+    if (profile.height > 0) {
+      setBmiDisplay(profile.weight / Math.pow(profile.height / 100, 2));
+    }
+  } else {
+    // 没有档案时按页面初始体重与默认身高重算，避免 BMI 与体重不一致
+    const shownWeight = parseFloat(document.getElementById('weightValue').textContent);
+    if (shownWeight > 0) {
+      setBmiDisplay(shownWeight / Math.pow(currentHeightCm() / 100, 2));
+    }
+  }
 }
 
 function openProfile() {
@@ -4956,8 +5239,11 @@ function openProfile() {
   document.getElementById('pGender').value = currentGender;
   if (profile.height) document.getElementById('pHeight').value = profile.height;
   if (profile.weight) document.getElementById('pWeight').value = profile.weight.toFixed(1);
+  currentAvatar = typeof profile.avatar === 'number' ? profile.avatar : currentAvatar;
+  customAvatarImage = profile.avatarImage || null;
   renderAvatarPicker();
-  applyAvatar(currentAvatar);
+  renderSideAvatar();
+  updateAvatarSelection();
   profileMask.classList.add('open');
   document.body.style.overflow = 'hidden'; // 弹窗打开时禁止页面滚动
 }
@@ -4994,19 +5280,7 @@ document.getElementById('saveProfile').addEventListener('click', function () {
 
   // BMI = 体重(kg) / 身高(m) 的平方
   const bmi = weight / Math.pow(height / 100, 2);
-  document.getElementById('bmiValue').textContent = bmi.toFixed(1);
-
-  const badge = document.getElementById('bmiBadge');
-  if (bmi < 18.5) {
-    badge.textContent = '偏瘦';
-    badge.className = 'badge warn';
-  } else if (bmi < 24) {
-    badge.textContent = '正常';
-    badge.className = 'badge';
-  } else {
-    badge.textContent = '偏高';
-    badge.className = 'badge warn';
-  }
+  setBmiDisplay(bmi);
 
   // 昵称用于展示，姓名仅在填写后写入档案
   document.getElementById('userBtn').title = '个人信息 · ' + nickname + '（' + gender + '）';
@@ -5018,6 +5292,7 @@ document.getElementById('saveProfile').addEventListener('click', function () {
     nickname: nickname,
     name: name,
     avatar: currentAvatar,
+    avatarImage: customAvatarImage,
     gender: gender,
     height: height,
     weight: weight
@@ -5030,8 +5305,157 @@ document.getElementById('saveProfile').addEventListener('click', function () {
   // 营养目标与体重相关，档案变化后重新计算
   refreshDietViews();
 
+  // 身高或体重变化后同步正常值范围、异常提醒与 BMI 公式
+  renderVitalRanges();
+
   closeProfile();
   showToast(name ? '个人信息已保存' : '个人信息已保存（姓名可稍后补充）');
+});
+
+/* ---------- 头像上传与裁剪 ---------- */
+const cropMask = document.getElementById('cropMask');
+const cropStage = document.getElementById('cropStage');
+const cropImg = document.getElementById('cropImage');
+const cropZoom = document.getElementById('cropZoom');
+const CROP_SIZE = 240;
+
+let cropSource = null;
+let cropBaseScale = 1;
+let cropScale = 1;
+let cropOffsetX = 0;
+let cropOffsetY = 0;
+let cropDragging = false;
+let cropPointerStart = { x: 0, y: 0, ox: 0, oy: 0 };
+
+function cropDisplaySize() {
+  return {
+    w: cropSource.naturalWidth * cropBaseScale * cropScale,
+    h: cropSource.naturalHeight * cropBaseScale * cropScale
+  };
+}
+
+// 图片始终铺满裁剪框，并限制拖动范围，避免出现空白边缘
+function layoutCropImage() {
+  if (!cropSource) return;
+  const size = cropDisplaySize();
+  const maxX = Math.max(0, (size.w - CROP_SIZE) / 2);
+  const maxY = Math.max(0, (size.h - CROP_SIZE) / 2);
+  cropOffsetX = Math.min(maxX, Math.max(-maxX, cropOffsetX));
+  cropOffsetY = Math.min(maxY, Math.max(-maxY, cropOffsetY));
+
+  cropImg.style.width = size.w + 'px';
+  cropImg.style.height = size.h + 'px';
+  cropImg.style.marginLeft = cropOffsetX + 'px';
+  cropImg.style.marginTop = cropOffsetY + 'px';
+}
+
+function closeCrop() {
+  cropMask.classList.remove('open');
+  if (!document.querySelector('.mask.open')) document.body.style.overflow = '';
+}
+
+document.getElementById('avatarUploadInput').addEventListener('change', function () {
+  const file = this.files && this.files[0];
+  this.value = ''; // 允许连续选择同一张图片
+  if (!file) return;
+  if (file.type.indexOf('image/') !== 0) {
+    showToast('请选择图片文件');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function () {
+    const image = new Image();
+    image.onload = function () {
+      cropSource = image;
+      cropBaseScale = Math.max(CROP_SIZE / image.naturalWidth, CROP_SIZE / image.naturalHeight);
+      cropScale = 1;
+      cropZoom.value = 100;
+      cropOffsetX = 0;
+      cropOffsetY = 0;
+      cropImg.src = image.src;
+      layoutCropImage();
+      cropMask.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    };
+    image.onerror = function () {
+      showToast('图片加载失败，请换一张试试');
+    };
+    image.src = reader.result;
+  };
+  reader.onerror = function () {
+    showToast('图片读取失败，请重试');
+  };
+  reader.readAsDataURL(file);
+});
+
+cropStage.addEventListener('pointerdown', function (event) {
+  if (!cropSource) return;
+  cropDragging = true;
+  cropStage.classList.add('dragging');
+  cropStage.setPointerCapture(event.pointerId);
+  cropPointerStart = {
+    x: event.clientX,
+    y: event.clientY,
+    ox: cropOffsetX,
+    oy: cropOffsetY
+  };
+});
+
+cropStage.addEventListener('pointermove', function (event) {
+  if (!cropDragging) return;
+  cropOffsetX = cropPointerStart.ox + (event.clientX - cropPointerStart.x);
+  cropOffsetY = cropPointerStart.oy + (event.clientY - cropPointerStart.y);
+  layoutCropImage();
+});
+
+function endCropDrag() {
+  cropDragging = false;
+  cropStage.classList.remove('dragging');
+}
+
+cropStage.addEventListener('pointerup', endCropDrag);
+cropStage.addEventListener('pointercancel', endCropDrag);
+
+cropZoom.addEventListener('input', function () {
+  cropScale = Number(cropZoom.value) / 100;
+  layoutCropImage();
+});
+
+document.getElementById('cropSave').addEventListener('click', function () {
+  if (!cropSource) {
+    closeCrop();
+    return;
+  }
+
+  const display = cropDisplaySize();
+  const left = CROP_SIZE / 2 + cropOffsetX - display.w / 2;
+  const top = CROP_SIZE / 2 + cropOffsetY - display.h / 2;
+  const ratio = cropSource.naturalWidth / display.w;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = CROP_SIZE;
+  canvas.height = CROP_SIZE;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, CROP_SIZE, CROP_SIZE);
+  ctx.drawImage(
+    cropSource,
+    -left * ratio, -top * ratio, CROP_SIZE * ratio, CROP_SIZE * ratio,
+    0, 0, CROP_SIZE, CROP_SIZE
+  );
+
+  customAvatarImage = canvas.toDataURL('image/jpeg', 0.88);
+  renderSideAvatar();
+  updateAvatarSelection();
+  closeCrop();
+  showToast('头像已更新，记得点击「保存修改」');
+});
+
+document.getElementById('cropClose').addEventListener('click', closeCrop);
+document.getElementById('cropCancel').addEventListener('click', closeCrop);
+cropMask.addEventListener('click', function (event) {
+  if (event.target === cropMask) closeCrop();
 });
 
 /* ==========================================================
@@ -5170,20 +5594,19 @@ reportImageInput.addEventListener('change', function () {
 // 将识别结果同步到核心体征
 document.getElementById('applyReport').addEventListener('click', function () {
   document.getElementById('weightValue').textContent = '64.8';
-  document.getElementById('fatValue').textContent = '18.2';
-  document.getElementById('bmiValue').textContent = '21.2';
+  document.getElementById('fatValue').textContent = '24.0';
   document.getElementById('bpValue').textContent = '112/72';
   document.getElementById('glucoseValue').textContent = '5.0';
+
+  // BMI 由体重和身高算出，不直接写入固定值
+  setBmiDisplay(64.8 / Math.pow(currentHeightMeters(), 2));
 
   // 体检同步的体重也进入趋势记录
   addWeightRecord(64.8);
   saveData('bp', { systolic: 112, diastolic: 72 });
   saveData('glucose', 5.0);
   refreshDietViews();
-
-  const badge = document.getElementById('bmiBadge');
-  badge.textContent = '正常';
-  badge.className = 'badge';
+  renderVitalRanges();
 
   showToast('体检指标已同步到核心体征');
 });
@@ -5682,7 +6105,7 @@ document.getElementById('generatePlan').addEventListener('click', function () {
   const target = parseFloat(document.getElementById('beautyTarget').value);
   const weeks = parseInt(document.getElementById('beautyWeeks').value, 10);
   const times = parseInt(document.getElementById('beautyTimes').value, 10);
-  const current = parseFloat(document.getElementById('weightValue').textContent) || 65.2;
+  const current = parseFloat(document.getElementById('weightValue').textContent) || 60.0;
 
   if (!target || target < 20 || target > 200) {
     showToast('请输入 20-200 kg 的目标体重');
@@ -6787,14 +7210,18 @@ function setBmiDisplay(bmi) {
   document.getElementById('bmiValue').textContent = bmi.toFixed(1);
   const badge = document.getElementById('bmiBadge');
 
+  // 中国成人 BMI 标准：＜18.5 偏瘦，18.5–23.9 正常，24.0–27.9 超重，≥28.0 肥胖
   if (bmi < 18.5) {
     badge.textContent = '偏瘦';
     badge.className = 'badge warn';
   } else if (bmi < 24) {
     badge.textContent = '正常';
     badge.className = 'badge';
+  } else if (bmi < 28) {
+    badge.textContent = '超重';
+    badge.className = 'badge warn';
   } else {
-    badge.textContent = '偏高';
+    badge.textContent = '肥胖';
     badge.className = 'badge warn';
   }
 }
@@ -6803,10 +7230,162 @@ function currentHeightMeters() {
   return (parseFloat(document.getElementById('pHeight').value) || 165) / 100;
 }
 
+/* ==========================================================
+   核心体征：正常值范围与异常提醒
+   标准来源：WS/T 428-2013（成人 BMI）、中国高血压防治指南、
+            中国 2 型糖尿病防治指南、常用体成分参考值
+   ========================================================== */
+function currentHeightCm() {
+  const saved = parseFloat(readProfile().height);
+  if (saved > 0) return saved;
+  const input = parseFloat(document.getElementById('pHeight').value);
+  return input > 0 ? input : 165;
+}
+
+function setRangeState(id, text, warn) {
+  const el = document.getElementById(id);
+  el.textContent = text;
+  el.className = 'rr-state' + (warn ? ' warn' : '');
+}
+
+function renderVitalRanges() {
+  const heightCm = currentHeightCm();
+  const heightM = heightCm / 100;
+  const weight = parseFloat(document.getElementById('weightValue').textContent);
+  const bmi = parseFloat(document.getElementById('bmiValue').textContent);
+  const fat = parseFloat(document.getElementById('fatValue').textContent);
+  const glucose = parseFloat(document.getElementById('glucoseValue').textContent);
+  const bp = (document.getElementById('bpValue').textContent || '').split('/');
+  const systolic = parseInt(bp[0], 10);
+  const diastolic = parseInt(bp[1], 10);
+  const isFemale = (currentGender || document.getElementById('pGender').value) === '女';
+
+  const warnings = [];
+
+  // 体重：按正常 BMI 区间反推
+  const lowWeight = 18.5 * heightM * heightM;
+  const highWeight = 23.9 * heightM * heightM;
+  document.getElementById('refWeight').textContent =
+    lowWeight.toFixed(1) + '–' + highWeight.toFixed(1) + ' kg';
+
+  if (weight) {
+    if (weight < lowWeight) {
+      setRangeState('stateWeight', '偏低', true);
+      warnings.push('体重 ' + weight.toFixed(1) + ' kg 低于参考下限 ' + lowWeight.toFixed(1) +
+        ' kg（BMI＜18.5），建议增加优质蛋白与主食摄入。');
+    } else if (weight > highWeight) {
+      setRangeState('stateWeight', '偏高', true);
+      warnings.push('体重 ' + weight.toFixed(1) + ' kg 高于参考上限 ' + highWeight.toFixed(1) +
+        ' kg（BMI＞23.9），建议控制总热量并增加日常活动。');
+    } else {
+      setRangeState('stateWeight', '正常', false);
+    }
+  }
+
+  if (bmi) {
+    if (bmi < 18.5) {
+      setRangeState('stateBmi', '偏瘦', true);
+      warnings.push('BMI ' + bmi.toFixed(1) + ' 属于偏瘦（＜18.5），建议保证三餐并适度增加力量训练。');
+    } else if (bmi < 24) {
+      setRangeState('stateBmi', '正常', false);
+    } else if (bmi < 28) {
+      setRangeState('stateBmi', '超重', true);
+      warnings.push('BMI ' + bmi.toFixed(1) + ' 属于超重（24.0–27.9），建议减少高油高糖食物并增加有氧运动。');
+    } else {
+      setRangeState('stateBmi', '肥胖', true);
+      warnings.push('BMI ' + bmi.toFixed(1) + ' 达到肥胖（≥28.0），建议在医生或营养师指导下制定减重计划。');
+    }
+  }
+
+  // 体脂率：常用参考值，女性 20%–30%，男性 10%–20%
+  const lowFat = isFemale ? 20 : 10;
+  const highFat = isFemale ? 30 : 20;
+  document.getElementById('refFat').textContent = isFemale ? '女 20%–30%' : '男 10%–20%';
+
+  if (fat) {
+    if (fat < lowFat) {
+      setRangeState('stateFat', '偏低', true);
+      warnings.push('体脂率 ' + fat.toFixed(1) + '% 低于' + (isFemale ? '女性' : '男性') +
+        '参考下限 ' + lowFat + '%，建议适当增加健康脂肪与蛋白质摄入。');
+    } else if (fat > highFat) {
+      setRangeState('stateFat', '偏高', true);
+      warnings.push('体脂率 ' + fat.toFixed(1) + '% 高于' + (isFemale ? '女性' : '男性') +
+        '参考上限 ' + highFat + '%，建议结合力量训练与有氧运动。');
+    } else {
+      setRangeState('stateFat', '正常', false);
+    }
+  }
+
+  // 血压：＜120/80 正常，120–139/80–89 正常高值，≥140/90 偏高
+  if (systolic && diastolic) {
+    if (systolic < 90 || diastolic < 60) {
+      setRangeState('stateBp', '偏低', true);
+      warnings.push('血压 ' + systolic + '/' + diastolic + ' mmHg 偏低，若伴随头晕乏力请及时就医。');
+    } else if (systolic < 120 && diastolic < 80) {
+      setRangeState('stateBp', '正常', false);
+    } else if (systolic < 140 && diastolic < 90) {
+      setRangeState('stateBp', '正常高值', true);
+      warnings.push('血压 ' + systolic + '/' + diastolic + ' mmHg 处于正常高值（120–139/80–89），建议减少盐分摄入并规律监测。');
+    } else {
+      setRangeState('stateBp', '偏高', true);
+      warnings.push('血压 ' + systolic + '/' + diastolic + ' mmHg 达到高血压范围（≥140/90），建议尽快就医评估。');
+    }
+  }
+
+  // 空腹血糖：3.9–6.1 正常，6.1–7.0 空腹血糖受损，≥7.0 偏高
+  if (glucose) {
+    if (glucose < 3.9) {
+      setRangeState('stateGlucose', '偏低', true);
+      warnings.push('空腹血糖 ' + glucose.toFixed(1) + ' mmol/L 低于 3.9，注意按时进餐，必要时就医。');
+    } else if (glucose <= 6.1) {
+      setRangeState('stateGlucose', '正常', false);
+    } else if (glucose < 7.0) {
+      setRangeState('stateGlucose', '空腹血糖受损', true);
+      warnings.push('空腹血糖 ' + glucose.toFixed(1) + ' mmol/L 处于空腹血糖受损区间（6.1–7.0），建议复查并咨询医生。');
+    } else {
+      setRangeState('stateGlucose', '偏高', true);
+      warnings.push('空腹血糖 ' + glucose.toFixed(1) + ' mmol/L 达到糖尿病诊断参考值（≥7.0），请尽快就医确认。');
+    }
+  }
+
+  // 异常提醒列表
+  const box = document.getElementById('abnormalBox');
+  const list = document.getElementById('abnormalList');
+  list.innerHTML = '';
+  if (warnings.length) {
+    box.classList.remove('ok');
+    warnings.forEach(function (text) {
+      const li = document.createElement('li');
+      li.textContent = text;
+      list.appendChild(li);
+    });
+  } else {
+    box.classList.add('ok');
+    const li = document.createElement('li');
+    li.textContent = '各项体征均在参考范围内，继续保持。';
+    list.appendChild(li);
+  }
+
+  // BMI 公式代入当前身高体重
+  if (weight) {
+    const computed = weight / Math.pow(heightM, 2);
+    document.getElementById('bmiFormulaValue').textContent =
+      '当前：' + weight.toFixed(1) + ' ÷ ' + heightM.toFixed(2) + '² ≈ ' + computed.toFixed(1) +
+      '（身高 ' + heightCm.toFixed(0) + ' cm）';
+  }
+}
+
 // 体重变化后同步 BMI、个人档案与趋势
 function applyWeightChange(weight) {
   document.getElementById('weightValue').textContent = weight.toFixed(1);
   document.getElementById('pWeight').value = weight.toFixed(1);
+
+  // 已保存档案时同步体重，刷新页面后仍能恢复
+  const profile = readProfile();
+  if (profile.weight !== undefined) {
+    profile.weight = weight;
+    saveData('profile', profile);
+  }
 
   const bmi = weight / Math.pow(currentHeightMeters(), 2);
   setBmiDisplay(bmi);
@@ -6876,6 +7455,7 @@ document.getElementById('vitalSave').addEventListener('click', function () {
 
   closeMask(vitalMask);
   refreshDietViews();
+  renderVitalRanges();
 });
 
 // 恢复上次保存的血压与血糖
@@ -7970,6 +8550,7 @@ newsSearch.addEventListener('input', filterNews);
 
 // ---------- 新功能初始化 ----------
 loadProfileView();
+renderVitalRanges();
 renderMealLog();
 refreshDietViews();
 fillSportInputs();
@@ -8036,7 +8617,7 @@ const chatRules = [
   },
   {
     keys: ['血压', '血糖', '体检', 'bmi', '体脂', '指标'],
-    reply: '你的核心体征目前为：BMI 21.3（正常）、血压 110/70 mmHg、空腹血糖 5.2 mmol/L。整体处于健康范围，建议每 3—6 个月复测一次并保持规律运动。'
+    reply: '你的核心体征目前为：BMI 22.0（正常）、血压 110/70 mmHg、空腹血糖 5.2 mmol/L。整体处于健康范围，建议每 3—6 个月复测一次并保持规律运动。'
   },
   {
     keys: ['减肥', '减脂', '体重', '瘦'],
@@ -8089,6 +8670,7 @@ chatInput.addEventListener('keydown', function (event) {
    ========================================================== */
 document.addEventListener('keydown', function (event) {
   if (event.key !== 'Escape') return;
+  closeCrop();
   closeProfile();
   closeChat();
   closeMask(periodMask);
