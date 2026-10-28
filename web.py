@@ -225,17 +225,20 @@ a { text-decoration: none; }
    3. 顶部横幅（浅绿卡片式，含插画与三条评分）
    ========================================================== */
 .hero {
-  margin-top: 24px;
-  border-radius: 18px;
-  padding: 30px 34px 60px;
+  margin-top: 20px;
+  border-radius: 14px;
+  padding: 16px 24px;
   position: relative;
   overflow: hidden;
   color: #24512f;
+  display: flex;
+  align-items: center;
+  gap: 26px;
   background:
     radial-gradient(90% 130% at 94% 4%, #ffffff 0%, rgba(255, 255, 255, 0) 58%),
     linear-gradient(112deg, #f0f8e7 0%, #f7fbf2 38%, #eef7f1 68%, #e6f2f5 100%);
   border: 1px solid #e3eedd;
-  box-shadow: 0 10px 28px rgba(84, 112, 74, 0.08);
+  box-shadow: 0 8px 22px rgba(84, 112, 74, 0.07);
 }
 
 /* 底部柔和的草地与水色弧线 */
@@ -244,48 +247,47 @@ a { text-decoration: none; }
   position: absolute;
   left: -12%;
   right: -12%;
-  bottom: -96px;
-  height: 170px;
+  bottom: -104px;
+  height: 130px;
   background:
-    radial-gradient(58% 100% at 28% 100%, #dcefcf, rgba(220, 239, 207, 0) 72%),
-    radial-gradient(52% 100% at 82% 100%, #cfe6f2, rgba(207, 230, 242, 0) 72%);
+    radial-gradient(58% 100% at 28% 100%, #dfefd3, rgba(223, 239, 211, 0) 72%),
+    radial-gradient(52% 100% at 84% 100%, #d4e9f3, rgba(212, 233, 243, 0) 72%);
   pointer-events: none;
 }
 
 .hero-head {
   position: relative;
   z-index: 2;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 20px;
+  flex: none;
 }
 
 .hero-title h1 {
-  font-size: 36px;
+  font-size: 22px;
   font-weight: 800;
-  letter-spacing: 3px;
+  letter-spacing: 2px;
   color: #1c5a30;
   line-height: 1.25;
+  white-space: nowrap;
 }
 
 .hero-title p {
-  font-size: 16px;
+  font-size: 12.5px;
   font-weight: 500;
-  letter-spacing: 2px;
+  letter-spacing: 1px;
   color: #47704f;
-  margin-top: 10px;
+  margin-top: 4px;
 }
 
 .hero-underline {
-  width: 64px;
-  height: 4px;
-  border-radius: 4px;
+  width: 42px;
+  height: 3px;
+  border-radius: 3px;
   background: #6ea75b;
-  margin-top: 12px;
+  margin-top: 7px;
 }
 
-/* 右侧插画：心形脉搏 + 标语 + 跑者 */
+/* 顶部插画与角落装饰在紧凑版中不再展示 */
+.hero-illus, .hero-leaf, .hero-leaf-sm, .hero-bowl, .hero-glass { display: none; }
 .hero-illus {
   position: relative;
   flex: none;
@@ -372,23 +374,25 @@ a { text-decoration: none; }
   pointer-events: none;
 }
 
-/* 三条评分：图标 + 标题 + 进度条 + 分数 */
+/* 三条评分：同一行排布，图标 + 标题 + 进度条 + 分数 */
 .score-group {
   position: relative;
   z-index: 2;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-top: 26px;
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 0;
 }
 
 .score {
   display: grid;
-  grid-template-columns: 46px 1fr auto;
+  grid-template-columns: 32px minmax(0, 1fr);
   align-items: center;
-  gap: 14px;
-  padding: 12px 24px 12px 12px;
-  border-radius: 12px;
+  gap: 9px;
+  padding: 8px 12px 9px 9px;
+  border-radius: 10px;
   border: 1px solid transparent;
   margin-top: 0;
   max-width: none;
@@ -398,12 +402,12 @@ a { text-decoration: none; }
 
 .score:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(80, 100, 70, 0.1);
+  box-shadow: 0 6px 14px rgba(80, 100, 70, 0.1);
 }
 
 .score .score-ico {
-  width: 44px;
-  height: 44px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -412,33 +416,35 @@ a { text-decoration: none; }
   flex: none;
 }
 
-.score .score-ico .icon { width: 23px; height: 23px; stroke-width: 2; }
+.score .score-ico .icon { width: 17px; height: 17px; stroke-width: 2; }
 
 .score .row {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  font-size: 15px;
+  gap: 6px;
+  font-size: 12px;
   color: #5b4636;
-  margin-bottom: 9px;
+  margin-bottom: 5px;
   opacity: 1;
+  white-space: nowrap;
 }
 
 .score .score-num {
-  font-size: 14px;
+  font-size: 10.5px;
   color: #9a8a7c;
   white-space: nowrap;
 }
 
 .score .score-num b {
-  font-size: 26px;
+  font-size: 17px;
   font-weight: 800;
-  margin-right: 3px;
-  letter-spacing: 0.5px;
+  margin-right: 1px;
+  letter-spacing: 0.3px;
 }
 
 .bar {
-  height: 10px;
+  height: 6px;
   border-radius: 99px;
   background: rgba(74, 53, 37, 0.08);
   overflow: hidden;
@@ -882,6 +888,21 @@ a { text-decoration: none; }
 }
 
 .meal input::placeholder { color: #aab2c0; }
+
+.meal-btn {
+  flex: none;
+  height: 34px;
+  padding: 0 14px;
+  border: 1px solid #d9c3ae;
+  border-radius: 9px;
+  background: #fdf7f0;
+  color: #8b4a22;
+  font-size: 12.5px;
+  font-weight: 600;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.meal-btn:hover { background: #f7eee4; border-color: #c9a98d; }
 
 .meal input:focus {
   background: #fff;
@@ -1331,6 +1352,60 @@ a { text-decoration: none; }
   max-width: 64%;
   text-align: right;
   line-height: 1.5;
+}
+
+/* 家人卡片可点击进入完整档案 */
+.person-card {
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.person-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(74, 53, 37, 0.1);
+}
+
+/* 家人健康档案弹窗 */
+.member-detail-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 14px;
+  border-bottom: 1px dashed #eef1f6;
+  margin-bottom: 14px;
+}
+
+.member-detail-name { display: flex; flex-direction: column; gap: 3px; }
+.member-detail-name b { font-size: 15px; color: #39404f; }
+.member-detail-name span { font-size: 12px; color: #8a94a6; }
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.detail-item {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #f8faf7;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.detail-item span { font-size: 11.5px; color: #8b7d70; }
+.detail-item b { font-size: 13px; color: #39404f; line-height: 1.5; word-break: break-all; }
+
+.detail-title {
+  font-size: 13px;
+  color: #433326;
+  margin: 14px 0 8px;
+}
+
+@media (max-width: 620px) {
+  .detail-grid { grid-template-columns: 1fr; }
 }
 
 .family-card .status-title .icon { color: #5b8def; }
@@ -1987,7 +2062,7 @@ a { text-decoration: none; }
 .onboarding-actions .btn-primary { padding: 12px 24px; font-size: 14px; }
 
 /* ==========================================================
-   科学变美 · 目标与计划
+   运动计划 · 目标与计划
    ========================================================== */
 .beauty-card { margin-top: 20px; }
 
@@ -2853,6 +2928,8 @@ body { color: var(--text); }
   .health-card { flex-direction: column; }
   .vital-side { width: 100%; flex: none; }
   .report-link { align-self: flex-end; }
+  .hero { gap: 14px; padding: 14px 16px; }
+  .score-group { gap: 8px; }
   .vitals { grid-template-columns: repeat(2, 1fr); }
   .report-grid { grid-template-columns: repeat(2, 1fr); }
   .sport-modal { width: 100%; }
@@ -2867,22 +2944,25 @@ body { color: var(--text); }
   .chat { right: 12px; left: 12px; width: auto; }
 }
 
+/* 窄屏：标题在上，三个评分仍保持一行 */
+@media (max-width: 700px) {
+  .hero { flex-direction: column; align-items: stretch; gap: 10px; padding: 14px 16px; }
+  .score-group { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
 @media (max-width: 560px) {
   .container { padding: 0 16px; }
-  .hero { padding: 22px 20px 30px; }
-  .hero-head { gap: 12px; }
-  .hero-title h1 { font-size: 24px; letter-spacing: 2px; }
-  .hero-title p { font-size: 14px; }
-  .hero-underline { width: 48px; height: 3px; margin-top: 9px; }
-  .hero-illus, .hero-bowl, .hero-glass, .hero-leaf-sm { display: none; }
-  .hero-leaf { width: 92px; opacity: 0.5; }
-  .score-group { margin-top: 20px; gap: 9px; }
-  .score { grid-template-columns: 38px 1fr auto; gap: 10px; padding: 10px 14px 10px 10px; }
-  .score .score-ico { width: 38px; height: 38px; }
-  .score .score-ico .icon { width: 20px; height: 20px; }
-  .score .row { font-size: 13.5px; margin-bottom: 7px; }
-  .score .score-num { font-size: 12px; }
-  .score .score-num b { font-size: 21px; }
+  .hero { padding: 16px 16px 18px; flex-direction: column; align-items: stretch; gap: 10px; }
+  .hero-title h1 { font-size: 21px; letter-spacing: 2px; }
+  .hero-title p { font-size: 12px; }
+  .hero-underline { width: 38px; height: 3px; margin-top: 6px; }
+  .score-group { gap: 8px; }
+  .score { grid-template-columns: 26px minmax(0, 1fr); padding: 7px 8px; gap: 6px; }
+  .score .score-ico { width: 26px; height: 26px; }
+  .score .score-ico .icon { width: 14px; height: 14px; }
+  .score .row { font-size: 11px; margin-bottom: 4px; }
+  .score .score-num { font-size: 9px; }
+  .score .score-num b { font-size: 15px; }
   .macros { grid-template-columns: repeat(2, 1fr); }
   .female-card { padding: 18px; }
   .family-card { padding: 18px; }
@@ -2957,7 +3037,7 @@ body { color: var(--text); }
   padding: 10px 8px 6px;
 }
 
-.weight-chart svg { width: 100%; height: 140px; display: block; }
+.weight-chart svg { width: 100%; height: auto; display: block; }
 .weight-chart svg text { font-size: 9px; fill: #a08d7d; }
 
 .weight-chart-head {
@@ -3271,12 +3351,6 @@ body { color: var(--text); }
 .reminder-del:hover { color: #b0402f; }
 
 /* 顶部三项评分：综合 / 饮食 / 运动，随数据自动更新 */
-.score-group {
-  display: flex;
-  gap: 16px;
-  margin-top: 22px;
-}
-
 .score-group .score {
   flex: 1;
   margin-top: 0;
@@ -3622,6 +3696,54 @@ body { color: var(--text); }
   color: #a08d7d;
 }
 
+/* 提醒弹窗：多日期选择 */
+.date-quick { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+
+.date-add { display: flex; align-items: center; gap: 8px; }
+
+.date-add input {
+  flex: 1;
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: #f8faf7;
+  color: #475467;
+  font-size: 13px;
+}
+
+.date-selected {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.date-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #f2f8ec;
+  border: 1px solid #dbe9cd;
+  color: #4f7a37;
+  font-size: 12px;
+}
+
+.date-tag button {
+  border: 0;
+  background: transparent;
+  color: #8aa377;
+  font-size: 13px;
+  line-height: 1;
+  padding: 0;
+}
+
+.date-tag button:hover { color: #b0402f; }
+
+.date-empty { font-size: 12px; color: #aab2c0; }
+
 .quick-chip {
   border: 1px solid #e6dbcd;
   background: #fbf8f4;
@@ -3676,7 +3798,6 @@ body { color: var(--text); }
 @media (max-width: 700px) {
   .sport-inputs { grid-template-columns: 1fr; }
   .plan-day { grid-template-columns: 22px 36px 1fr; }
-  .score-group { flex-direction: column; gap: 10px; }
   .week-grid { grid-template-columns: repeat(4, 1fr); }
   .mood-week { flex-wrap: wrap; }
   .mood-week .day { flex: 1 1 28%; }
@@ -3769,7 +3890,7 @@ body { color: var(--text); }
     <div class="onboarding-head">
       <div>
         <h1>完善你的健康信息</h1>
-        <p>填写后，我们会为你生成更贴合的健康建议与变美计划。</p>
+        <p>填写后，我们会为你生成更贴合的健康建议与运动计划。</p>
       </div>
     </div>
 
@@ -3959,36 +4080,13 @@ body { color: var(--text); }
 <div class="main-area">
 <main class="container">
 
-  <!-- 所有页面共用的顶部横幅 -->
+  <!-- 所有页面共用的顶部横幅（紧凑版：标题 + 三评分同一行） -->
   <section class="hero">
-    <!-- 左上角叶片装饰 -->
-    <svg class="hero-leaf" viewBox="0 0 120 90" aria-hidden="true">
-      <path d="M4 84C4 44 30 12 68 6c0 38-24 70-64 78z" fill="currentColor" opacity=".55"/>
-      <path d="M20 74C34 50 52 32 84 18" stroke="#6f9b52" stroke-width="2" fill="none" stroke-linecap="round"/>
-      <path d="M48 78c0-26 18-46 50-52 0 26-20 46-50 52z" fill="currentColor" opacity=".38"/>
-    </svg>
-    <svg class="hero-leaf-sm" viewBox="0 0 40 40" aria-hidden="true">
-      <path d="M6 34C6 16 18 6 34 4c0 16-12 28-28 30z" fill="currentColor"/>
-    </svg>
-
     <div class="hero-head">
       <div class="hero-title">
         <h1>科学管理健康</h1>
         <p>遇见更好的自己</p>
         <div class="hero-underline"></div>
-      </div>
-
-      <div class="hero-illus">
-        <div class="hi-heart">
-          <svg viewBox="0 0 64 60" aria-hidden="true">
-            <path d="M32 55S6 39 6 22C6 12 13 6 22 6c5 0 8 2 10 5 2-3 5-5 10-5 9 0 16 6 16 16 0 17-26 33-26 33z" fill="#f2606b"/>
-            <path d="M16 27h7l4-7 5 14 4-7h8" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-        <div class="hi-slogan">健康从<br>科学管理开始</div>
-        <div class="hi-runner">
-          <svg class="icon" aria-hidden="true"><use href="#i-run"/></svg>
-        </div>
       </div>
     </div>
 
@@ -3996,58 +4094,27 @@ body { color: var(--text); }
       <div class="score score-total" data-score="total" title="点击查看分析">
         <span class="score-ico"><svg class="icon"><use href="#i-heart"/></svg></span>
         <div class="score-main">
-          <div class="row"><span>综合健康评分</span></div>
+          <div class="row"><span>综合健康评分</span><span class="score-num"><b id="scoreTotal">0</b>/100</span></div>
           <div class="bar"><i id="scoreTotalBar"></i></div>
         </div>
-        <div class="score-num"><b id="scoreTotal">0</b>/100</div>
       </div>
 
       <div class="score score-diet" data-score="diet" title="点击查看分析">
         <span class="score-ico"><svg class="icon"><use href="#i-leaf"/></svg></span>
         <div class="score-main">
-          <div class="row"><span>饮食健康评分</span></div>
+          <div class="row"><span>饮食健康评分</span><span class="score-num"><b id="scoreDiet">0</b>/100</span></div>
           <div class="bar"><i id="scoreDietBar"></i></div>
         </div>
-        <div class="score-num"><b id="scoreDiet">0</b>/100</div>
       </div>
 
       <div class="score score-sport" data-score="sport" title="点击查看分析">
         <span class="score-ico"><svg class="icon"><use href="#i-run"/></svg></span>
         <div class="score-main">
-          <div class="row"><span>运动完成评分</span></div>
+          <div class="row"><span>运动完成评分</span><span class="score-num"><b id="scoreSport">0</b>/100</span></div>
           <div class="bar"><i id="scoreSportBar"></i></div>
         </div>
-        <div class="score-num"><b id="scoreSport">0</b>/100</div>
       </div>
     </div>
-
-    <!-- 左下角蔬果碗 -->
-    <svg class="hero-bowl" viewBox="0 0 140 96" aria-hidden="true">
-      <ellipse cx="70" cy="88" rx="54" ry="7" fill="#cfe4c2" opacity=".5"/>
-      <path d="M30 54h80c0 24-18 40-40 40S30 78 30 54z" fill="#fff" stroke="#e4ddcf" stroke-width="1.5"/>
-      <path d="M30 54h80" stroke="#e9e2d5" stroke-width="3"/>
-      <g>
-        <path d="M48 46c-8-8-8-18-2-26 8 3 12 11 10 20z" fill="#6fbf5f"/>
-        <path d="M58 44c2-12 10-18 20-18 2 10-4 18-14 22z" fill="#8ed07a"/>
-        <circle cx="72" cy="44" r="9" fill="#f08b58"/>
-        <circle cx="86" cy="46" r="7" fill="#f45f5f"/>
-        <circle cx="62" cy="45" r="6" fill="#f7c948"/>
-        <path d="M94 50c0-8 5-13 12-14 1 8-4 13-12 14z" fill="#7fc46c"/>
-      </g>
-      <g stroke="#d8b970" stroke-width="2" fill="#f3dfa8">
-        <circle cx="52" cy="56" r="4"/>
-        <circle cx="66" cy="60" r="4"/>
-        <circle cx="80" cy="57" r="4"/>
-      </g>
-    </svg>
-
-    <!-- 右下角水杯 -->
-    <svg class="hero-glass" viewBox="0 0 60 92" aria-hidden="true">
-      <path d="M10 14h40l-4 70H14z" fill="#eaf6fc" stroke="#bcd9e8" stroke-width="1.6"/>
-      <path d="M13 42h34l-3 40H16z" fill="#9fd6f0" opacity=".85"/>
-      <path d="M14 52c6 4 12 4 18 0s12-4 18 0" stroke="#fff" stroke-width="2.4" fill="none" opacity=".9"/>
-      <ellipse cx="30" cy="86" rx="20" ry="4" fill="#bcd9e8" opacity=".55"/>
-    </svg>
   </section>
 
   <div class="content">
@@ -4313,18 +4380,21 @@ body { color: var(--text); }
 
           <h3 class="sub-title">今日饮食记录</h3>
 
-          <!-- 回车即可记录一条饮食 -->
+          <!-- 回车或点击「记录」即可记录一条饮食 -->
           <div class="meal">
             <span class="meal-tag morning">早</span>
             <input data-meal="早餐" placeholder="例如：一杯牛奶，两片全麦面包...">
+            <button class="meal-btn" type="button" data-meal-btn="早餐">记录</button>
           </div>
           <div class="meal">
             <span class="meal-tag noon">中</span>
             <input data-meal="午餐" placeholder="记录午餐...">
+            <button class="meal-btn" type="button" data-meal-btn="午餐">记录</button>
           </div>
           <div class="meal">
             <span class="meal-tag night">晚</span>
             <input data-meal="晚餐" placeholder="记录晚餐...">
+            <button class="meal-btn" type="button" data-meal-btn="晚餐">记录</button>
           </div>
 
           <!-- 今日已记录的食物，可单条删除 -->
@@ -4536,13 +4606,13 @@ body { color: var(--text); }
                   <option value="7">7 次</option>
                 </select>
               </div>
-              <button class="btn-primary" id="generatePlan" type="button">生成变美计划</button>
+              <button class="btn-primary" id="generatePlan" type="button">生成运动计划</button>
             </div>
 
             <!-- 计划结果 -->
             <div class="beauty-result">
               <div class="beauty-empty" id="beautyEmpty">
-                设置目标体重与周期后，<br>这里会生成属于你的变美计划。
+                设置目标体重与周期后，<br>这里会生成属于你的运动计划。
               </div>
 
               <div id="beautyResultBody" hidden>
@@ -4603,15 +4673,9 @@ body { color: var(--text); }
             <button class="btn-soft" id="openReminder">添加提醒</button>
           </div>
 
-          <!-- 常用提醒：点击后自动带入标题，直接选日期保存 -->
-          <div class="quick-reminders">
+          <!-- 常用提醒：点击后自动带入标题，直接选日期保存；支持自定义并长期保留 -->
+          <div class="quick-reminders" id="quickReminderBox">
             <span>常用提醒</span>
-            <button class="quick-chip" type="button" data-reminder="提醒家人测量血压">测量血压</button>
-            <button class="quick-chip" type="button" data-reminder="提醒家人按时吃药">按时吃药</button>
-            <button class="quick-chip" type="button" data-reminder="陪家人散步 30 分钟">陪伴散步</button>
-            <button class="quick-chip" type="button" data-reminder="预约复诊 / 体检">复诊体检</button>
-            <button class="quick-chip" type="button" data-reminder="提醒家人多喝水">多喝水</button>
-            <button class="quick-chip" type="button" data-reminder="提醒家人注意保暖">注意保暖</button>
           </div>
 
           <div class="reminder-list" id="reminderList"></div>
@@ -4912,8 +4976,22 @@ body { color: var(--text); }
         <input id="memberName" type="text" placeholder="如：李秀兰">
       </div>
       <div class="field">
-        <label for="memberNote">备注</label>
-        <input id="memberNote" type="text" placeholder="如：每日降压药、经期注意保暖">
+        <label for="memberConditions">基础病史</label>
+        <input id="memberConditions" type="text" placeholder="如：高血压、糖尿病（没有可填“无”）">
+      </div>
+      <div class="field">
+        <label for="memberMedications">常用药物</label>
+        <input id="memberMedications" type="text" placeholder="如：降压药 每日 1 片">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="memberEmergencyName">紧急联系人</label>
+          <input id="memberEmergencyName" type="text" placeholder="如：王小明（儿子）">
+        </div>
+        <div class="field">
+          <label for="memberEmergencyPhone">联系电话</label>
+          <input id="memberEmergencyPhone" type="tel" placeholder="如：13800000000">
+        </div>
       </div>
     </div>
 
@@ -4946,8 +5024,19 @@ body { color: var(--text); }
         <input id="reminderTitle" type="text" placeholder="如：提醒母亲测量血压">
       </div>
       <div class="field">
-        <label for="reminderDate">提醒日期</label>
-        <input id="reminderDate" type="date">
+        <label>提醒日期（可一次多选）</label>
+        <div class="date-quick">
+          <button class="quick-chip date-chip" type="button" data-day="0">今天</button>
+          <button class="quick-chip date-chip" type="button" data-day="1">明天</button>
+          <button class="quick-chip date-chip" type="button" data-day="3">3 天后</button>
+          <button class="quick-chip date-chip" type="button" data-day="7">一周后</button>
+          <button class="quick-chip date-chip" type="button" data-day="14">两周后</button>
+        </div>
+        <div class="date-add">
+          <input id="reminderDate" type="date">
+          <button class="btn-soft" type="button" id="reminderDateAdd">添加日期</button>
+        </div>
+        <div class="date-selected" id="reminderDateList"></div>
       </div>
     </div>
 
@@ -4970,7 +5059,7 @@ body { color: var(--text); }
       </button>
     </div>
     <div class="modal-body">
-      <div id="memberRecordsList"></div>
+      <div id="memberDetailBody"></div>
     </div>
   </div>
 </div>
@@ -5760,7 +5849,19 @@ cropMask.addEventListener('click', function (event) {
    ========================================================== */
 document.querySelectorAll('.meal input').forEach(function (input) {
   input.addEventListener('keydown', function (event) {
-    if (event.key !== 'Enter') return;
+    if (event.key !== 'Enter' && event.keyCode !== 13) return;
+    // 中文输入法选词时的回车不算提交，避免把未上屏的拼音当成食物
+    if (event.isComposing || event.keyCode === 229) return;
+    event.preventDefault();
+    requestMealRecord(input.dataset.meal, input.value, input);
+  });
+});
+
+// 点「记录」按钮同样可以提交，避免部分输入法 / 移动端回车无效
+document.querySelectorAll('.meal-btn').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    const input = btn.parentElement.querySelector('input');
+    if (!input) return;
     requestMealRecord(input.dataset.meal, input.value, input);
   });
 });
@@ -5916,6 +6017,16 @@ const sportState = loadData('sport', {
   history: {}
 });
 
+// 运动记录只保留最近 7 天，避免旧数据长期堆积
+function pruneSportHistory() {
+  const cutoff = toISODate(addDays(new Date(), -6));
+  Object.keys(sportState.history).forEach(function (date) {
+    if (date < cutoff) delete sportState.history[date];
+  });
+}
+
+pruneSportHistory();
+
 // 小圆环半径 18，周长 = 2πr ≈ 113.1
 const gaugeLength = 2 * Math.PI * 18;
 
@@ -5990,6 +6101,7 @@ function fillSportInputs() {
 // 保存今日实际数据到对应日期，并刷新统计与评分
 function saveTodaySport(data) {
   sportState.history[toISODate(new Date())] = data;
+  pruneSportHistory();
   saveData('sport', sportState);
 
   const activeTab = document.querySelector('#sportTabs button.active');
@@ -6134,31 +6246,26 @@ document.querySelectorAll('.sport-pill').forEach(function (pill) {
 });
 
 // ---------- 本周统计：日期 + 图标，点击查看当天详情 ----------
-function moodEmojiOf(mood) {
-  return { '开心': '😄', '平静': '🙂', '疲惫': '😴', '焦虑': '😰', '低落': '😔' }[mood] || '·';
-}
-
 function renderWeekPanel() {
   const panel = document.getElementById('weekPanel');
   if (!panel) return;
 
   const today = new Date();
   const monday = addDays(today, -((today.getDay() + 6) % 7));
-  const moodLog = loadData('moodLog', {});
   const days = [];
 
   for (let index = 0; index < 7; index++) {
     const day = addDays(monday, index);
     const key = toISODate(day);
     const data = sportState.history[key] || { kcal: 0, steps: 0, minutes: 0 };
-    days.push({ date: day, key: key, data: data, mood: moodLog[key] ? moodLog[key].mood : '' });
+    days.push({ date: day, key: key, data: data });
   }
 
   const maxKcal = Math.max.apply(null, days.map(function (item) {
     return item.data.kcal || 0;
   }).concat([1]));
 
-  panel.innerHTML = '<div class="week-grid" id="weekGrid"></div><div class="week-detail" id="weekDetail">点击上方任意日期，查看当天的运动与心情记录。</div>';
+  panel.innerHTML = '<div class="week-grid" id="weekGrid"></div><div class="week-detail" id="weekDetail">点击上方任意日期，查看当天的运动记录。</div>';
   const grid = document.getElementById('weekGrid');
 
   days.forEach(function (item) {
@@ -6167,7 +6274,7 @@ function renderWeekPanel() {
     const icon = item.data.kcal >= maxKcal * 0.6 && item.data.kcal > 0 ? 'i-flame' : 'i-activity';
 
     tile.innerHTML = '<div class="date">' + (item.date.getMonth() + 1) + '/' + item.date.getDate() + '</div>' +
-      (item.mood ? '<span class="emoji">' + moodEmojiOf(item.mood) + '</span>' : '<svg class="icon"><use href="#' + icon + '"></use></svg>') +
+      '<svg class="icon"><use href="#' + icon + '"></use></svg>' +
       '<div class="kcal">' + (item.data.kcal ? Math.round(item.data.kcal) + ' kcal' : '无记录') + '</div>';
 
     tile.addEventListener('click', function () {
@@ -6178,8 +6285,7 @@ function renderWeekPanel() {
       document.getElementById('weekDetail').innerHTML =
         '<b>' + (item.date.getMonth() + 1) + ' 月 ' + item.date.getDate() + ' 日</b><br>' +
         '消耗：' + Math.round(item.data.kcal || 0) + ' kcal　步数：' + formatNumber(item.data.steps || 0) +
-        '　时长：' + Math.round(item.data.minutes || 0) + ' 分钟<br>' +
-        '心情：' + (item.mood ? moodEmojiOf(item.mood) + ' ' + item.mood : '未记录');
+        '　时长：' + Math.round(item.data.minutes || 0) + ' 分钟';
     });
 
     grid.appendChild(tile);
@@ -6201,33 +6307,47 @@ document.querySelectorAll('#sportTabs button').forEach(function (btn) {
 
 // ---------- 运动类型：先选大类板块，再选具体项目 ----------
 const sportBoards = [
-  { name: '户外运动', desc: '跑步、骑行、徒步、登山、游泳' },
-  { name: '球类运动', desc: '乒乓球、羽毛球、篮球、足球、网球' },
-  { name: '形体运动', desc: '瑜伽、普拉提、健身操、力量训练' },
-  { name: '碎片化运动', desc: '爬楼梯、跳绳、开合跳、工间操' }
+  { name: '户外运动', desc: '健走、快走、慢跑、骑行、徒步、登山、游泳、轮滑' },
+  { name: '球类运动', desc: '乒乓球、羽毛球、篮球、足球、网球、排球、台球' },
+  { name: '形体运动', desc: '瑜伽、普拉提、健身操、力量训练、太极、舞蹈' },
+  { name: '碎片化运动', desc: '爬楼梯、跳绳、开合跳、深蹲、平板支撑、工间操' }
 ];
 
 const sportTypes = [
   { name: '健走', board: '户外运动', cal: '约 280 kcal/小时', color: '#6b8f3f', icon: 'i-footprints', met: 4.3 },
+  { name: '快走', board: '户外运动', cal: '约 260 kcal/小时', color: '#7a9b5c', icon: 'i-footprints', met: 4.0 },
+  { name: '慢跑', board: '户外运动', cal: '约 455 kcal/小时', color: '#c08a5a', icon: 'i-run', met: 7.0 },
   { name: '户外骑行', board: '户外运动', cal: '约 350 kcal/小时', color: '#5f8fae', icon: 'i-bike', met: 6.8 },
   { name: '徒步', board: '户外运动', cal: '约 320 kcal/小时', color: '#4f7898', icon: 'i-mountain', met: 6.0 },
   { name: '跑步', board: '户外运动', cal: '约 450 kcal/小时', color: '#b06a3a', icon: 'i-run', met: 8.3 },
   { name: '登山', board: '户外运动', cal: '约 420 kcal/小时', color: '#6e3a18', icon: 'i-mountain', met: 7.5 },
   { name: '游泳', board: '户外运动', cal: '约 500 kcal/小时', color: '#4f7898', icon: 'i-swim', met: 7.0 },
+  { name: '轮滑 / 滑板', board: '户外运动', cal: '约 455 kcal/小时', color: '#8b7d70', icon: 'i-activity', met: 7.0 },
+  { name: '飞盘', board: '户外运动', cal: '约 260 kcal/小时', color: '#6b8f3f', icon: 'i-activity', met: 4.0 },
   { name: '乒乓球', board: '球类运动', cal: '约 360 kcal/小时', color: '#8b4a22', icon: 'i-ball', met: 4.0 },
   { name: '羽毛球', board: '球类运动', cal: '约 420 kcal/小时', color: '#a9653a', icon: 'i-ball', met: 5.5 },
   { name: '篮球', board: '球类运动', cal: '约 470 kcal/小时', color: '#b06a3a', icon: 'i-ball', met: 6.5 },
   { name: '足球', board: '球类运动', cal: '约 500 kcal/小时', color: '#6b8f3f', icon: 'i-ball', met: 7.0 },
   { name: '网球', board: '球类运动', cal: '约 440 kcal/小时', color: '#7a9b5c', icon: 'i-ball', met: 6.0 },
+  { name: '排球', board: '球类运动', cal: '约 260 kcal/小时', color: '#5f8fae', icon: 'i-ball', met: 4.0 },
+  { name: '匹克球', board: '球类运动', cal: '约 295 kcal/小时', color: '#9c7a4f', icon: 'i-ball', met: 4.5 },
+  { name: '台球', board: '球类运动', cal: '约 165 kcal/小时', color: '#8b7d70', icon: 'i-ball', met: 2.5 },
   { name: '瑜伽', board: '形体运动', cal: '约 180 kcal/小时', color: '#9c7a4f', icon: 'i-yoga', met: 3.0 },
   { name: '普拉提', board: '形体运动', cal: '约 200 kcal/小时', color: '#9c7a4f', icon: 'i-yoga', met: 3.0 },
   { name: '健身操', board: '形体运动', cal: '约 300 kcal/小时', color: '#c08a5a', icon: 'i-dumbbell', met: 5.0 },
   { name: '力量训练', board: '形体运动', cal: '约 330 kcal/小时', color: '#8b4a22', icon: 'i-dumbbell', met: 5.0 },
   { name: '拉伸放松', board: '形体运动', cal: '约 120 kcal/小时', color: '#8b7d70', icon: 'i-activity', met: 2.3 },
+  { name: '太极', board: '形体运动', cal: '约 195 kcal/小时', color: '#6b8f3f', icon: 'i-yoga', met: 3.0 },
+  { name: '八段锦', board: '形体运动', cal: '约 165 kcal/小时', color: '#7a9b5c', icon: 'i-yoga', met: 2.5 },
+  { name: '舞蹈', board: '形体运动', cal: '约 325 kcal/小时', color: '#c08a5a', icon: 'i-activity', met: 5.0 },
   { name: '爬楼梯', board: '碎片化运动', cal: '约 500 kcal/小时', color: '#6e3a18', icon: 'i-mountain', met: 8.8 },
   { name: '快走 10 分钟', board: '碎片化运动', cal: '约 280 kcal/小时', color: '#6b8f3f', icon: 'i-footprints', met: 4.3 },
   { name: '跳绳', board: '碎片化运动', cal: '约 600 kcal/小时', color: '#a9653a', icon: 'i-activity', met: 10.0 },
   { name: '开合跳', board: '碎片化运动', cal: '约 480 kcal/小时', color: '#b06a3a', icon: 'i-activity', met: 8.0 },
+  { name: '深蹲', board: '碎片化运动', cal: '约 325 kcal/小时', color: '#8b4a22', icon: 'i-dumbbell', met: 5.0 },
+  { name: '平板支撑', board: '碎片化运动', cal: '约 245 kcal/小时', color: '#9c7a4f', icon: 'i-activity', met: 3.8 },
+  { name: '原地高抬腿', board: '碎片化运动', cal: '约 520 kcal/小时', color: '#b06a3a', icon: 'i-run', met: 8.0 },
+  { name: '靠墙静蹲', board: '碎片化运动', cal: '约 195 kcal/小时', color: '#7a9b5c', icon: 'i-dumbbell', met: 3.0 },
   { name: '工间操', board: '碎片化运动', cal: '约 210 kcal/小时', color: '#8b7d70', icon: 'i-activity', met: 3.5 }
 ];
 
@@ -6522,7 +6642,7 @@ document.getElementById('logBeautyWeight').addEventListener('click', function ()
   const value = parseFloat(document.getElementById('beautyWeightNow').value);
 
   if (!beautyState.startWeight) {
-    showToast('请先生成变美计划');
+    showToast('请先生成运动计划');
     return;
   }
   if (!value || value < 20 || value > 200) {
@@ -6876,8 +6996,26 @@ const reminderMemberSelect = document.getElementById('reminderMember');
 
 // 家人列表（可通过「添加家人」继续扩展）
 let familyMembers = [
-  { id: 'm1', relation: '母亲', name: '', age: 58, note: '每日降压药' },
-  { id: 'm2', relation: '爱人', name: '', age: 28, note: '经期前后注意保暖' }
+  {
+    id: 'm1',
+    relation: '母亲',
+    name: '',
+    age: 58,
+    conditions: '高血压',
+    medications: '降压药 每日 1 片',
+    emergencyName: '王小明（儿子）',
+    emergencyPhone: '13800000000'
+  },
+  {
+    id: 'm2',
+    relation: '爱人',
+    name: '',
+    age: 28,
+    conditions: '无',
+    medications: '无',
+    emergencyName: '',
+    emergencyPhone: ''
+  }
 ];
 
 const todayDate = new Date();
@@ -6932,17 +7070,6 @@ function latestRecord(memberId) {
   })[0];
 }
 
-// 取某位家人最近一条未完成的提醒
-function nextReminder(memberId) {
-  const list = reminders.filter(function (reminder) {
-    return reminder.memberId === memberId && !reminder.done;
-  });
-  if (!list.length) return null;
-  return list.slice().sort(function (a, b) {
-    return a.date.localeCompare(b.date);
-  })[0];
-}
-
 // 渲染家人卡片
 function renderFamilyMembers() {
   const grid = document.getElementById('familyGrid');
@@ -6976,86 +7103,119 @@ function renderFamilyMembers() {
     head.appendChild(info);
     card.appendChild(head);
 
-    // 最近记录：点击查看该家人的全部记录
+    // 卡片上的三行关键信息：基础病史 / 常用药物 / 紧急联系人
+    function appendInfoLine(label, value) {
+      const line = document.createElement('div');
+      line.className = 'family-line';
+      line.appendChild(document.createTextNode(label));
+      const text = document.createElement('b');
+      text.textContent = value || '暂无';
+      line.appendChild(text);
+      card.appendChild(line);
+    }
+
+    appendInfoLine('基础病史', member.conditions);
+    appendInfoLine('常用药物', member.medications);
+    appendInfoLine('紧急联系人', emergencyText(member));
+
+    // 最近记录
     const record = latestRecord(member.id);
     const recordLine = document.createElement('div');
     recordLine.className = 'family-line clickable';
-    recordLine.title = '点击查看该家人的全部记录';
     recordLine.appendChild(document.createTextNode('最近记录'));
     const recordValue = document.createElement('b');
     recordValue.textContent = record
       ? formatYMD(parseISODate(record.date)) + ' · ' + record.type + ' ›'
       : '暂无记录 ›';
     recordLine.appendChild(recordValue);
-    recordLine.addEventListener('click', function () {
-      openMemberRecords(member);
-    });
     card.appendChild(recordLine);
 
-    // 最近提醒
-    const reminder = nextReminder(member.id);
-    const reminderLine = document.createElement('div');
-    reminderLine.className = 'family-line';
-    reminderLine.appendChild(document.createTextNode('关怀提醒'));
-    const reminderValue = document.createElement('b');
-    reminderValue.textContent = reminder
-      ? formatMD(parseISODate(reminder.date)) + ' · ' + reminder.title
-      : '暂无提醒';
-    reminderLine.appendChild(reminderValue);
-    card.appendChild(reminderLine);
-
-    // 备注
-    const noteLine = document.createElement('div');
-    noteLine.className = 'family-line';
-    noteLine.appendChild(document.createTextNode('备注'));
-    const noteValue = document.createElement('b');
-    noteValue.textContent = member.note || '暂无';
-    noteLine.appendChild(noteValue);
-    card.appendChild(noteLine);
+    // 点击整张卡片查看完整健康数据
+    card.title = '点击查看完整健康档案';
+    card.addEventListener('click', function () {
+      openMemberDetail(member);
+    });
 
     grid.appendChild(card);
   });
 }
 
-// 渲染某位家人的全部记录（在弹窗中展示）
-function renderFamilyRecords(memberId) {
-  const list = document.getElementById('memberRecordsList');
-  if (!list) return;
-  list.innerHTML = '';
+// 紧急联系人展示文本
+function emergencyText(member) {
+  if (!member) return '';
+  const name = member.emergencyName || '';
+  const phone = member.emergencyPhone || '';
+  if (!name && !phone) return '未填写';
+  return name + (phone ? (name ? ' · ' : '') + phone : '');
+}
 
+// 渲染某位家人的全部记录（在详情弹窗中展示）
+function renderFamilyRecords(memberId) {
   const records = familyRecords.filter(function (record) {
     return record.memberId === memberId;
   }).sort(function (a, b) {
     return b.date.localeCompare(a.date);
   });
 
-  if (!records.length) {
-    list.innerHTML = '<div class="member-record-empty">暂无记录，点击「添加记录」为家人建立健康档案。</div>';
-    return;
-  }
+  if (!records.length) return '<div class="member-record-empty">暂无健康记录，点击「添加记录」为该家人建档。</div>';
 
-  records.forEach(function (record) {
-    const item = document.createElement('div');
-    item.className = 'member-record';
-
-    const dateEl = document.createElement('span');
-    dateEl.className = 'date';
-    dateEl.textContent = formatYMD(parseISODate(record.date));
-
-    const textEl = document.createElement('span');
-    textEl.textContent = record.type + (record.content ? ' · ' + record.content : '');
-
-    item.appendChild(dateEl);
-    item.appendChild(textEl);
-    list.appendChild(item);
-  });
+  return records.map(function (record) {
+    return '<div class="member-record"><span class="date">' + formatYMD(parseISODate(record.date)) +
+      '</span><span>' + escapeHtml(record.type) +
+      (record.content ? ' · ' + escapeHtml(record.content) : '') + '</span></div>';
+  }).join('');
 }
 
-// 点击家人卡片上的「最近记录」打开记录弹窗
-function openMemberRecords(member) {
-  document.getElementById('memberRecordsTitle').textContent = memberLabel(member) + ' · 健康记录';
-  renderFamilyRecords(member.id);
+// 点击家人卡片：打开完整健康档案
+function openMemberDetail(member) {
+  const body = document.getElementById('memberDetailBody');
+  if (!body || !member) return;
+
+  document.getElementById('memberRecordsTitle').textContent = memberLabel(member) + ' · 健康档案';
+
+  const pending = reminders.filter(function (reminder) {
+    return reminder.memberId === member.id && !reminder.done;
+  }).sort(function (a, b) {
+    return a.date.localeCompare(b.date);
+  });
+
+  const infoRows = [
+    { label: '基础病史', value: member.conditions },
+    { label: '常用药物', value: member.medications },
+    { label: '紧急联系人', value: emergencyText(member) }
+  ].map(function (row) {
+    return '<div class="detail-item"><span>' + row.label + '</span><b>' +
+      escapeHtml(row.value || '暂无') + '</b></div>';
+  }).join('');
+
+  const reminderRows = pending.length
+    ? pending.map(function (reminder) {
+      return '<div class="member-record"><span class="date">' +
+        formatMD(parseISODate(reminder.date)) + '</span><span>' +
+        escapeHtml(reminder.title) + '</span></div>';
+    }).join('')
+    : '<div class="member-record-empty">暂无待办提醒，可在「关怀提醒」中添加。</div>';
+
+  body.innerHTML =
+    '<div class="member-detail-head">' +
+      '<div class="person-avatar">' + escapeHtml(member.relation.charAt(0)) + '</div>' +
+      '<div class="member-detail-name"><b>' + escapeHtml(memberLabel(member)) + '</b><span>' +
+        (member.age ? member.age + ' 岁' : '年龄未填写') + '</span></div>' +
+    '</div>' +
+    '<div class="detail-grid">' + infoRows + '</div>' +
+    '<h4 class="detail-title">健康记录</h4>' + renderFamilyRecords(member.id) +
+    '<h4 class="detail-title">待办提醒</h4>' + reminderRows;
+
   openMask(document.getElementById('memberRecordsMask'));
+}
+
+// 简单的 HTML 转义，避免用户输入的内容破坏结构
+function escapeHtml(text) {
+  return String(text == null ? '' : text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
 
 const memberRecordsMask = document.getElementById('memberRecordsMask');
@@ -7068,14 +7228,131 @@ memberRecordsMask.addEventListener('click', function (event) {
   if (event.target === memberRecordsMask) closeMask(memberRecordsMask);
 });
 
-// 常用提醒：点击后打开提醒弹窗并带入标题与默认日期
-document.querySelectorAll('.quick-chip').forEach(function (chip) {
-  chip.addEventListener('click', function () {
-    renderMemberOptions();
-    document.getElementById('reminderTitle').value = chip.dataset.reminder;
-    document.getElementById('reminderDate').value = toISODate(addDays(new Date(), 1));
-    openMask(reminderMask);
+// ---------- 常用提醒：可自定义，保存在本地长期使用 ----------
+const DEFAULT_QUICK_REMINDERS = [
+  { label: '测量血压', text: '提醒家人测量血压' },
+  { label: '按时吃药', text: '提醒家人按时吃药' },
+  { label: '陪伴散步', text: '陪家人散步 30 分钟' },
+  { label: '复诊体检', text: '预约复诊 / 体检' },
+  { label: '多喝水', text: '提醒家人多喝水' },
+  { label: '注意保暖', text: '提醒家人注意保暖' }
+];
+
+let quickReminders = loadData('quickReminders', DEFAULT_QUICK_REMINDERS);
+
+function renderQuickReminders() {
+  const box = document.getElementById('quickReminderBox');
+  if (!box) return;
+  box.innerHTML = '<span>常用提醒</span>';
+
+  quickReminders.forEach(function (item) {
+    const chip = document.createElement('button');
+    chip.className = 'quick-chip';
+    chip.type = 'button';
+    chip.textContent = item.label;
+    chip.title = item.text;
+    chip.addEventListener('click', function () {
+      openReminderDialog(item.text, [toISODate(addDays(new Date(), 1))]);
+    });
+    box.appendChild(chip);
   });
+
+  // 手动添加常用提醒
+  const addBtn = document.createElement('button');
+  addBtn.className = 'quick-chip';
+  addBtn.type = 'button';
+  addBtn.style.borderStyle = 'dashed';
+  addBtn.textContent = '＋ 自定义';
+  addBtn.addEventListener('click', function () {
+    const text = window.prompt('输入常用提醒内容，例如：提醒奶奶测血糖');
+    const value = (text || '').trim();
+    if (!value) return;
+    if (quickReminders.some(function (item) { return item.text === value; })) {
+      showToast('这条常用提醒已存在');
+      return;
+    }
+    quickReminders.push({ label: value, text: value });
+    saveData('quickReminders', quickReminders);
+    renderQuickReminders();
+    showToast('已添加到常用提醒');
+  });
+  box.appendChild(addBtn);
+}
+
+// ---------- 提醒日期：支持一次选择多个 ----------
+let reminderPickedDates = [];
+
+function renderReminderDates() {
+  const box = document.getElementById('reminderDateList');
+  if (!box) return;
+  box.innerHTML = '';
+
+  if (!reminderPickedDates.length) {
+    box.innerHTML = '<span class="date-empty">还没有选择日期，可在上方快捷选择或手动添加</span>';
+    return;
+  }
+
+  reminderPickedDates.slice().sort().forEach(function (iso) {
+    const tag = document.createElement('span');
+    tag.className = 'date-tag';
+    tag.innerHTML = '<span>' + iso.slice(5) + ' 周' + '日一二三四五六'[parseISODate(iso).getDay()] + '</span>';
+
+    const del = document.createElement('button');
+    del.type = 'button';
+    del.textContent = '×';
+    del.title = '移除这个日期';
+    del.addEventListener('click', function () {
+      reminderPickedDates = reminderPickedDates.filter(function (date) { return date !== iso; });
+      renderReminderDates();
+    });
+
+    tag.appendChild(del);
+    box.appendChild(tag);
+  });
+}
+
+function addReminderDate(iso) {
+  if (!iso) return;
+  if (reminderPickedDates.indexOf(iso) !== -1) {
+    showToast('这个日期已经选过啦');
+    return;
+  }
+  reminderPickedDates.push(iso);
+  reminderPickedDates.sort();
+  renderReminderDates();
+}
+
+function openReminderDialog(title, dates) {
+  renderMemberOptions();
+  document.getElementById('reminderTitle').value = title || '';
+  document.getElementById('reminderDate').value = '';
+  reminderPickedDates = (dates || []).slice();
+  renderReminderDates();
+  openMask(reminderMask);
+}
+
+// 快捷日期按钮
+document.querySelectorAll('.date-chip').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    addReminderDate(toISODate(addDays(new Date(), Number(btn.dataset.day))));
+  });
+});
+
+// 手动添加日期：点按钮或直接回车
+document.getElementById('reminderDateAdd').addEventListener('click', function () {
+  const input = document.getElementById('reminderDate');
+  if (!input.value) {
+    showToast('请选择要添加的日期');
+    return;
+  }
+  addReminderDate(input.value);
+  input.value = '';
+});
+
+document.getElementById('reminderDate').addEventListener('keydown', function (event) {
+  if (event.key !== 'Enter' || event.isComposing) return;
+  event.preventDefault();
+  document.getElementById('reminderDateAdd').click();
 });
 
 // 渲染关怀提醒
@@ -7279,7 +7556,10 @@ document.getElementById('openMember').addEventListener('click', function () {
   document.getElementById('memberRelation').value = '';
   document.getElementById('memberAge').value = '';
   document.getElementById('memberName').value = '';
-  document.getElementById('memberNote').value = '';
+  document.getElementById('memberConditions').value = '';
+  document.getElementById('memberMedications').value = '';
+  document.getElementById('memberEmergencyName').value = '';
+  document.getElementById('memberEmergencyPhone').value = '';
   openMask(memberMask);
 });
 
@@ -7299,7 +7579,10 @@ document.getElementById('memberSave').addEventListener('click', function () {
   const relation = document.getElementById('memberRelation').value.trim();
   const age = parseInt(document.getElementById('memberAge').value, 10);
   const name = document.getElementById('memberName').value.trim();
-  const note = document.getElementById('memberNote').value.trim();
+  const conditions = document.getElementById('memberConditions').value.trim();
+  const medications = document.getElementById('memberMedications').value.trim();
+  const emergencyName = document.getElementById('memberEmergencyName').value.trim();
+  const emergencyPhone = document.getElementById('memberEmergencyPhone').value.trim();
 
   if (!relation) {
     showToast('请填写家人的称呼或关系');
@@ -7311,7 +7594,10 @@ document.getElementById('memberSave').addEventListener('click', function () {
     relation: relation,
     name: name,
     age: age || '',
-    note: note
+    conditions: conditions,
+    medications: medications,
+    emergencyName: emergencyName,
+    emergencyPhone: emergencyPhone
   });
 
   renderFamilyMembers();
@@ -7322,10 +7608,7 @@ document.getElementById('memberSave').addEventListener('click', function () {
 
 // ---------- 添加关怀提醒弹窗 ----------
 document.getElementById('openReminder').addEventListener('click', function () {
-  renderMemberOptions();
-  document.getElementById('reminderTitle').value = '';
-  document.getElementById('reminderDate').value = toISODate(new Date());
-  openMask(reminderMask);
+  openReminderDialog('', [toISODate(new Date())]);
 });
 
 document.getElementById('reminderClose').addEventListener('click', function () {
@@ -7343,7 +7626,6 @@ reminderMask.addEventListener('click', function (event) {
 document.getElementById('reminderSave').addEventListener('click', function () {
   const member = getMember(reminderMemberSelect.value);
   const title = document.getElementById('reminderTitle').value.trim();
-  const date = parseISODate(document.getElementById('reminderDate').value);
 
   if (!member) {
     showToast('请先添加家人信息');
@@ -7353,24 +7635,27 @@ document.getElementById('reminderSave').addEventListener('click', function () {
     showToast('请填写提醒内容');
     return;
   }
-  if (!date) {
-    showToast('请选择提醒日期');
+  if (!reminderPickedDates.length) {
+    showToast('请至少选择一个提醒日期');
     return;
   }
 
-  reminders.push({
-    id: 'r' + Date.now(),
-    memberId: member.id,
-    title: title,
-    date: toISODate(date),
-    done: false
+  // 每个选中的日期各生成一条提醒
+  reminderPickedDates.slice().sort().forEach(function (date, index) {
+    reminders.push({
+      id: 'r' + Date.now() + '-' + index,
+      memberId: member.id,
+      title: title,
+      date: date,
+      done: false
+    });
   });
   saveData('reminders', reminders);
 
   renderReminders();
   renderFamilyMembers();
   closeMask(reminderMask);
-  showToast('关怀提醒已添加');
+  showToast('已添加 ' + reminderPickedDates.length + ' 条关怀提醒');
 });
 
 // 初始化页面状态
@@ -7379,6 +7664,7 @@ applyGenderView();
 renderMemberOptions();
 renderFamilyMembers();
 renderReminders();
+renderQuickReminders();
 
 /* ==========================================================
    六之三、本地数据层与新增功能
@@ -7766,7 +8052,18 @@ if (savedGlucose) {
 }
 
 // ---------- 体重历史与趋势曲线 ----------
-const weightHistory = loadData('weightHistory', []);
+// 体重记录：只保留最近 15 天
+const WEIGHT_KEEP_DAYS = 15;
+let weightHistory = loadData('weightHistory', []);
+
+function pruneWeightHistory() {
+  const cutoff = toISODate(addDays(new Date(), -(WEIGHT_KEEP_DAYS - 1)));
+  weightHistory = weightHistory.filter(function (item) {
+    return item.date >= cutoff;
+  });
+}
+
+pruneWeightHistory();
 
 function addWeightRecord(weight) {
   if (!weight || weight < 20 || weight > 200) return;
@@ -7780,12 +8077,27 @@ function addWeightRecord(weight) {
   }
   weightHistory.push({ date: date, weight: weight });
 
-  while (weightHistory.length > 60) weightHistory.shift();
+  pruneWeightHistory();
   saveData('weightHistory', weightHistory);
   renderWeightChart();
 
   // 体重变化后重新计算营养目标与评分
   refreshDietViews();
+}
+
+// 曲线数据：只取 15 天内，同一天多次记录以最后一次为准
+function recentWeightData() {
+  const cutoff = toISODate(addDays(new Date(), -(WEIGHT_KEEP_DAYS - 1)));
+  const byDate = {};
+
+  weightHistory.forEach(function (item) {
+    if (item.date < cutoff) return;
+    byDate[item.date] = item.weight;
+  });
+
+  return Object.keys(byDate).sort().map(function (date) {
+    return { date: date, weight: byDate[date] };
+  });
 }
 
 function renderWeightChart() {
@@ -7800,20 +8112,20 @@ function renderWeightChart() {
   if (!weightHistory.length) {
     html = '<div class="weight-chart-empty">在「运动计划 · 记录当前体重」中记录后，这里会画出体重变化曲线。</div>';
   } else {
-    const data = weightHistory.slice(-14);
+    const data = recentWeightData();
     const latest = data[data.length - 1].weight;
-    const head = '<div class="weight-chart-head"><span>近 ' + data.length + ' 次体重记录</span><b>' +
+    const head = '<div class="weight-chart-head"><span>近 15 天体重趋势（' + data.length + ' 天有记录）</span><b>' +
       latest.toFixed(1) + ' kg</b></div>';
 
     if (data.length === 1) {
       html = head + '<div class="weight-chart-empty">再记录一次体重，就能看到趋势曲线。</div>';
     } else {
-      const width = 320;
-      const height = 140;
+      const width = 440;
+      const height = 176;
       const left = 32;
-      const right = 12;
+      const right = 14;
       const top = 16;
-      const bottom = 26;
+      const bottom = 50;
       const plotW = width - left - right;
       const plotH = height - top - bottom;
 
@@ -7853,9 +8165,14 @@ function renderWeightChart() {
           '" r="3" fill="#fff" stroke="#8b4a22" stroke-width="1.6"/>';
       });
 
-      svg += '<text x="' + left + '" y="' + (height - 6) + '">' + data[0].date.slice(5) + '</text>';
-      svg += '<text x="' + (width - right) + '" y="' + (height - 6) + '" text-anchor="end">' +
-        data[data.length - 1].date.slice(5) + '</text>';
+      // 每个折点下方标注对应日期（旋转 45°，避免重叠）
+      data.forEach(function (item, index) {
+        const cx = xFor(index);
+        const labelY = height - 30;
+        svg += '<text x="' + cx.toFixed(1) + '" y="' + labelY +
+          '" text-anchor="end" transform="rotate(-45 ' + cx.toFixed(1) + ' ' + labelY + ')" ' +
+          'font-size="8" fill="#a08d7d">' + item.date.slice(5) + '</text>';
+      });
       svg += '</svg>';
 
       html = head + svg;
