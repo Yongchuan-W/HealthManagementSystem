@@ -2285,6 +2285,42 @@ a { text-decoration: none; }
   transform: translateY(-1px);
 }
 
+/* 睡眠记录表单 */
+.sleep-form {
+  margin-top: 22px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.sleep-form input,
+.sleep-form select {
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-size: 13px;
+  outline: none;
+}
+
+.sleep-form input { width: 180px; }
+
+.sleep-form input::placeholder { color: rgba(255, 255, 255, 0.72); }
+
+.sleep-form select option { color: #433326; }
+
+.sleep-form .btn-sleep { margin-top: 0; }
+
+.sleep-today {
+  margin-top: 16px;
+  min-height: 18px;
+  font-size: 12.5px;
+  color: #eadfce;
+}
+
 /* ==========================================================
    10. 科普资讯页
    ========================================================== */
@@ -4314,23 +4350,23 @@ body { color: var(--text); }
           <div class="report-grid">
             <div class="report-item">
               <div class="label">体重</div>
-              <div class="value">64.8<span class="unit">kg</span></div>
+              <div class="value"><span id="reportWeight">64.8</span><span class="unit">kg</span></div>
             </div>
             <div class="report-item">
               <div class="label">体脂率</div>
-              <div class="value">24.0<span class="unit">%</span></div>
+              <div class="value"><span id="reportFat">24.0</span><span class="unit">%</span></div>
             </div>
             <div class="report-item">
               <div class="label">BMI</div>
-              <div class="value">23.8</div>
+              <div class="value" id="reportBmi">23.8</div>
             </div>
             <div class="report-item">
               <div class="label">血压</div>
-              <div class="value">112/72<span class="unit">mmHg</span></div>
+              <div class="value"><span id="reportBp">112/72</span><span class="unit">mmHg</span></div>
             </div>
             <div class="report-item">
               <div class="label">血糖</div>
-              <div class="value">5.0<span class="unit">mmol/L</span></div>
+              <div class="value"><span id="reportGlucose">5.0</span><span class="unit">mmol/L</span></div>
             </div>
           </div>
           <div class="report-summary">综合分析：各项指标总体处于正常范围。建议保持每周 3 次有氧运动，晚餐适当补充优质蛋白，并在 3 个月后复查。</div>
@@ -4345,8 +4381,17 @@ body { color: var(--text); }
         <div class="sleep-card">
           <div class="sleep-icon"><svg class="icon"><use href="#i-moon"/></svg></div>
           <h2>优质睡眠，恢复活力</h2>
-          <p>连接你的智能手表或手动记录，分析睡眠周期与质量。</p>
-          <button class="btn-sleep" data-toast="已开始记录睡眠，请保持设备佩戴">开始记录睡眠</button>
+          <p>记录昨晚的睡眠时长与质量，数据会保存在你的健康档案里。</p>
+          <form class="sleep-form" id="sleepForm">
+            <input id="sleepHours" type="number" step="0.5" min="0" max="24" placeholder="睡眠时长（小时）">
+            <select id="sleepQuality" aria-label="睡眠质量">
+              <option>良好</option>
+              <option selected>一般</option>
+              <option>较差</option>
+            </select>
+            <button class="btn-sleep" type="submit">保存睡眠记录</button>
+          </form>
+          <div class="sleep-today" id="sleepToday"></div>
         </div>
       </div>
 
@@ -5359,7 +5404,8 @@ async function api(path, options) {
 const SYNC_KEYS = [
   'profile', 'weightHistory', 'vitalsHistory', 'bp', 'glucose', 'mealLog',
   'moodLog', 'dietActivity', 'sport', 'reminders', 'quickReminders',
-  'familyMembers', 'familyRecords'
+  'familyMembers', 'familyRecords', 'preferences', 'femaleProfile',
+  'femaleStatus', 'reports', 'beautyPlan', 'sleepLog'
 ];
 const dataCache = Object.create(null);
 const OWNER_KEY = 'hm_owner';
@@ -5428,6 +5474,7 @@ function clearLocalData() {
   });
   try {
     window.localStorage.removeItem(OWNER_KEY);
+    window.localStorage.removeItem('hm_chatLog');
   } catch (error) {
     // 忽略清理失败
   }
@@ -5442,6 +5489,14 @@ function hasAnyRecord() {
   if ((loadData('familyMembers', []) || []).length) return true;
   const sport = loadData('sport', null);
   return !!(sport && sport.history && Object.keys(sport.history).length);
+}
+
+// 每日状态标签以 { 日期: {tags, note} } 存放，提交前转成后端需要的数组
+function femaleStatusList() {
+  const status = loadData('femaleStatus', {}) || {};
+  return Object.keys(status).map(function (date) {
+    return { date: date, tags: status[date].tags || [], note: status[date].note || '' };
+  });
 }
 
 // 把当前数据整理成 /api/sync/import 需要的整包
@@ -5461,7 +5516,15 @@ function buildSyncPayload() {
     familyMembers: loadData('familyMembers', []),
     familyRecords: loadData('familyRecords', []),
     reminders: loadData('reminders', []),
-    quickReminders: loadData('quickReminders', [])
+    quickReminders: loadData('quickReminders', []),
+    preferences: loadData('preferences', {}),
+    female: {
+      profile: loadData('femaleProfile', {}),
+      status: femaleStatusList()
+    },
+    reports: loadData('reports', []),
+    beautyPlan: loadData('beautyPlan', null),
+    sleepLog: loadData('sleepLog', [])
   };
 }
 
@@ -5512,6 +5575,12 @@ function applyBundle(bundle) {
     ? glucoseState.value
     : glucoseState;
 
+  const femaleStatus = {};
+  ((bundle.female || {}).status || []).forEach(function (item) {
+    if (!item || !item.date) return;
+    femaleStatus[item.date] = { tags: item.tags || [], note: item.note || '' };
+  });
+
   const values = {
     profile: bundle.profile || {},
     weightHistory: bundle.weightHistory || [],
@@ -5527,7 +5596,13 @@ function applyBundle(bundle) {
     reminders: bundle.reminders || [],
     quickReminders: bundle.quickReminders || [],
     familyMembers: bundle.familyMembers || [],
-    familyRecords: bundle.familyRecords || []
+    familyRecords: bundle.familyRecords || [],
+    preferences: bundle.preferences || {},
+    femaleProfile: (bundle.female || {}).profile || {},
+    femaleStatus: femaleStatus,
+    reports: bundle.reports || [],
+    beautyPlan: settings.beautyPlan || null,
+    sleepLog: bundle.sleepLog || []
   };
 
   Object.keys(values).forEach(function (key) {
@@ -5672,6 +5747,7 @@ async function restoreSession(profile) {
   await hydrateFromServer();
   afterLogin(profile);
   refreshAllViews();
+  await loadChatHistory();
 }
 
 document.getElementById('logoutBtn').addEventListener('click', async function () {
@@ -5893,6 +5969,20 @@ document.getElementById('onboardingForm').addEventListener('submit', function (e
     gender: gender,
     height: height > 0 ? height : 0,
     weight: weight > 0 ? weight : 0
+  });
+
+  // 健康情况与饮食偏好单独存档，用于饮食建议与后续个性化
+  const previousPreferences = loadData('preferences', {}) || {};
+  saveData('preferences', {
+    age: previousPreferences.age || '',
+    sleepQuality: document.getElementById('obSleep').value,
+    exerciseFrequency: document.getElementById('obExercise').value,
+    goal: goal,
+    conditions: getChipValues('obConditions'),
+    taste: taste,
+    dietType: dietType,
+    restrictions: restrictions,
+    meals: document.getElementById('obMeals').value
   });
 
   // 同步到核心体征并重算 BMI
@@ -6424,6 +6514,52 @@ const reportResult = document.getElementById('reportResult');
 
 let reportImageUrl = null;
 
+// 未接入 OCR 时的示例指标（识别结果与同步都基于这份数据）
+const reportDemoMetrics = { weight: 64.8, fat: 24.0, systolic: 112, diastolic: 72, glucose: 5.0 };
+let reportMetrics = Object.assign({}, reportDemoMetrics);
+let reportMetricsDate = toISODate(new Date());
+
+// 把一份报告指标渲染到结果卡片
+function renderReportResult(record, date) {
+  reportMetrics = {
+    weight: Number(record.weight) || 0,
+    fat: Number(record.fat) || 0,
+    systolic: Number(record.systolic) || 0,
+    diastolic: Number(record.diastolic) || 0,
+    glucose: Number(record.glucose) || 0
+  };
+  reportMetricsDate = date || toISODate(new Date());
+
+  document.getElementById('reportWeight').textContent = reportMetrics.weight.toFixed(1);
+  document.getElementById('reportFat').textContent = reportMetrics.fat.toFixed(1);
+  document.getElementById('reportBp').textContent =
+    reportMetrics.systolic + '/' + reportMetrics.diastolic;
+  document.getElementById('reportGlucose').textContent = reportMetrics.glucose.toFixed(1);
+  document.getElementById('reportBmi').textContent = reportMetrics.weight
+    ? (reportMetrics.weight / Math.pow(currentHeightMeters(), 2)).toFixed(1)
+    : '—';
+
+  const parsed = parseISODate(reportMetricsDate);
+  document.getElementById('reportDateText').textContent =
+    parsed ? formatYMD(parsed) : reportMetricsDate;
+  reportResult.hidden = false;
+}
+
+// 同一天的报告只保留一条，避免重复堆积
+function saveReportRecord(record) {
+  const list = (loadData('reports', []) || []).slice();
+  const date = record.date;
+  const index = list.findIndex(function (item) {
+    return item.date === date;
+  });
+  if (index >= 0) {
+    list[index] = Object.assign({}, list[index], record);
+  } else {
+    list.push(record);
+  }
+  saveData('reports', list);
+}
+
 function chooseReportImage() {
   reportImageInput.value = '';
   reportImageInput.click();
@@ -6465,30 +6601,38 @@ reportImageInput.addEventListener('change', function () {
   setTimeout(function () {
     reportStatus.className = 'upload-status';
     reportStatus.textContent = '当前未接入 OCR，以下为示例指标，请按实际报告修改';
-    reportResult.hidden = false;
-    document.getElementById('reportDateText').textContent = formatYMD(new Date());
+    renderReportResult(reportDemoMetrics, toISODate(new Date()));
     showToast('已填入示例指标（未接入 OCR）');
   }, 1100);
 });
 
-// 将识别结果同步到核心体征
+// 将识别结果同步到核心体征，并把这份报告存档
 document.getElementById('applyReport').addEventListener('click', function () {
-  document.getElementById('weightValue').textContent = '64.8';
-  document.getElementById('fatValue').textContent = '24.0';
-  document.getElementById('bpValue').textContent = '112/72';
-  document.getElementById('glucoseValue').textContent = '5.0';
+  document.getElementById('weightValue').textContent = reportMetrics.weight.toFixed(1);
+  document.getElementById('fatValue').textContent = reportMetrics.fat.toFixed(1);
+  document.getElementById('bpValue').textContent =
+    reportMetrics.systolic + '/' + reportMetrics.diastolic;
+  document.getElementById('glucoseValue').textContent = reportMetrics.glucose.toFixed(1);
 
   // BMI 由体重和身高算出，不直接写入固定值
-  setBmiDisplay(64.8 / Math.pow(currentHeightMeters(), 2));
+  setBmiDisplay(reportMetrics.weight / Math.pow(currentHeightMeters(), 2));
 
   // 体检同步的体重也进入趋势记录
-  addWeightRecord(64.8);
-  saveData('bp', { systolic: 112, diastolic: 72 });
-  saveData('glucose', 5.0);
+  addWeightRecord(reportMetrics.weight);
+  saveData('bp', { systolic: reportMetrics.systolic, diastolic: reportMetrics.diastolic });
+  saveData('glucose', reportMetrics.glucose);
+  saveReportRecord({
+    date: reportMetricsDate,
+    weight: reportMetrics.weight,
+    fat: reportMetrics.fat,
+    systolic: reportMetrics.systolic,
+    diastolic: reportMetrics.diastolic,
+    glucose: reportMetrics.glucose
+  });
   refreshDietViews();
   renderVitalRanges();
 
-  showToast('体检指标已同步到核心体征');
+  showToast('体检指标已同步到核心体征并保存');
 });
 
 /* ==========================================================
@@ -6999,36 +7143,44 @@ function updateBeautyProgress() {
     isWeightType ? Math.round(percent) + '%' : '进行中';
 }
 
-document.getElementById('generatePlan').addEventListener('click', function () {
-  const type = document.getElementById('beautyType').value;
-  const target = parseFloat(document.getElementById('beautyTarget').value);
-  const weeks = parseInt(document.getElementById('beautyWeeks').value, 10);
-  const times = parseInt(document.getElementById('beautyTimes').value, 10);
+// 生成计划：点击按钮与登录后恢复共用同一套逻辑，silent 时跳过校验与提示
+function generateBeautyPlan(type, target, weeks, times, silent) {
   const current = parseFloat(document.getElementById('weightValue').textContent) || 60.0;
 
-  if (!target || target < 20 || target > 200) {
-    showToast('请输入 20-200 kg 的目标体重');
-    return;
-  }
-  if (!weeks || weeks < 2 || weeks > 52) {
-    showToast('目标周期请设置在 2-52 周');
-    return;
-  }
-  if (!times || times < 2 || times > 7) {
-    showToast('每周运动次数请设置在 2-7 次');
-    return;
-  }
-  if (type === '健身减脂' && target >= current) {
-    showToast('减脂目标体重应低于当前体重');
-    return;
-  }
-  if (type === '增肌塑形' && target <= current) {
-    showToast('增肌目标体重应高于当前体重');
-    return;
+  if (!silent) {
+    if (!target || target < 20 || target > 200) {
+      showToast('请输入 20-200 kg 的目标体重');
+      return false;
+    }
+    if (!weeks || weeks < 2 || weeks > 52) {
+      showToast('目标周期请设置在 2-52 周');
+      return false;
+    }
+    if (!times || times < 2 || times > 7) {
+      showToast('每周运动次数请设置在 2-7 次');
+      return false;
+    }
+    if (type === '健身减脂' && target >= current) {
+      showToast('减脂目标体重应低于当前体重');
+      return false;
+    }
+    if (type === '增肌塑形' && target <= current) {
+      showToast('增肌目标体重应高于当前体重');
+      return false;
+    }
   }
 
+  // 目标与当前体重方向不符时，恢复计划只做展示，不重算热量缺口
+  const validTarget = target >= 20 && target <= 200;
+  if (!validTarget) return false;
+
   beautyState.type = type;
-  beautyState.startWeight = current;
+  // 起始体重用于计算进度：恢复计划时沿用当时保存的值
+  const previousPlan = loadData('beautyPlan', null);
+  const startWeight = silent && previousPlan && previousPlan.startWeight
+    ? Number(previousPlan.startWeight)
+    : current;
+  beautyState.startWeight = startWeight;
   beautyState.currentWeight = current;
   beautyState.targetWeight = target;
   beautyState.weeks = weeks;
@@ -7116,8 +7268,42 @@ document.getElementById('generatePlan').addEventListener('click', function () {
   renderWeightChart();
 
   updateBeautyProgress();
-  showToast('已生成' + type + '计划');
+
+  // 计划的目标设定写回账号，下次登录可恢复
+  saveData('beautyPlan', {
+    type: type,
+    targetWeight: target,
+    weeks: weeks,
+    times: times,
+    startWeight: startWeight
+  });
+  if (!silent) showToast('已生成' + type + '计划');
+  return true;
+}
+
+document.getElementById('generatePlan').addEventListener('click', function () {
+  generateBeautyPlan(
+    document.getElementById('beautyType').value,
+    parseFloat(document.getElementById('beautyTarget').value),
+    parseInt(document.getElementById('beautyWeeks').value, 10),
+    parseInt(document.getElementById('beautyTimes').value, 10),
+    false
+  );
 });
+
+// 登录后恢复上次保存的变美计划
+function restoreBeautyPlan() {
+  const plan = loadData('beautyPlan', null);
+  if (!plan || !plan.type || !plan.targetWeight) return;
+
+  document.getElementById('beautyType').value = plan.type;
+  document.getElementById('beautyTarget').value = plan.targetWeight;
+  document.getElementById('beautyWeeks').value = plan.weeks || 12;
+  document.getElementById('beautyTimes').value = String(plan.times || 4);
+
+  generateBeautyPlan(plan.type, Number(plan.targetWeight),
+    Number(plan.weeks) || 12, Number(plan.times) || 4, true);
+}
 
 // 记录当前体重并更新目标进度
 document.getElementById('logBeautyWeight').addEventListener('click', function () {
@@ -7241,14 +7427,37 @@ fillSelect(periodDaysSelect, 3, 10, '天', periodDays);
 fillSelect(cycleDaysMainSelect, 21, 40, '天', cycleDays);
 fillSelect(cycleDaysInput, 21, 40, '天', cycleDays);
 
+// 周期设置写回账号
+function saveFemaleProfile() {
+  saveData('femaleProfile', {
+    periodDays: periodDays,
+    cycleDays: cycleDays,
+    lastPeriodStart: toISODate(lastPeriodStart)
+  });
+}
+
+// 从账号取回周期设置
+function applyFemaleProfile(profile) {
+  if (!profile) return;
+  const days = parseInt(profile.periodDays, 10);
+  const cycle = parseInt(profile.cycleDays, 10);
+  const start = parseISODate(profile.lastPeriodStart);
+  if (days >= 1 && days <= 15) periodDays = days;
+  if (cycle >= 15 && cycle <= 60) cycleDays = cycle;
+  if (start) lastPeriodStart = start;
+  renderCycle();
+}
+
 periodDaysSelect.addEventListener('change', function () {
   periodDays = parseInt(periodDaysSelect.value, 10);
   renderCycle();
+  saveFemaleProfile();
 });
 
 cycleDaysMainSelect.addEventListener('change', function () {
   cycleDays = parseInt(cycleDaysMainSelect.value, 10);
   renderCycle();
+  saveFemaleProfile();
 });
 
 // ---------- 弹窗开关辅助 ----------
@@ -7337,6 +7546,7 @@ document.getElementById('periodSave').addEventListener('click', function () {
   cycleDays = nextCycle;
 
   renderCycle();
+  saveFemaleProfile();
   closeMask(periodMask);
   showToast('生理期记录已保存');
 });
@@ -7403,6 +7613,7 @@ function createTagEditor(config) {
         selected.delete(value);
         renderTags();
         renderOptions();
+        if (config.onChange) config.onChange(Array.from(selected));
       });
 
       tag.appendChild(remove);
@@ -7428,6 +7639,7 @@ function createTagEditor(config) {
         }
         option.classList.toggle('selected');
         renderTags(); // 勾选后立即同步标签区
+        if (config.onChange) config.onChange(Array.from(selected));
       });
       optionsEl.appendChild(option);
     });
@@ -7452,13 +7664,32 @@ function createTagEditor(config) {
   renderTags();
 }
 
+// 今日状态标签按日期保存，便于跨设备查看当天记录
+function saveFemaleStatus(tags) {
+  const map = loadData('femaleStatus', {}) || {};
+  const today = toISODate(new Date());
+  if (tags.length) {
+    map[today] = { tags: tags, note: ((map[today] || {}).note) || '' };
+  } else {
+    delete map[today];
+  }
+  saveData('femaleStatus', map);
+}
+
+function todayFemaleTags() {
+  const map = loadData('femaleStatus', {}) || {};
+  const entry = map[toISODate(new Date())];
+  return (entry && entry.tags) || [];
+}
+
 createTagEditor({
   tagsId: 'femaleTags',
   addBtnId: 'femaleAddTag',
   menuId: 'femaleTagMenu',
   optionsId: 'femaleTagOptions',
   values: femaleTagValues,
-  initial: ['轻微腹痛', '情绪平稳']
+  initial: todayFemaleTags(),
+  onChange: saveFemaleStatus
 });
 
 // 点击标签面板以外的地方时收起面板
@@ -7467,6 +7698,54 @@ document.addEventListener('click', function (event) {
     closeTagMenus();
   }
 });
+
+// ---------- 睡眠记录 ----------
+function renderSleepToday() {
+  const log = loadData('sleepLog', []) || [];
+  const today = toISODate(new Date());
+  const entry = log.find(function (item) {
+    return item.date === today;
+  });
+  const box = document.getElementById('sleepToday');
+
+  if (!entry) {
+    box.textContent = '还没有记录今天的睡眠。';
+    return;
+  }
+  box.textContent = '今日已记录：' + entry.hours + ' 小时 · ' + entry.quality;
+  document.getElementById('sleepHours').value = entry.hours;
+  document.getElementById('sleepQuality').value = entry.quality;
+}
+
+document.getElementById('sleepForm').addEventListener('submit', function (event) {
+  event.preventDefault();
+
+  const hours = parseFloat(document.getElementById('sleepHours').value);
+  const quality = document.getElementById('sleepQuality').value;
+
+  if (isNaN(hours) || hours < 0 || hours > 24) {
+    showToast('请输入 0-24 之间的睡眠时长');
+    return;
+  }
+
+  const log = (loadData('sleepLog', []) || []).slice();
+  const today = toISODate(new Date());
+  const record = { date: today, hours: hours, quality: quality, note: '' };
+  const index = log.findIndex(function (item) {
+    return item.date === today;
+  });
+  if (index >= 0) {
+    log[index] = Object.assign({}, log[index], record);
+  } else {
+    log.push(record);
+  }
+
+  saveData('sleepLog', log);
+  renderSleepToday();
+  showToast('睡眠记录已保存');
+});
+
+renderSleepToday();
 
 // ---------- 家人健康：成员、健康记录与关怀提醒 ----------
 const familyMask = document.getElementById('familyMask');
@@ -9681,8 +9960,24 @@ function refreshAllViews() {
   renderQuickReminders();
   renderFamilyMembers();
   renderMemberOptions();
+  applyFemaleProfile(loadData('femaleProfile', null));
   renderCycle();
+  renderSleepToday();
+  restoreBeautyPlan();
+  restoreReport();
   applyGenderView();
+}
+
+// 恢复最近一份体检报告的指标
+function restoreReport() {
+  const list = loadData('reports', []);
+  if (!list || !list.length) return;
+  const latest = list.slice().sort(function (a, b) {
+    return String(a.date) < String(b.date) ? 1 : -1;
+  })[0];
+  renderReportResult(latest, latest.date);
+  reportStatus.className = 'upload-status';
+  reportStatus.textContent = '显示上次同步的体检指标（报告日期见下方）';
 }
 
 /* ==========================================================
@@ -9772,6 +10067,34 @@ function getReply(text) {
   return '收到～我是健康小管家。你可以问我饮食搭配、运动计划、睡眠改善或生理期护理等问题，我会给出简单可执行的建议。';
 }
 
+// 聊天记录：连后端时由服务端保存，纯静态演示时存本机
+function renderChatLog(messages) {
+  chatBody.innerHTML = '';
+  messages.forEach(function (item) {
+    addBubble(item.content, item.role === 'user' ? 'user' : 'bot');
+  });
+}
+
+async function loadChatHistory() {
+  if (!serverMode || !currentUser) {
+    // 静态演示：沿用本机保存的记录
+    const local = loadData('chatLog', []);
+    if (local && local.length) renderChatLog(local);
+    return;
+  }
+
+  let result = null;
+  try {
+    result = await api('/api/ai/history?limit=50');
+  } catch (error) {
+    return;
+  }
+  if (!result || !result.ok) return;
+
+  const messages = result.data.messages || [];
+  if (messages.length) renderChatLog(messages);
+}
+
 // 发送消息
 function sendChat() {
   const text = chatInput.value.trim();
@@ -9783,10 +10106,34 @@ function sendChat() {
   // 模拟 AI “正在输入”
   const typingBubble = addBubble('正在输入...', 'bot typing');
 
-  setTimeout(function () {
-    typingBubble.remove();
-    addBubble(getReply(text), 'bot');
-  }, 500);
+  // 纯静态演示：本地规则回复，并把对话留在本机
+  if (!serverMode || !currentUser) {
+    const reply = getReply(text);
+    const log = (loadData('chatLog', []) || []).slice();
+    log.push({ role: 'user', content: text }, { role: 'assistant', content: reply });
+    saveData('chatLog', log.slice(-100));
+
+    setTimeout(function () {
+      typingBubble.remove();
+      addBubble(reply, 'bot');
+    }, 500);
+    return;
+  }
+
+  // 连后端：消息与回复都由服务端保存
+  api('/api/ai/chat', { method: 'POST', body: { message: text } })
+    .then(function (result) {
+      typingBubble.remove();
+      if (result.ok && result.data.reply) {
+        addBubble(result.data.reply, 'bot');
+      } else {
+        addBubble('抱歉，暂时无法获取回复，请稍后再试。', 'bot');
+      }
+    })
+    .catch(function () {
+      typingBubble.remove();
+      addBubble('网络异常，请稍后再试。', 'bot');
+    });
 }
 
 document.getElementById('chatSend').addEventListener('click', sendChat);

@@ -1384,6 +1384,8 @@ def preference_json(row):
             "taste": "清淡",
             "dietType": "均衡饮食",
             "restrictions": [],
+            "meals": "3 餐",
+            "age": "",
         }
     return {
         "sleepQuality": row["sleep_quality"] or "",
@@ -1393,6 +1395,8 @@ def preference_json(row):
         "taste": row["taste"] or "",
         "dietType": row["diet_type"] or "",
         "restrictions": load_list(row["restrictions"]),
+        "meals": row["meals"] or "",
+        "age": row["age"] or "",
     }
 
 
@@ -1402,6 +1406,8 @@ PREFERENCE_COLUMNS = {
     "goal": "goal",
     "taste": "taste",
     "dietType": "diet_type",
+    "meals": "meals",
+    "age": "age",
 }
 
 
@@ -1650,7 +1656,8 @@ def sync_import(ctx):
     if to_bool(body.get("replace", True)):
         for table in ("weight_records", "vital_records", "meal_records", "sport_records",
                       "mood_records", "sleep_records", "reminders", "quick_reminders",
-                      "family_records", "family_members"):
+                      "family_records", "family_members", "report_records",
+                      "female_status", "female_profiles", "preferences"):
             conn.execute("DELETE FROM %s WHERE user_id = ?" % table, (uid,))
 
     # ---- 个人档案 ----
@@ -1743,6 +1750,18 @@ def sync_import(ctx):
     if activity is not None:
         db.state_set(conn, uid, "dietActivity", activity)
 
+    # ---- 变美计划的目标设置（表单输入，不属于计算结果）----
+    beauty = body.get("beautyPlan")
+    if isinstance(beauty, dict) and beauty:
+        target_weight = safe_float(beauty.get("targetWeight"), 20, 300)
+        if target_weight is not None:
+            db.state_set(conn, uid, "beautyPlan", {
+                "type": safe_text(beauty.get("type"), 20, "健身减脂"),
+                "targetWeight": target_weight,
+                "weeks": safe_int(beauty.get("weeks"), 2, 52, 12),
+                "times": safe_int(beauty.get("times"), 2, 7, 4),
+            })
+
     # ---- 饮食记录 ----
     imported = 0
     for item in body.get("mealLog") or []:
@@ -1819,14 +1838,123 @@ def sync_import(ctx):
             imported += 1
     counts["mood"] = imported
 
+    # ---- 睡眠记录 ----
+    imported = 0
+    for item in body.get("sleepLog") or []:
+        if not isinstance(item, dict):
+            continue
+        day = safe_day(item.get("date"))
+        if day is None:
+            continue
+        conn.execute(
+            "INSERT INTO sleep_records(user_id, date, hours, quality, note, created_at) "
+            "VALUES (?, ?, ?, ?, ?, ?) "
+            "ON CONFLICT(user_id, date) DO UPDATE SET hours = excluded.hours, "
+            "quality = excluded.quality, note = excluded.note",
+            (uid, day[:10], safe_float(item.get("hours"), 0, 24) or 0,
+             safe_text(item.get("quality"), 20), safe_text(item.get("note"), 200), db.now()),
+        )
+        imported += 1
+    counts["sleep"] = imported
+
+    # ---- 体检报告 ----
+    imported = 0
+    for item in body.get("reports") or []:
+        if not isinstance(item, dict):
+            continue
+        day = safe_day(item.get("date"), db.today())
+        values = {
+            "weight": safe_float(item.get("weight"), 20, 200),
+            "fat": safe_float(item.get("fat"), 0, 70),
+            "systolic": safe_float(item.get("systolic"), 40, 300),
+            "diastolic": safe_float(item.get("diastolic"), 20, 200),
+            "glucose": safe_float(item.get("glucose"), 1, 40),
+        }
+        if all(value is None for value in values.values()):
+            continue
+        conn.execute(
+            "INSERT INTO report_records(user_id, date, weight, fat, systolic, diastolic, "
+            "glucose, image_url, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (uid, (day or db.today())[:10], values["weight"], values["fat"],
+             values["systolic"], values["diastolic"], values["glucose"],
+             safe_text(item.get("imageUrl"), 500) or None, db.now()),
+        )
+        imported += 1
+    counts["reports"] = imported
+
+    # ---- 女性健康档案：周期设置 + 每日状态 ----
+    female = body.get("female") or {}
+    if isinstance(female, dict):
+        female_profile = female.get("profile") or {}
+        conn.execute(
+            "INSERT INTO female_profiles(user_id, period_days, cycle_days, last_period_start, "
+            "updated_at) VALUES (?, ?, ?, ?, ?) "
+            "ON CONFLICT(user_id) DO UPDATE SET period_days = excluded.period_days, "
+            "cycle_days = excluded.cycle_days, last_period_start = excluded.last_period_start, "
+            "updated_at = excluded.updated_at",
+            (uid, safe_int(female_profile.get("periodDays"), 1, 15, 5),
+             safe_int(female_profile.get("cycleDays"), 15, 60, 28),
+             safe_text(female_profile.get("lastPeriodStart"), 10), db.now()),
+        )
+
+        imported = 0
+        for item in female.get("status") or []:
+            if not isinstance(item, dict):
+                continue
+            day = safe_day(item.get("date"))
+            tags = item.get("tags")
+            if day is None or not isinstance(tags, list):
+                continue
+            conn.execute(
+                "INSERT INTO female_status(user_id, date, tags, note, created_at) "
+                "VALUES (?, ?, ?, ?, ?) "
+                "ON CONFLICT(user_id, date) DO UPDATE SET tags = excluded.tags, "
+                "note = excluded.note",
+                (uid, day[:10], json.dumps([str(tag)[:20] for tag in tags], ensure_ascii=False),
+                 safe_text(item.get("note"), 200), db.now()),
+            )
+            imported += 1
+        counts["femaleStatus"] = imported
+
+    # ---- 饮食与健康偏好 ----
+    preferences = body.get("preferences") or {}
+    if isinstance(preferences, dict) and preferences:
+        values = {}
+        for key, column in PREFERENCE_COLUMNS.items():
+            if key in preferences:
+                values[column] = safe_text(preferences[key], 40)
+        if "conditions" in preferences:
+            conditions = preferences.get("conditions")
+            values["conditions"] = json.dumps(
+                [str(item)[:20] for item in conditions] if isinstance(conditions, list) else [],
+                ensure_ascii=False)
+        if "restrictions" in preferences:
+            restrictions = preferences.get("restrictions")
+            values["restrictions"] = json.dumps(
+                [str(item)[:20] for item in restrictions] if isinstance(restrictions, list) else [],
+                ensure_ascii=False)
+        if values:
+            pairs = list(values.items()) + [("updated_at", db.now())]
+            conn.execute("INSERT OR IGNORE INTO preferences(user_id) VALUES (?)", (uid,))
+            conn.execute(
+                "UPDATE preferences SET %s WHERE user_id = ?"
+                % ", ".join("%s = ?" % column for column, _value in pairs),
+                [value for _column, value in pairs] + [uid],
+            )
+            counts["preferences"] = 1
+
     # ---- 家人档案（旧 ID 加用户前缀，避免跨账号冲突）----
     member_map = {}
     imported = 0
     for index, item in enumerate(body.get("familyMembers") or []):
         if not isinstance(item, dict):
             continue
-        old_id = safe_text(item.get("id"), 40, "m%d" % index)
-        new_id_value = "m%d-%s" % (uid, old_id)
+        prefix = "m%d-" % uid
+        old_id = safe_text(item.get("id"), 60, "m%d" % index)
+        # 导出再导入时 id 已带前缀，先去重，避免前缀不断叠加
+        if old_id.startswith(prefix):
+            old_id = old_id[len(prefix):]
+        new_id_value = prefix + old_id
         relation = safe_text(item.get("relation"), 20, "家人")
         conn.execute(
             "INSERT INTO family_members(id, user_id, relation, name, age, conditions, medications, "
@@ -1972,6 +2100,7 @@ def sync_export(ctx):
             "dietActivity": db.state_get(conn, uid, "dietActivity", 1.375),
             "bp": db.state_get(conn, uid, "bp"),
             "glucose": db.state_get(conn, uid, "glucose"),
+            "beautyPlan": db.state_get(conn, uid, "beautyPlan"),
         },
         "weightHistory": [weight_json(row) for row in weight_rows],
         "vitalsHistory": vitals,

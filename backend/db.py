@@ -222,6 +222,8 @@ CREATE TABLE IF NOT EXISTS preferences (
     taste              TEXT,
     diet_type          TEXT,
     restrictions       TEXT,              -- JSON 数组
+    meals              TEXT,              -- 每日餐数
+    age                TEXT,              -- 年龄
     updated_at         TEXT
 );
 
@@ -279,6 +281,12 @@ def _migrate(conn):
     meal_columns = {row[1] for row in conn.execute("PRAGMA table_info(meal_records)")}
     if meal_columns and "image" not in meal_columns:
         conn.execute("ALTER TABLE meal_records ADD COLUMN image TEXT")
+
+    preference_columns = {row[1] for row in conn.execute("PRAGMA table_info(preferences)")}
+    if preference_columns and "meals" not in preference_columns:
+        conn.execute("ALTER TABLE preferences ADD COLUMN meals TEXT")
+    if preference_columns and "age" not in preference_columns:
+        conn.execute("ALTER TABLE preferences ADD COLUMN age TEXT")
 
 
 @contextmanager
