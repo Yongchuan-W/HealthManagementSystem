@@ -19,7 +19,9 @@
 import socket
 import threading
 import webbrowser
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from http.server import ThreadingHTTPServer
+
+from backend.app import HealthAppHandler, prepare
 
 # ============================================================
 # 页面 HTML：样式（CSS）与交互（JavaScript）全部内嵌，便于单文件运行
@@ -9307,42 +9309,11 @@ document.addEventListener('keydown', function (event) {
 
 
 # ============================================================
-# HTTP 服务：把上面的 HTML 返回给浏览器
+# HTTP 服务：页面 + /api/* 接口，由 backend.app.HealthAppHandler 提供
 # ============================================================
-class HealthPageHandler(BaseHTTPRequestHandler):
-    """处理浏览器请求：根路径返回页面，其余路径返回 404。"""
-
-    # 供登录页显示的手机访问地址，由 main() 启动时写入
-    mobile_url = "http://127.0.0.1:8000/"
-
-    def do_GET(self):
-        # 去掉查询参数，例如 /?x=1 → /
-        path = self.path.split("?")[0]
-
-        if path in ("/", "/index.html"):
-            # 把登录页中的占位符替换为实际局域网地址
-            html = PAGE_HTML.replace("__MOBILE_URL__", self.mobile_url)
-            body = html.encode("utf-8")
-            self.send_response(200)
-            self.send_header("Content-Type", "text/html; charset=utf-8")
-            self.send_header("Content-Length", str(len(body)))
-            self.end_headers()
-            self.wfile.write(body)
-        elif path == "/favicon.ico":
-            # 没有图标文件，直接返回 204，避免浏览器报 404
-            self.send_response(204)
-            self.end_headers()
-        else:
-            body = "404 Not Found".encode("utf-8")
-            self.send_response(404)
-            self.send_header("Content-Type", "text/plain; charset=utf-8")
-            self.send_header("Content-Length", str(len(body)))
-            self.end_headers()
-            self.wfile.write(body)
-
-    def log_message(self, fmt, *args):
-        """在终端打印简短的访问日志。"""
-        print("[HTTP] " + fmt % args)
+# 页面 HTML 与局域网地址在 main() 启动前注入处理器：
+#   HealthAppHandler.page_html  = PAGE_HTML
+#   HealthAppHandler.mobile_url = mobile_url
 
 
 def find_free_port(start=8000, end=8100):
@@ -9385,18 +9356,24 @@ def main():
     lan_ip = get_lan_ip()
     mobile_url = "http://%s:%d/" % (lan_ip, port) if lan_ip != "127.0.0.1" else local_url
 
-    # 登录页展示手机访问链接
-    HealthPageHandler.mobile_url = mobile_url
+    # 初始化数据库（health.db）并确保演示账号存在
+    prepare()
+
+    # 把页面与手机访问地址注入后端处理器
+    HealthAppHandler.page_html = PAGE_HTML
+    HealthAppHandler.mobile_url = mobile_url
 
     # 服务启动后 0.8 秒自动打开浏览器
     threading.Timer(0.8, lambda: webbrowser.open(local_url)).start()
 
     # 监听 0.0.0.0，手机与电脑在同一 Wi-Fi 下即可访问
-    server = ThreadingHTTPServer(("0.0.0.0", port), HealthPageHandler)
+    server = ThreadingHTTPServer(("0.0.0.0", port), HealthAppHandler)
     print("=" * 58)
     print("健康管理系统已启动")
     print("电脑访问：", local_url)
     print("手机访问：", mobile_url, "（需连接同一 Wi-Fi）")
+    print("接口地址：", local_url + "api/health")
+    print("数据文件：health.db（与本文件同目录）")
     print("提示：若 Windows 防火墙弹窗，请允许 Python 访问专用网络")
     print("按 Ctrl + C 停止服务")
     print("=" * 58)
