@@ -1923,6 +1923,25 @@ a { text-decoration: none; }
 
 .login-hint b { color: #4a5568; letter-spacing: 1px; }
 
+.login-switch {
+  margin-top: 16px;
+  font-size: 13px;
+  color: #8a94a6;
+  text-align: center;
+}
+
+.login-switch button {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  margin-left: 4px;
+  color: var(--teal);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.login-switch button:hover { text-decoration: underline; }
+
 .mobile-hint {
   margin-top: 10px;
   font-size: 12px;
@@ -3862,8 +3881,8 @@ body { color: var(--text); }
     </div>
 
     <div class="login-card">
-      <h1>欢迎回来</h1>
-      <p class="login-sub">登录后开始科学管理你的健康</p>
+      <h1 id="authTitle">欢迎回来</h1>
+      <p class="login-sub" id="authSub">登录后开始科学管理你的健康</p>
 
       <form id="loginForm" novalidate>
         <div class="login-field">
@@ -3875,8 +3894,30 @@ body { color: var(--text); }
           <input id="loginPassword" type="password" autocomplete="current-password" placeholder="请输入密码" value="123456">
         </div>
         <div class="login-error" id="loginError" hidden></div>
-        <button class="btn-primary login-btn" type="submit">登录</button>
+        <button class="btn-primary login-btn" type="submit" id="loginSubmit">登录</button>
       </form>
+
+      <form id="registerForm" novalidate hidden>
+        <div class="login-field">
+          <label for="registerAccount">账号</label>
+          <input id="registerAccount" type="text" autocomplete="username" placeholder="2-32 位，字母、数字或下划线">
+        </div>
+        <div class="login-field">
+          <label for="registerPassword">密码</label>
+          <input id="registerPassword" type="password" autocomplete="new-password" placeholder="6-64 位">
+        </div>
+        <div class="login-field">
+          <label for="registerPassword2">确认密码</label>
+          <input id="registerPassword2" type="password" autocomplete="new-password" placeholder="再次输入密码">
+        </div>
+        <div class="login-error" id="registerError" hidden></div>
+        <button class="btn-primary login-btn" type="submit" id="registerSubmit">注册并登录</button>
+      </form>
+
+      <div class="login-switch" id="authSwitch">
+        <span id="authSwitchText">还没有账号？</span>
+        <button type="button" id="authSwitchBtn">立即注册</button>
+      </div>
 
       <div class="login-hint">演示账号：<b>AAA</b>　密码：<b>123456</b></div>
       <div class="mobile-hint">手机与电脑连接同一 Wi-Fi 后访问：<br><a href="__MOBILE_URL__">__MOBILE_URL__</a></div>
@@ -5273,26 +5314,179 @@ const loginView = document.getElementById('loginView');
 const onboardingView = document.getElementById('onboardingView');
 const appShell = document.getElementById('appShell');
 
-// 演示账号
+// 演示账号（后端首次启动时会自动创建同名账号）
 const DEMO_ACCOUNT = 'AAA';
 const DEMO_PASSWORD = '123456';
 
-document.getElementById('loginForm').addEventListener('submit', function (event) {
+// ---------- 后端接口封装 ----------
+// 通过 python web.py 打开时走 /api/*；直接双击 static 版页面（file: 协议）时只能用本地演示逻辑
+const IS_FILE_PROTOCOL = window.location.protocol === 'file:';
+let serverMode = !IS_FILE_PROTOCOL;
+let currentUser = null;
+
+async function api(path, options) {
+  const config = Object.assign({ method: 'GET', credentials: 'same-origin' }, options || {});
+  if (config.body && typeof config.body !== 'string') {
+    config.headers = Object.assign({ 'Content-Type': 'application/json' }, config.headers || {});
+    config.body = JSON.stringify(config.body);
+  }
+  const response = await fetch(path, config);
+  let data = {};
+  try {
+    data = await response.json();
+  } catch (error) {
+    data = {};
+  }
+  return { ok: response.ok, status: response.status, data: data };
+}
+
+// ---------- 登录 / 注册面板切换 ----------
+let authMode = 'login';
+
+function setAuthMode(mode) {
+  authMode = mode === 'register' ? 'register' : 'login';
+  const isRegister = authMode === 'register';
+
+  document.getElementById('loginForm').hidden = isRegister;
+  document.getElementById('registerForm').hidden = !isRegister;
+  document.getElementById('authTitle').textContent = isRegister ? '创建账号' : '欢迎回来';
+  document.getElementById('authSub').textContent = isRegister
+    ? '注册后可在任意设备登录，数据自动同步'
+    : '登录后开始科学管理你的健康';
+  document.getElementById('authSwitchText').textContent = isRegister ? '已有账号？' : '还没有账号？';
+  document.getElementById('authSwitchBtn').textContent = isRegister ? '返回登录' : '立即注册';
+  document.getElementById('loginError').hidden = true;
+  document.getElementById('registerError').hidden = true;
+
+  const target = document.getElementById(isRegister ? 'registerAccount' : 'loginAccount');
+  if (target) target.focus();
+}
+
+document.getElementById('authSwitchBtn').addEventListener('click', function () {
+  setAuthMode(authMode === 'login' ? 'register' : 'login');
+});
+
+function showAuthError(id, message) {
+  const box = document.getElementById(id);
+  box.hidden = false;
+  box.textContent = message;
+}
+
+// 登录成功后：已有档案直接进主界面，否则进入信息填写页
+function afterLogin(profile) {
+  loginView.hidden = true;
+  onboardingView.hidden = true;
+  const hasProfile = !!(profile && (profile.nickname || profile.height || profile.weight));
+  if (hasProfile) {
+    enterApp();
+    loadProfileView();
+    renderVitalRanges();
+  } else {
+    onboardingView.hidden = false;
+    window.scrollTo(0, 0);
+    document.getElementById('obName').focus();
+  }
+}
+
+// 刚完成登录 / 注册：拉取账号信息后决定进入哪个页面
+async function afterAuthenticated() {
+  const result = await api('/api/auth/me');
+  if (!result.ok) {
+    showAuthError(authMode === 'register' ? 'registerError' : 'loginError',
+      result.data.error || '会话已失效，请重新登录');
+    return false;
+  }
+  currentUser = result.data.user || currentUser;
+  afterLogin(result.data.profile);
+  return true;
+}
+
+document.getElementById('loginForm').addEventListener('submit', async function (event) {
   event.preventDefault();
 
   const account = document.getElementById('loginAccount').value.trim();
   const password = document.getElementById('loginPassword').value;
-  const error = document.getElementById('loginError');
+  const submit = document.getElementById('loginSubmit');
 
-  if (account === DEMO_ACCOUNT && password === DEMO_PASSWORD) {
-    error.hidden = true;
-    loginView.hidden = true;
-    onboardingView.hidden = false;
-    window.scrollTo(0, 0);
-    document.getElementById('obName').focus();
-  } else {
-    error.hidden = false;
-    error.textContent = '账号或密码不正确，请使用演示账号 AAA / 123456';
+  if (!account || !password) {
+    showAuthError('loginError', '请输入账号与密码');
+    return;
+  }
+
+  if (!serverMode) {
+    // 静态演示版：沿用本地演示账号
+    if (account === DEMO_ACCOUNT && password === DEMO_PASSWORD) {
+      document.getElementById('loginError').hidden = true;
+      afterLogin(loadData('profile', null));
+    } else {
+      showAuthError('loginError', '账号或密码不正确，请使用演示账号 AAA / 123456');
+    }
+    return;
+  }
+
+  submit.disabled = true;
+  submit.textContent = '登录中…';
+  try {
+    const result = await api('/api/auth/login', { method: 'POST', body: { account, password } });
+    if (!result.ok) {
+      showAuthError('loginError', result.data.error || '账号或密码不正确');
+      return;
+    }
+    document.getElementById('loginError').hidden = true;
+    currentUser = result.data.user || null;
+    document.getElementById('loginAccount').value = account;
+    await afterAuthenticated();
+  } catch (error) {
+    showAuthError('loginError', '无法连接服务器，请确认服务已启动');
+  } finally {
+    submit.disabled = false;
+    submit.textContent = '登录';
+  }
+});
+
+document.getElementById('registerForm').addEventListener('submit', async function (event) {
+  event.preventDefault();
+
+  const account = document.getElementById('registerAccount').value.trim();
+  const password = document.getElementById('registerPassword').value;
+  const confirm = document.getElementById('registerPassword2').value;
+  const submit = document.getElementById('registerSubmit');
+
+  if (!serverMode) {
+    showAuthError('registerError', '当前为静态演示版，不支持注册账号');
+    return;
+  }
+  if (account.length < 2 || account.length > 32) {
+    showAuthError('registerError', '账号需为 2-32 个字符');
+    return;
+  }
+  if (password.length < 6 || password.length > 64) {
+    showAuthError('registerError', '密码需为 6-64 个字符');
+    return;
+  }
+  if (password !== confirm) {
+    showAuthError('registerError', '两次输入的密码不一致');
+    return;
+  }
+
+  submit.disabled = true;
+  submit.textContent = '注册中…';
+  try {
+    const result = await api('/api/auth/register', { method: 'POST', body: { account, password } });
+    if (!result.ok) {
+      showAuthError('registerError', result.data.error || '注册失败，请稍后再试');
+      return;
+    }
+    document.getElementById('registerError').hidden = true;
+    currentUser = result.data.user || null;
+
+    // 注册成功后新账号还没有档案，直接进入引导页
+    await afterAuthenticated();
+  } catch (error) {
+    showAuthError('registerError', '无法连接服务器，请确认服务已启动');
+  } finally {
+    submit.disabled = false;
+    submit.textContent = '注册并登录';
   }
 });
 
