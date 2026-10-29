@@ -3240,6 +3240,14 @@ body { color: var(--text); }
   line-height: 1.6;
 }
 
+.meal-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex: none;
+}
+
 .meal-log-item button {
   border: none;
   background: transparent;
@@ -6440,11 +6448,33 @@ document.querySelectorAll('.meal-btn').forEach(function (btn) {
 
 /* ==========================================================
    四之二、图片上传
-   说明：餐食图片仅做预览；体检报告为示例指标。
-        接入豆包视觉模型 / OCR 后可替换为真实识别。
+   说明：图片上传到后端 /api/uploads 并随记录一起存档；
+        识别结果仍为示例数据，接入豆包视觉模型 / OCR 后可替换。
    ========================================================== */
 
-// ---------- 餐食图片上传（当前仅预览，未接入视觉识别） ----------
+// 上传图片到后端，返回可访问的图片地址；静态演示模式不落库，返回 null
+function uploadImage(file) {
+  if (!serverMode) return Promise.resolve(null);
+  const headers = {
+    'Content-Type': file.type || 'application/octet-stream',
+    'X-File-Name': encodeURIComponent(file.name || 'upload')
+  };
+  return fetch('/api/uploads', {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: headers,
+    body: file
+  }).then(function (response) {
+    return response.json().then(function (data) {
+      if (!response.ok || !data.file || !data.file.url) {
+        throw new Error(data.error || '图片上传失败');
+      }
+      return data.file.url;
+    });
+  });
+}
+
+// ---------- 餐食图片上传 ----------
 const dietImageInput = document.getElementById('dietImageInput');
 const dietPreview = document.getElementById('dietPreview');
 const dietUploadEmpty = document.getElementById('dietUploadEmpty');
@@ -6454,7 +6484,8 @@ const dietStatus = document.getElementById('dietStatus');
 const dietResult = document.getElementById('dietResult');
 const dietFillMeal = document.getElementById('dietFillMeal');
 
-let dietImageUrl = null;
+let dietImageUrl = null;        // 本地预览地址
+let pendingMealImage = '';      // 待写入下一条饮食记录的图片地址
 
 function chooseDietImage() {
   dietImageInput.value = '';
@@ -6488,7 +6519,18 @@ dietImageInput.addEventListener('change', function () {
 
   // 目前版本没有接入视觉识别模型：保留图片预览，但不编造识别结果
   dietStatus.className = 'upload-status';
-  dietStatus.textContent = '图片已保存。当前版本未接入图像识别模型。';
+  dietStatus.textContent = '图片上传中...';
+  pendingMealImage = '';
+
+  uploadImage(file).then(function (url) {
+    pendingMealImage = url || '';
+    dietStatus.textContent = url
+      ? '图片已保存，会随下一条饮食记录一起存档。'
+      : '当前为静态演示模式，图片只做本地预览，不会保存。';
+  }).catch(function (error) {
+    dietStatus.textContent = '图片上传失败：' + error.message + '。仍可手动记录饮食。';
+  });
+
   dietResult.innerHTML = '<div>请在下方「今日饮食记录」中按实际食物手动填写（例如：米饭 鸡胸肉 西兰花），' +
     '系统会按食物成分表估算热量与蛋白质等营养。配置豆包视觉模型后可自动识别。</div>';
   dietResult.hidden = false;
@@ -6512,7 +6554,9 @@ const reportFileName = document.getElementById('reportFileName');
 const reportStatus = document.getElementById('reportStatus');
 const reportResult = document.getElementById('reportResult');
 
-let reportImageUrl = null;
+let reportImageUrl = null;      // 本地预览地址
+let reportImagePath = '';       // 已上传到后端的图片地址
+let reportUploadTask = null;    // 正在上传的任务，点击同步前先等它完成
 
 // 未接入 OCR 时的示例指标（识别结果与同步都基于这份数据）
 const reportDemoMetrics = { weight: 64.8, fat: 24.0, systolic: 112, diastolic: 72, glucose: 5.0 };
@@ -6529,6 +6573,15 @@ function renderReportResult(record, date) {
     glucose: Number(record.glucose) || 0
   };
   reportMetricsDate = date || toISODate(new Date());
+
+  // 报告存档里带了图片地址时，把预览区换成存档图片（刷新后也能看到）
+  if (record.imageUrl) {
+    reportImagePath = record.imageUrl;
+    reportPreviewImg.src = record.imageUrl;
+    reportFileName.textContent = '体检报告图片';
+    reportUploadEmpty.hidden = true;
+    reportPreview.hidden = false;
+  }
 
   document.getElementById('reportWeight').textContent = reportMetrics.weight.toFixed(1);
   document.getElementById('reportFat').textContent = reportMetrics.fat.toFixed(1);
@@ -6598,6 +6651,12 @@ reportImageInput.addEventListener('change', function () {
   reportStatus.textContent = 'AI 正在识别报告指标...';
   reportResult.hidden = true;
 
+  reportImagePath = '';
+  reportUploadTask = uploadImage(file).then(function (url) {
+    reportImagePath = url || '';
+    return reportImagePath;
+  });
+
   setTimeout(function () {
     reportStatus.className = 'upload-status';
     reportStatus.textContent = '当前未接入 OCR，以下为示例指标，请按实际报告修改';
@@ -6607,7 +6666,18 @@ reportImageInput.addEventListener('change', function () {
 });
 
 // 将识别结果同步到核心体征，并把这份报告存档
-document.getElementById('applyReport').addEventListener('click', function () {
+document.getElementById('applyReport').addEventListener('click', async function () {
+  // 图片可能还在上传，先等上传完成再存档
+  if (reportUploadTask) {
+    try {
+      reportImagePath = (await reportUploadTask) || '';
+    } catch (error) {
+      reportImagePath = '';
+      showToast('报告图片上传失败：' + error.message);
+    }
+    reportUploadTask = null;
+  }
+
   document.getElementById('weightValue').textContent = reportMetrics.weight.toFixed(1);
   document.getElementById('fatValue').textContent = reportMetrics.fat.toFixed(1);
   document.getElementById('bpValue').textContent =
@@ -6627,7 +6697,8 @@ document.getElementById('applyReport').addEventListener('click', function () {
     fat: reportMetrics.fat,
     systolic: reportMetrics.systolic,
     diastolic: reportMetrics.diastolic,
-    glucose: reportMetrics.glucose
+    glucose: reportMetrics.glucose,
+    imageUrl: reportImagePath || ''
   });
   refreshDietViews();
   renderVitalRanges();
@@ -8992,8 +9063,10 @@ function saveMealRecord(meal, text, nutrition) {
     protein: nutrition.protein,
     carb: nutrition.carb,
     fat: nutrition.fat,
-    fiber: nutrition.fiber
+    fiber: nutrition.fiber,
+    image: pendingMealImage || ''
   });
+  pendingMealImage = '';
 
   // 只保留最近 30 天，避免数据无限增长
   const cutoff = toISODate(addDays(new Date(), -30));
@@ -9146,7 +9219,18 @@ function renderMealLog() {
   items.forEach(function (item) {
     const chip = document.createElement('span');
     chip.className = 'meal-log-item';
-    chip.textContent = item.meal + ' · ' + item.text + '（约 ' + Math.round(item.kcal) + ' kcal）';
+
+    // 上传过餐食图片的记录带一个小缩略图
+    if (item.image) {
+      const thumb = document.createElement('img');
+      thumb.className = 'meal-thumb';
+      thumb.src = item.image;
+      thumb.alt = '餐食图片';
+      chip.appendChild(thumb);
+    }
+
+    chip.appendChild(document.createTextNode(
+      item.meal + ' · ' + item.text + '（约 ' + Math.round(item.kcal) + ' kcal）'));
 
     const del = document.createElement('button');
     del.type = 'button';
