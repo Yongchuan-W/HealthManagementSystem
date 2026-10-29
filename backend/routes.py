@@ -1668,10 +1668,15 @@ def sync_import(ctx):
                     values[column] = number
             else:
                 values[column] = safe_text(profile[key], 50)
-        if profile.get("avatarImage"):
-            image = str(profile["avatarImage"])
-            if image.startswith("data:image/") and len(image) < 2_000_000:
-                values["avatar_image"] = image
+        if "avatarImage" in profile:
+            image = profile.get("avatarImage")
+            if image in (None, ""):
+                # 用户从自定义头像切回预设头像时，需要清掉旧图片
+                values["avatar_image"] = None
+            else:
+                text = str(image)
+                if text.startswith("data:image/") and len(text) < 2_000_000:
+                    values["avatar_image"] = text
 
         if conn.execute("SELECT user_id FROM profiles WHERE user_id = ?", (uid,)).fetchone() is None:
             conn.execute("INSERT INTO profiles(user_id, updated_at) VALUES (?, ?)", (uid, db.now()))
@@ -1705,7 +1710,9 @@ def sync_import(ctx):
     vitals = body.get("vitalsHistory") or {}
     if isinstance(vitals, dict):
         for vital_type, items in vitals.items():
-            if vital_type not in VITAL_TYPES or not isinstance(items, list):
+            if vital_type not in VITAL_TYPES and vital_type != "weight":
+                continue
+            if not isinstance(items, list):
                 continue
             for item in items:
                 if not isinstance(item, dict):
@@ -1913,7 +1920,7 @@ def sync_export(ctx):
     vital_rows = conn.execute(
         "SELECT type, date, text FROM vital_records WHERE user_id = ? ORDER BY date", (uid,)
     ).fetchall()
-    vitals = {name: [] for name in VITAL_TYPES}
+    vitals = {name: [] for name in VITAL_TYPES + ("weight",)}
     for row in vital_rows:
         vitals[row["type"]].append({"date": row["date"], "text": row["text"] or ""})
 

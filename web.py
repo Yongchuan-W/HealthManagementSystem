@@ -5355,6 +5355,221 @@ async function api(path, options) {
   return { ok: response.ok, status: response.status, data: data };
 }
 
+// ---------- 数据层：内存缓存 + localStorage + 后端整包同步 ----------
+const SYNC_KEYS = [
+  'profile', 'weightHistory', 'vitalsHistory', 'bp', 'glucose', 'mealLog',
+  'moodLog', 'dietActivity', 'sport', 'reminders', 'quickReminders',
+  'familyMembers', 'familyRecords'
+];
+const dataCache = Object.create(null);
+const OWNER_KEY = 'hm_owner';
+let syncTimer = null;
+
+function loadData(key, fallback) {
+  if (Object.prototype.hasOwnProperty.call(dataCache, key)) {
+    return dataCache[key];
+  }
+  try {
+    const raw = window.localStorage.getItem('hm_' + key);
+    if (raw !== null) {
+      const parsed = JSON.parse(raw);
+      dataCache[key] = parsed;
+      return parsed;
+    }
+  } catch (error) {
+    // 隐私模式或数据损坏时退回默认值
+  }
+  return fallback;
+}
+
+function saveData(key, value) {
+  dataCache[key] = value;
+  try {
+    window.localStorage.setItem('hm_' + key, JSON.stringify(value));
+  } catch (error) {
+    // 无痕模式等场景下写入失败，忽略即可
+  }
+  scheduleSync();
+}
+
+function hasLocalData() {
+  try {
+    return window.localStorage.getItem('hm_profile') !== null;
+  } catch (error) {
+    return false;
+  }
+}
+
+// 本机缓存属于哪个账号（空表示是接入账号之前的旧版演示数据）
+function localOwner() {
+  try {
+    return window.localStorage.getItem(OWNER_KEY);
+  } catch (error) {
+    return null;
+  }
+}
+
+function setLocalOwner(userId) {
+  try {
+    window.localStorage.setItem(OWNER_KEY, String(userId));
+  } catch (error) {
+    // 忽略写入失败
+  }
+}
+
+function clearLocalData() {
+  SYNC_KEYS.forEach(function (key) {
+    delete dataCache[key];
+    try {
+      window.localStorage.removeItem('hm_' + key);
+    } catch (error) {
+      // 忽略清理失败
+    }
+  });
+  try {
+    window.localStorage.removeItem(OWNER_KEY);
+  } catch (error) {
+    // 忽略清理失败
+  }
+}
+
+// 账号里是否已经有业务数据（有记录就不再重复引导填写）
+function hasAnyRecord() {
+  if ((loadData('weightHistory', []) || []).length) return true;
+  if ((loadData('mealLog', []) || []).length) return true;
+  if (Object.keys(loadData('moodLog', {}) || {}).length) return true;
+  if ((loadData('reminders', []) || []).length) return true;
+  if ((loadData('familyMembers', []) || []).length) return true;
+  const sport = loadData('sport', null);
+  return !!(sport && sport.history && Object.keys(sport.history).length);
+}
+
+// 把当前数据整理成 /api/sync/import 需要的整包
+function buildSyncPayload() {
+  const glucose = loadData('glucose', null);
+  return {
+    replace: true,
+    profile: loadData('profile', {}) || {},
+    weightHistory: loadData('weightHistory', []),
+    vitalsHistory: loadData('vitalsHistory', {}),
+    bp: loadData('bp', null),
+    glucose: (glucose && typeof glucose === 'object') ? glucose.value : glucose,
+    dietActivity: loadData('dietActivity', null),
+    mealLog: loadData('mealLog', []),
+    sport: loadData('sport', {}),
+    moodLog: loadData('moodLog', {}),
+    familyMembers: loadData('familyMembers', []),
+    familyRecords: loadData('familyRecords', []),
+    reminders: loadData('reminders', []),
+    quickReminders: loadData('quickReminders', [])
+  };
+}
+
+// 500ms 内的多次保存合并为一次整包提交，避免频繁请求
+function scheduleSync() {
+  if (!serverMode || !currentUser) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(flushSync, 500);
+}
+
+async function flushSync() {
+  syncTimer = null;
+  if (!serverMode || !currentUser) return;
+  try {
+    await api('/api/sync/import', { method: 'POST', body: buildSyncPayload() });
+  } catch (error) {
+    // 断网时保留本地数据，下次保存会再次尝试
+  }
+}
+
+// 服务端整包里是否有真正的业务数据（quickReminders、运动目标为注册时的默认值，不算）
+function bundleHasData(bundle) {
+  if (!bundle) return false;
+  const profile = bundle.profile || {};
+  if (profile.nickname || profile.height || profile.weight) return true;
+  if ((bundle.weightHistory || []).length) return true;
+  if ((bundle.mealLog || []).length) return true;
+  if (Object.keys(bundle.moodLog || {}).length) return true;
+  if ((bundle.reminders || []).length) return true;
+  if ((bundle.familyMembers || []).length) return true;
+  if ((bundle.familyRecords || []).length) return true;
+  if (Object.keys((bundle.sport || {}).history || {}).length) return true;
+  const vitals = bundle.vitalsHistory || {};
+  return Object.keys(vitals).some(function (key) {
+    return (vitals[key] || []).length > 0;
+  });
+}
+
+// 用服务端整包覆盖本地缓存
+function applyBundle(bundle) {
+  const settings = bundle.settings || {};
+  let bp = settings.bp || null;
+  if (bp && bp.systolic && bp.diastolic) {
+    bp = { systolic: bp.systolic, diastolic: bp.diastolic };
+  }
+  const glucoseState = settings.glucose;
+  const glucose = (glucoseState && typeof glucoseState === 'object')
+    ? glucoseState.value
+    : glucoseState;
+
+  const values = {
+    profile: bundle.profile || {},
+    weightHistory: bundle.weightHistory || [],
+    vitalsHistory: bundle.vitalsHistory || {},
+    bp: bp,
+    glucose: glucose,
+    dietActivity: settings.dietActivity,
+    mealLog: bundle.mealLog || [],
+    moodLog: bundle.moodLog || {},
+    sport: bundle.sport && bundle.sport.goal
+      ? bundle.sport
+      : { goal: { kcal: 500, steps: 8000, minutes: 60 }, history: {} },
+    reminders: bundle.reminders || [],
+    quickReminders: bundle.quickReminders || [],
+    familyMembers: bundle.familyMembers || [],
+    familyRecords: bundle.familyRecords || []
+  };
+
+  Object.keys(values).forEach(function (key) {
+    if (values[key] === undefined) return;
+    dataCache[key] = values[key];
+    try {
+      window.localStorage.setItem('hm_' + key, JSON.stringify(values[key]));
+    } catch (error) {
+      // 忽略写入失败
+    }
+  });
+  if (currentUser && currentUser.id) setLocalOwner(currentUser.id);
+}
+
+// 登录 / 会话恢复后，从后端取回整包数据；账号为空而本机有旧数据时先迁移
+async function hydrateFromServer() {
+  if (!serverMode || !currentUser) return;
+
+  let bundle = null;
+  try {
+    const result = await api('/api/sync/export');
+    if (result.ok) bundle = result.data;
+  } catch (error) {
+    return;
+  }
+  if (!bundle) return;
+
+  // 只有「接入账号之前」的旧版本机数据才迁移，避免把上一个账号的数据写进新账号
+  const isLegacy = hasLocalData() && !localOwner();
+  if (!bundleHasData(bundle) && isLegacy) {
+    await flushSync();
+    try {
+      const again = await api('/api/sync/export');
+      if (again.ok) bundle = again.data;
+    } catch (error) {
+      // 迁移失败时沿用本机数据
+    }
+  }
+
+  applyBundle(bundle);
+}
+
 // ---------- 登录 / 注册面板切换 ----------
 let authMode = 'login';
 
@@ -5387,12 +5602,13 @@ function showAuthError(id, message) {
   box.textContent = message;
 }
 
-// 登录成功后：已有档案直接进主界面，否则进入信息填写页
+// 登录成功后：档案已填过身高体重（或已有记录）直接进主界面，否则进入信息填写页
+// 注意：新注册账号的昵称默认就是账号名，不能只凭昵称判断档案是否填过
 function afterLogin(profile) {
   loginView.hidden = true;
   onboardingView.hidden = true;
-  const hasProfile = !!(profile && (profile.nickname || profile.height || profile.weight));
-  if (hasProfile) {
+  const hasProfile = !!(profile && profile.height && profile.weight);
+  if (hasProfile || hasAnyRecord()) {
     enterApp();
     loadProfileView();
     renderVitalRanges();
@@ -5412,7 +5628,7 @@ async function afterAuthenticated() {
     return false;
   }
   currentUser = result.data.user || currentUser;
-  afterLogin(result.data.profile);
+  await restoreSession(result.data.profile);
   return true;
 }
 
@@ -5451,9 +5667,11 @@ async function bootAuth() {
   }
 }
 
-// 已登录会话恢复（数据水合由数据层负责）
+// 已登录会话恢复：先取回账号数据，再决定进入哪个页面并重绘
 async function restoreSession(profile) {
+  await hydrateFromServer();
   afterLogin(profile);
+  refreshAllViews();
 }
 
 document.getElementById('logoutBtn').addEventListener('click', async function () {
@@ -5464,6 +5682,8 @@ document.getElementById('logoutBtn').addEventListener('click', async function ()
       // 网络异常时也允许本地退出
     }
   }
+  // 清掉本机的账号数据，避免下一个登录的账号读到上一个账号的内容
+  clearLocalData();
   window.location.reload();
 });
 
@@ -7256,8 +7476,8 @@ const familyPersonSelect = document.getElementById('familyPerson');
 const familyTypeSelect = document.getElementById('familyType');
 const reminderMemberSelect = document.getElementById('reminderMember');
 
-// 家人列表（可通过「添加家人」继续扩展）
-let familyMembers = [
+// 家人列表（读取已保存的档案，首次使用时给出示例后可通过「添加家人」扩展）
+let familyMembers = loadData('familyMembers', [
   {
     id: 'm1',
     relation: '母亲',
@@ -7278,19 +7498,19 @@ let familyMembers = [
     emergencyName: '',
     emergencyPhone: ''
   }
-];
+]);
 
 const todayDate = new Date();
 
 // 健康记录
-let familyRecords = [
+let familyRecords = loadData('familyRecords', [
   {
     memberId: 'm1',
     type: '体检',
     date: toISODate(addDays(todayDate, -39)),
     content: '各项指标正常'
   }
-];
+]);
 
 // 关怀提醒：默认给出「今天」与「三天后」两条示例，之后读取本地保存的数据
 let reminders = loadData('reminders', [
@@ -7805,6 +8025,7 @@ document.getElementById('familySave').addEventListener('click', function () {
     date: toISODate(date),
     content: content
   });
+  saveData('familyRecords', familyRecords);
 
   renderFamilyMembers();
 
@@ -7861,6 +8082,7 @@ document.getElementById('memberSave').addEventListener('click', function () {
     emergencyName: emergencyName,
     emergencyPhone: emergencyPhone
   });
+  saveData('familyMembers', familyMembers);
 
   renderFamilyMembers();
   renderMemberOptions();
@@ -7929,26 +8151,8 @@ renderReminders();
 renderQuickReminders();
 
 /* ==========================================================
-   六之三、本地数据层与新增功能
+   六之三、核心体征记录（数据读写见「零、数据层」）
    ========================================================== */
-
-// ---------- localStorage 读写 ----------
-function loadData(key, fallback) {
-  try {
-    const raw = window.localStorage.getItem('hm_' + key);
-    return raw ? JSON.parse(raw) : fallback;
-  } catch (error) {
-    return fallback;
-  }
-}
-
-function saveData(key, value) {
-  try {
-    window.localStorage.setItem('hm_' + key, JSON.stringify(value));
-  } catch (error) {
-    // 无痕模式等场景下写入失败，忽略即可
-  }
-}
 
 // ---------- 核心数据：修改弹窗 + 近一个月记录 ----------
 const vitalMask = document.getElementById('vitalMask');
@@ -9434,6 +9638,52 @@ renderExercise('today');
 renderWeightChart();
 renderMoodWeek();
 renderWeekPanel();
+
+// 从后端取回数据后，把内存变量与页面重新同步成最新状态
+function refreshAllViews() {
+  weightHistory = loadData('weightHistory', []);
+  mealLog = loadData('mealLog', []);
+  reminders = loadData('reminders', []);
+  quickReminders = loadData('quickReminders', []);
+  familyMembers = loadData('familyMembers', []);
+  familyRecords = loadData('familyRecords', []);
+
+  const sport = loadData('sport', null);
+  if (sport && sport.goal) {
+    sportState.goal = sport.goal;
+    sportState.history = sport.history || {};
+    pruneSportHistory();
+  }
+
+  const bp = loadData('bp', null);
+  const bpBox = document.getElementById('bpValue');
+  if (bpBox && bp && bp.systolic && bp.diastolic) {
+    bpBox.textContent = bp.systolic + '/' + bp.diastolic;
+  }
+  const glucose = loadData('glucose', null);
+  const glucoseBox = document.getElementById('glucoseValue');
+  if (glucoseBox && glucose) {
+    glucoseBox.textContent = Number(glucose).toFixed(1);
+  }
+  const activity = loadData('dietActivity', null);
+  if (activity) document.getElementById('dietActivity').value = String(activity);
+
+  loadProfileView();
+  renderVitalRanges();
+  renderMealLog();
+  refreshDietViews();
+  fillSportInputs();
+  renderExercise('today');
+  renderWeightChart();
+  renderMoodWeek();
+  renderWeekPanel();
+  renderReminders();
+  renderQuickReminders();
+  renderFamilyMembers();
+  renderMemberOptions();
+  renderCycle();
+  applyGenderView();
+}
 
 /* ==========================================================
    页面启动：尝试恢复已登录的会话（后端不可用时退回本地演示）
