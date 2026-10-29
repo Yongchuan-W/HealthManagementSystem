@@ -2504,6 +2504,20 @@ a { text-decoration: none; }
 
 .btn-save:hover { background: #3fc0b6; }
 
+/* 个人信息弹窗中的退出登录（仅连后端时显示） */
+.btn-logout {
+  margin-right: auto;
+  background: #f2efe9;
+  color: #8b7d70;
+  border: 0;
+  border-radius: 8px;
+  padding: 9px 14px;
+  font-size: 12px;
+  transition: background 0.2s, color 0.2s;
+}
+
+.btn-logout:hover { background: #fbeee9; color: #b3482f; }
+
 /* ==========================================================
    12. 悬浮客服按钮 + AI 聊天窗口
    ========================================================== */
@@ -4851,6 +4865,7 @@ body { color: var(--text); }
     </div>
 
     <div class="modal-foot">
+      <button class="btn-logout" id="logoutBtn" hidden>退出登录</button>
       <button class="btn-save" id="saveProfile">保存修改</button>
     </div>
   </div>
@@ -5400,6 +5415,57 @@ async function afterAuthenticated() {
   afterLogin(result.data.profile);
   return true;
 }
+
+// ---------- 运行模式：连后端 / 纯静态演示 ----------
+function setServerMode(enabled) {
+  serverMode = !!enabled;
+  document.getElementById('logoutBtn').hidden = !serverMode;
+  document.getElementById('authSwitch').hidden = !serverMode;
+  if (!serverMode) setAuthMode('login');
+}
+
+// 打开页面时恢复已登录的会话；后端不可达则退回本地演示
+async function bootAuth() {
+  if (IS_FILE_PROTOCOL) {
+    setServerMode(false);
+    return;
+  }
+
+  let result = null;
+  try {
+    result = await api('/api/auth/me');
+  } catch (error) {
+    result = null;
+  }
+
+  if (!result) {
+    // 页面被静态托管（没有后端）时，继续使用演示账号 + localStorage
+    setServerMode(false);
+    return;
+  }
+
+  setServerMode(true);
+  if (result.ok) {
+    currentUser = result.data.user || null;
+    await restoreSession(result.data.profile);
+  }
+}
+
+// 已登录会话恢复（数据水合由数据层负责）
+async function restoreSession(profile) {
+  afterLogin(profile);
+}
+
+document.getElementById('logoutBtn').addEventListener('click', async function () {
+  if (serverMode) {
+    try {
+      await api('/api/auth/logout', { method: 'POST' });
+    } catch (error) {
+      // 网络异常时也允许本地退出
+    }
+  }
+  window.location.reload();
+});
 
 document.getElementById('loginForm').addEventListener('submit', async function (event) {
   event.preventDefault();
@@ -9368,6 +9434,11 @@ renderExercise('today');
 renderWeightChart();
 renderMoodWeek();
 renderWeekPanel();
+
+/* ==========================================================
+   页面启动：尝试恢复已登录的会话（后端不可用时退回本地演示）
+   ========================================================== */
+bootAuth();
 
 /* ==========================================================
    七、AI 健康小管家聊天
