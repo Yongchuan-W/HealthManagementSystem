@@ -94,6 +94,7 @@ CREATE TABLE IF NOT EXISTS meal_records (
     carb       REAL    DEFAULT 0,
     fat        REAL    DEFAULT 0,
     fiber      REAL    DEFAULT 0,
+    image      TEXT,
     created_at TEXT    NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_meal_user_date ON meal_records(user_id, date);
@@ -210,6 +211,53 @@ CREATE TABLE IF NOT EXISTS user_state (
     updated_at TEXT,
     PRIMARY KEY(user_id, key)
 );
+
+-- 首次填写与饮食偏好（健康目标、口味、忌口等）
+CREATE TABLE IF NOT EXISTS preferences (
+    user_id            INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    sleep_quality      TEXT,
+    exercise_frequency TEXT,
+    goal               TEXT,
+    conditions         TEXT,              -- JSON 数组
+    taste              TEXT,
+    diet_type          TEXT,
+    restrictions       TEXT,              -- JSON 数组
+    updated_at         TEXT
+);
+
+-- 女性健康档案：周期设置 + 每日状态标签
+CREATE TABLE IF NOT EXISTS female_profiles (
+    user_id           INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    period_days       INTEGER DEFAULT 5,
+    cycle_days        INTEGER DEFAULT 28,
+    last_period_start TEXT,
+    updated_at        TEXT
+);
+
+CREATE TABLE IF NOT EXISTS female_status (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    date       TEXT    NOT NULL,
+    tags       TEXT,                      -- JSON 数组
+    note       TEXT,
+    created_at TEXT,
+    UNIQUE(user_id, date)
+);
+
+-- 体检报告记录（图片识别后同步的指标）
+CREATE TABLE IF NOT EXISTS report_records (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    date       TEXT    NOT NULL,
+    weight     REAL,
+    fat        REAL,
+    systolic   REAL,
+    diastolic  REAL,
+    glucose    REAL,
+    image_url  TEXT,
+    created_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_report_user_date ON report_records(user_id, date);
 """
 
 
@@ -219,10 +267,18 @@ def init_db():
     conn = sqlite3.connect(DB_PATH)
     try:
         conn.executescript(SCHEMA)
+        _migrate(conn)
         conn.execute("PRAGMA journal_mode=WAL")
         conn.commit()
     finally:
         conn.close()
+
+
+def _migrate(conn):
+    """对已存在的旧库补齐新增字段。"""
+    meal_columns = {row[1] for row in conn.execute("PRAGMA table_info(meal_records)")}
+    if meal_columns and "image" not in meal_columns:
+        conn.execute("ALTER TABLE meal_records ADD COLUMN image TEXT")
 
 
 @contextmanager
