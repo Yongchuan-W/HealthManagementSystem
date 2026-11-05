@@ -8,6 +8,7 @@
 
 from __future__ import annotations
 
+import base64
 import json
 import os
 import urllib.error
@@ -22,6 +23,9 @@ DEFAULT_MODEL = "deepseek-flash"
 MAX_HISTORY = 8          # 最多带最近 8 条历史消息，控制费用与延迟
 TIMEOUT = 20             # 单次请求超时（秒）
 MAX_TOKENS = 800
+
+VISION_TIMEOUT = 60      # 图片识别更慢，单独放宽超时
+VISION_MAX_TOKENS = 1200
 
 PLACEHOLDER_REPLY = (
     "AI 健康助手接口已经就绪，但目前还没有配置大模型密钥。"
@@ -109,14 +113,8 @@ def _build_messages(message, history, context):
     return messages
 
 
-def _request_model(settings, messages):
-    payload = {
-        "model": settings["model"],
-        "messages": messages,
-        "temperature": 0.6,
-        "max_tokens": MAX_TOKENS,
-        "stream": False,
-    }
+def _post(settings, payload, timeout=TIMEOUT, not_found_hint=""):
+    """向兼容 OpenAI 的服务发请求，返回解析后的 JSON。"""
     request = urllib.request.Request(
         settings["api_base"] + "/chat/completions",
         data=json.dumps(payload).encode("utf-8"),
@@ -128,8 +126,8 @@ def _request_model(settings, messages):
     )
 
     try:
-        with urllib.request.urlopen(request, timeout=TIMEOUT) as response:
-            body = json.loads(response.read().decode("utf-8"))
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            return json.loads(response.read().decode("utf-8"))
     except urllib.error.HTTPError as error:
         detail = ""
         try:
@@ -141,6 +139,8 @@ def _request_model(settings, messages):
             raise AiError("密钥无效或已过期")
         if error.code == 402:
             raise AiError("账户余额不足")
+        if error.code == 404:
+            raise AiError(not_found_hint or "接口不存在，请确认 HM_AI_API_BASE 与 HM_AI_MODEL")
         if error.code == 429:
             raise AiError("调用过于频繁，请稍后再试")
         raise AiError("模型服务返回 %d%s" % (error.code, ("：" + detail) if detail else ""))
@@ -149,6 +149,8 @@ def _request_model(settings, messages):
     except (ValueError, json.JSONDecodeError):
         raise AiError("模型返回内容无法解析")
 
+
+def _message_text(body):
     choices = body.get("choices") or []
     if not choices:
         raise AiError("模型没有返回内容")
@@ -156,6 +158,16 @@ def _request_model(settings, messages):
     if not text:
         raise AiError("模型返回内容为空")
     return text
+
+
+def _request_model(settings, messages):
+    return _message_text(_post(settings, {
+        "model": settings["model"],
+        "messages": messages,
+        "temperature": 0.6,
+        "max_tokens": MAX_TOKENS,
+        "stream": False,
+    }))
 
 
 def generate_reply(message, history=None, context=None):
@@ -183,4 +195,90 @@ def generate_reply(message, history=None, context=None):
     return text, {
         "configured": True, "degraded": False,
         "model": settings["model"], "provider": provider_name(settings), "error": None,
+    }
+
+
+# ==========================================================
+# 图片识别（多模态）
+# ==========================================================
+VISION_SYSTEM = (
+    "你是健康数据识别助手。必须严格按要求只输出一个 JSON 对象，不要输出解释、Markdown 或代码块标记；"
+    "看不清或不确定的字段填 null，不要编造。"
+)
+
+VISION_PROMPTS = {
+    "meal": (
+        "识别这张餐食图片里的食物，输出 JSON：\n"
+        '{"foods":[{"name":"食物名","portion":"分量描述","kcal":数字}],'
+        '"total":{"kcal":数字,"protein":数字,"carb":数字,"fat":数字,"fiber":数字},'
+        '"note":"估算说明"}\n'
+        "要求：热量单位 kcal、营养素单位克；按常见中式分量估算；最多 12 项；"
+        "看不清时在 note 里说明。"
+    ),
+    "report": (
+        "识别这张体检报告图片，输出 JSON：\n"
+        '{"date":"YYYY-MM-DD 或 null","weight":数字或null,"fat":数字或null,"bmi":数字或null,'
+        '"systolic":数字或null,"diastolic":数字或null,"glucose":数字或null,'
+        '"items":[{"name":"指标名","value":"数值","unit":"单位","ref":"参考范围","abnormal":true或false}],'
+        '"abnormal":["异常项描述"]}\n'
+        "要求：体重单位 kg、体脂率单位 %、血糖单位 mmol/L、血压单位为 mmHg；"
+        "报告上没有的字段填 null；最多 60 条指标。"
+    ),
+}
+
+
+def parse_json_object(text):
+    """从模型输出中提取 JSON 对象，容忍 ``` 包裹与前后多余文字。"""
+    raw = (text or "").strip()
+    if raw.startswith("```"):
+        raw = raw.split("\n", 1)[-1] if "\n" in raw else raw
+        if raw.rstrip().endswith("```"):
+            raw = raw.rstrip()[:-3]
+    start, end = raw.find("{"), raw.rfind("}")
+    if start == -1 or end <= start:
+        raise AiError("模型没有返回可解析的数据")
+    try:
+        data = json.loads(raw[start:end + 1])
+    except ValueError:
+        raise AiError("模型返回的数据无法解析")
+    if not isinstance(data, dict):
+        raise AiError("模型返回的数据格式不正确")
+    return data
+
+
+def vision(image_bytes, mime, task):
+    """识别餐食图片或体检报告，返回 (JSON dict, 元信息)。"""
+    if task not in VISION_PROMPTS:
+        raise AiError("不支持的识别类型")
+    if not image_bytes:
+        raise AiError("图片内容为空")
+
+    settings = config()
+    if settings is None:
+        raise AiError("未配置 HM_AI_API_KEY")
+
+    mime = mime if str(mime).startswith("image/") else "image/jpeg"
+    data_url = "data:%s;base64,%s" % (mime, base64.b64encode(image_bytes).decode("ascii"))
+
+    messages = [
+        {"role": "system", "content": VISION_SYSTEM},
+        {"role": "user", "content": [
+            {"type": "text", "text": VISION_PROMPTS[task]},
+            {"type": "image_url", "image_url": {"url": data_url}},
+        ]},
+    ]
+
+    body = _post(settings, {
+        "model": settings["model"],
+        "messages": messages,
+        "temperature": 0.1,
+        "max_tokens": VISION_MAX_TOKENS,
+        "stream": False,
+    }, timeout=VISION_TIMEOUT,
+        not_found_hint="当前模型不支持图片识别，请确认 HM_AI_MODEL 为多模态模型")
+
+    return parse_json_object(_message_text(body)), {
+        "configured": True,
+        "model": settings["model"],
+        "provider": provider_name(settings),
     }

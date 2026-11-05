@@ -1425,6 +1425,146 @@ def ai_clear(ctx):
 
 
 # ==========================================================
+# 图片识别（餐食 / 体检报告）
+# ==========================================================
+VISION_DAILY_LIMIT = 20          # 每用户每天最多识别次数，防止额度被刷
+VISION_USAGE = {}                # (user_id, 日期) -> 已用次数，进程内计数
+
+
+def _vision_count(uid):
+    return VISION_USAGE.get((uid, datetime.now().strftime("%Y-%m-%d")), 0)
+
+
+def _bounded_float(value, minimum, maximum):
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    if number < minimum or number > maximum:
+        return None
+    return round(number, 1)
+
+
+def _short_text(value, limit):
+    return str(value or "").strip()[:limit]
+
+
+def normalize_meal_result(raw):
+    foods = []
+    for item in (raw.get("foods") or [])[:12]:
+        if not isinstance(item, dict):
+            continue
+        name = _short_text(item.get("name"), 30)
+        if not name:
+            continue
+        foods.append({
+            "name": name,
+            "portion": _short_text(item.get("portion"), 24),
+            "kcal": _bounded_float(item.get("kcal"), 0, 1500) or 0,
+        })
+
+    total = raw.get("total") if isinstance(raw.get("total"), dict) else {}
+    return {
+        "foods": foods,
+        "total": {
+            "kcal": _bounded_float(total.get("kcal"), 0, 5000) or 0,
+            "protein": _bounded_float(total.get("protein"), 0, 500) or 0,
+            "carb": _bounded_float(total.get("carb"), 0, 500) or 0,
+            "fat": _bounded_float(total.get("fat"), 0, 500) or 0,
+            "fiber": _bounded_float(total.get("fiber"), 0, 200) or 0,
+        },
+        "note": _short_text(raw.get("note"), 120),
+    }
+
+
+def normalize_report_result(raw):
+    items = []
+    for item in (raw.get("items") or [])[:60]:
+        if not isinstance(item, dict):
+            continue
+        name = _short_text(item.get("name"), 30)
+        if not name:
+            continue
+        items.append({
+            "name": name,
+            "value": _short_text(item.get("value"), 20),
+            "unit": _short_text(item.get("unit"), 12),
+            "ref": _short_text(item.get("ref"), 30),
+            "abnormal": bool(item.get("abnormal")),
+        })
+
+    abnormal = [_short_text(text, 80) for text in (raw.get("abnormal") or [])[:20]]
+    date = _short_text(raw.get("date"), 10)
+    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", date or ""):
+        date = ""
+
+    return {
+        "date": date,
+        "weight": _bounded_float(raw.get("weight"), 0, 500),
+        "fat": _bounded_float(raw.get("fat"), 0, 80),
+        "bmi": _bounded_float(raw.get("bmi"), 0, 100),
+        "systolic": _bounded_float(raw.get("systolic"), 40, 300),
+        "diastolic": _bounded_float(raw.get("diastolic"), 20, 200),
+        "glucose": _bounded_float(raw.get("glucose"), 0, 40),
+        "items": items,
+        "abnormal": [text for text in abnormal if text],
+    }
+
+
+@route("POST", "/api/ai/vision")
+def ai_vision(ctx):
+    task = clean_text(ctx.body.get("task"), "task", 12, required=True)
+    if task not in ("meal", "report"):
+        raise ApiError(400, "task 只能是 meal 或 report")
+
+    image_url = clean_text(ctx.body.get("imageUrl"), "imageUrl", 200, required=True)
+    filename = os.path.basename(image_url) if image_url.startswith("/uploads/") else ""
+    if not filename:
+        raise ApiError(400, "imageUrl 必须是本站上传的图片地址")
+
+    row = ctx.conn.execute(
+        "SELECT * FROM uploads WHERE filename = ? AND user_id = ?", (filename, ctx.user_id)
+    ).fetchone()
+    if row is None:
+        raise ApiError(404, "图片不存在或无权访问")
+
+    path = os.path.join(db.UPLOAD_DIR, filename)
+    if not os.path.isfile(path):
+        raise ApiError(404, "图片文件已丢失，请重新上传")
+    if os.path.getsize(path) > MAX_UPLOAD_BYTES:
+        raise ApiError(413, "图片超过 12MB，请压缩后再试")
+
+    if not ai.is_configured():
+        raise ApiError(503, "尚未配置图像识别模型，请先在 ai_local.env 填入密钥", "ai_not_configured")
+
+    used = _vision_count(ctx.user_id)
+    if used >= VISION_DAILY_LIMIT:
+        raise ApiError(429, "今天的图片识别次数已用完（每天 %d 次）" % VISION_DAILY_LIMIT,
+                       "vision_quota")
+
+    with open(path, "rb") as handle:
+        data = handle.read()
+
+    try:
+        raw, meta = ai.vision(data, row["mime"], task)
+    except ai.AiError as error:
+        raise ApiError(502, "图片识别失败：%s" % error, "vision_failed")
+
+    result = normalize_meal_result(raw) if task == "meal" else normalize_report_result(raw)
+    key = (ctx.user_id, datetime.now().strftime("%Y-%m-%d"))
+    VISION_USAGE[key] = used + 1
+
+    return {
+        "task": task,
+        "result": result,
+        "configured": meta["configured"],
+        "provider": meta["provider"],
+        "model": meta["model"],
+        "quotaLeft": max(0, VISION_DAILY_LIMIT - used - 1),
+    }
+
+
+# ==========================================================
 # 首次填写与饮食偏好
 # ==========================================================
 def clean_list(value, name, max_items=30, max_length=30):
