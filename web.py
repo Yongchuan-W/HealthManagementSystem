@@ -2708,6 +2708,15 @@ a { text-decoration: none; }
 .chat-input input::placeholder { color: #aab2c0; }
 .chat-input input:focus { border-color: #9fe3d5; }
 
+.chat-note {
+  padding: 7px 12px 0;
+  font-size: 11px;
+  line-height: 1.4;
+  color: #9aa4b2;
+  text-align: center;
+  background: #fff;
+}
+
 .chat-send {
   width: 34px;
   height: 34px;
@@ -5362,6 +5371,8 @@ body { color: var(--text); }
   <div class="chat-body" id="chatBody">
     <div class="msg bot">你好！我是你的专属 AI 健康助理。请问今天有什么我可以帮你的？关于饮食计算、运动建议或是生理期护理，都可以问我。</div>
   </div>
+
+  <div class="chat-note">AI 生成内容仅供参考，不构成医疗建议</div>
 
   <div class="chat-input">
     <input id="chatInput" type="text" placeholder="输入你想咨询的健康问题...">
@@ -10210,6 +10221,11 @@ function sendChat() {
       typingBubble.remove();
       if (result.ok && result.data.reply) {
         addBubble(result.data.reply, 'bot');
+        if (result.data.degraded) {
+          showToast(result.data.configured
+            ? 'AI 服务暂时不可用，已返回兜底建议'
+            : '尚未配置 AI 密钥，当前为兜底回复');
+        }
       } else {
         addBubble('抱歉，暂时无法获取回复，请稍后再试。', 'bot');
       }

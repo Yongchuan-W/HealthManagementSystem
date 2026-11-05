@@ -1299,12 +1299,74 @@ def upload_delete(ctx):
 
 
 # ==========================================================
-# AI 健康助手：接口占位，后续接入大模型后替换 chat 逻辑
+# AI 健康助手：调用 backend/ai.py（OpenAI 兼容接口）
 # ==========================================================
 AI_PLACEHOLDER_REPLY = (
-    "AI 健康助手接口已经就绪，但目前还没有接入大模型服务。"
-    "接入后，这里会根据你的体重、饮食、运动与睡眠数据给出个性化建议。"
+    "AI 健康助手接口已经就绪，但目前还没有配置大模型密钥。"
+    "配置后，这里会根据你的体重、饮食、运动与睡眠数据给出个性化建议。"
 )
+
+
+def health_summary(conn, uid):
+    """拼给模型的健康数据摘要：只放数值，不含账号、手机号等身份信息。"""
+    parts = []
+
+    profile = read_profile(conn, uid)
+    if profile:
+        bits = []
+        if profile["gender"]:
+            bits.append(profile["gender"])
+        if profile["height"]:
+            bits.append("身高 %.0fcm" % profile["height"])
+        if profile["weight"]:
+            bits.append("体重 %.1fkg" % profile["weight"])
+        if bits:
+            parts.append("基本信息：" + "、".join(bits))
+
+    rows = conn.execute(
+        "SELECT date, weight FROM weight_records WHERE user_id = ? ORDER BY date DESC LIMIT 5",
+        (uid,),
+    ).fetchall()
+    if rows:
+        trend = "、".join("%s %.1fkg" % (row["date"][5:10], row["weight"])
+                         for row in reversed(rows))
+        parts.append("最近体重记录：" + trend)
+
+    since = day_cutoff(7)
+    total, count = conn.execute(
+        "SELECT COALESCE(SUM(kcal), 0), COUNT(*) FROM meal_records "
+        "WHERE user_id = ? AND date >= ?", (uid, since),
+    ).fetchone()
+    if count:
+        parts.append("近 7 天饮食：%d 餐，合计约 %d kcal，日均约 %d kcal"
+                     % (count, total, total / 7))
+
+    kcal, steps, minutes = conn.execute(
+        "SELECT COALESCE(SUM(kcal), 0), COALESCE(SUM(steps), 0), COALESCE(SUM(minutes), 0) "
+        "FROM sport_records WHERE user_id = ? AND date >= ?", (uid, since),
+    ).fetchone()
+    if kcal or steps or minutes:
+        parts.append("近 7 天运动：消耗约 %d kcal，%d 步，%d 分钟" % (kcal, steps, minutes))
+
+    rows = conn.execute(
+        "SELECT date, hours, quality FROM sleep_records WHERE user_id = ? "
+        "ORDER BY date DESC LIMIT 3", (uid,),
+    ).fetchall()
+    if rows:
+        items = ["%s %.1f 小时%s" % (row["date"][5:10], row["hours"] or 0,
+                                     ("（%s）" % row["quality"]) if row["quality"] else "")
+                 for row in rows]
+        parts.append("最近睡眠：" + "、".join(items))
+
+    row = conn.execute(
+        "SELECT date, mood, note FROM mood_records WHERE user_id = ? ORDER BY date DESC LIMIT 1",
+        (uid,),
+    ).fetchone()
+    if row:
+        parts.append("最近心情：%s %s%s" % (row["date"][5:10], row["mood"] or "",
+                                          ("（%s）" % row["note"]) if row["note"] else ""))
+
+    return "\n".join(parts) if parts else "暂无健康记录。"
 
 
 def ai_message_json(row):
@@ -1326,7 +1388,15 @@ def ai_history(ctx):
 @route("POST", "/api/ai/chat")
 def ai_chat(ctx):
     message = clean_text(ctx.body.get("message"), "message", 2000, required=True)
-    reply, configured = ai.generate_reply(message)
+
+    rows = ctx.conn.execute(
+        "SELECT role, content FROM ai_messages WHERE user_id = ? ORDER BY id DESC LIMIT ?",
+        (ctx.user_id, ai.MAX_HISTORY),
+    ).fetchall()
+    history = [{"role": row["role"], "content": row["content"]} for row in reversed(rows)]
+
+    reply, meta = ai.generate_reply(message, history=history,
+                                    context=health_summary(ctx.conn, ctx.user_id))
 
     ctx.conn.execute(
         "INSERT INTO ai_messages(user_id, role, content, created_at) VALUES (?, 'user', ?, ?)",
@@ -1338,9 +1408,11 @@ def ai_chat(ctx):
     )
     return {
         "reply": reply,
-        "configured": configured,
-        "provider": None if not configured else "doubao",
-        "hint": "接入大模型时修改 backend/ai.py 即可，接口保持不变",
+        "configured": meta["configured"],
+        "degraded": meta["degraded"],
+        "provider": meta["provider"],
+        "model": meta["model"],
+        "error": meta["error"],
     }
 
 
