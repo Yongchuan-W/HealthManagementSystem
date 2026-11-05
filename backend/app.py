@@ -49,7 +49,6 @@ class HealthAppHandler(BaseHTTPRequestHandler):
 
     def do_OPTIONS(self):
         self.send_response(204)
-        self._send_cors_headers()
         self.send_header("Allow", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
         self.send_header("Content-Length", "0")
         self.end_headers()
@@ -82,6 +81,21 @@ class HealthAppHandler(BaseHTTPRequestHandler):
             self._send_json(404, {"ok": False, "error": "文件不存在", "code": "not_found"})
             return
 
+        # 图片同样要求登录，并且只允许上传者本人读取
+        token = auth.token_from_headers(self.headers)
+        with db.session() as conn:
+            user = auth.user_from_token(conn, token)
+            if user is None:
+                self._send_json(401, {"ok": False, "error": "请先登录", "code": "unauthorized"})
+                return
+            row = conn.execute(
+                "SELECT 1 FROM uploads WHERE filename = ? AND user_id = ?",
+                (name, user["id"]),
+            ).fetchone()
+        if row is None:
+            self._send_json(404, {"ok": False, "error": "文件不存在", "code": "not_found"})
+            return
+
         file_path = os.path.join(db.UPLOAD_DIR, name)
         if not os.path.isfile(file_path):
             self._send_json(404, {"ok": False, "error": "文件不存在", "code": "not_found"})
@@ -90,7 +104,7 @@ class HealthAppHandler(BaseHTTPRequestHandler):
         mime = mimetypes.guess_type(name)[0] or "application/octet-stream"
         with open(file_path, "rb") as handle:
             data = handle.read()
-        self._send_body(200, data, mime, extra=[("Cache-Control", "public, max-age=86400")])
+        self._send_body(200, data, mime, extra=[("Cache-Control", "private, max-age=86400")])
 
     def _handle_api(self, method, path, query):
         try:
@@ -164,7 +178,6 @@ class HealthAppHandler(BaseHTTPRequestHandler):
 
     def _send_body(self, status, body, content_type, extra=None):
         self.send_response(status)
-        self._send_cors_headers()
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(body)))
         self.send_header("X-Content-Type-Options", "nosniff")
@@ -173,17 +186,6 @@ class HealthAppHandler(BaseHTTPRequestHandler):
         self.end_headers()
         if body:
             self.wfile.write(body)
-
-    def _send_cors_headers(self):
-        origin = self.headers.get("Origin")
-        if not origin:
-            return
-        self.send_header("Access-Control-Allow-Origin", origin)
-        self.send_header("Vary", "Origin")
-        self.send_header("Access-Control-Allow-Credentials", "true")
-        self.send_header("Access-Control-Allow-Headers",
-                         "Content-Type, Authorization, X-File-Name")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
 
     def log_message(self, fmt, *args):
         print("[HTTP] " + fmt % args)
