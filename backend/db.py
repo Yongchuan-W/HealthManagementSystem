@@ -30,6 +30,8 @@ from datetime import datetime
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DB_PATH = os.path.join(BASE_DIR, "health.db")
 UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
+BACKUP_DIR = os.path.join(BASE_DIR, "backups")
+BACKUP_KEEP = 7
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS users (
@@ -274,6 +276,34 @@ def init_db():
         conn.commit()
     finally:
         conn.close()
+
+
+def backup_database(keep=BACKUP_KEEP):
+    """启动时备份一次数据库，只保留最近 keep 份。"""
+    if not os.path.isfile(DB_PATH):
+        return None
+    os.makedirs(BACKUP_DIR, exist_ok=True)
+    stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    target = os.path.join(BACKUP_DIR, "health-%s.db" % stamp)
+
+    source = sqlite3.connect(DB_PATH)
+    dest = sqlite3.connect(target)
+    try:
+        source.backup(dest)
+    finally:
+        dest.close()
+        source.close()
+
+    backups = sorted(
+        name for name in os.listdir(BACKUP_DIR)
+        if name.startswith("health-") and name.endswith(".db")
+    )
+    for name in backups[:-keep]:
+        try:
+            os.remove(os.path.join(BACKUP_DIR, name))
+        except OSError:
+            pass
+    return target
 
 
 def _migrate(conn):

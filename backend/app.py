@@ -194,6 +194,7 @@ class HealthAppHandler(BaseHTTPRequestHandler):
 def prepare():
     """初始化数据库，并按白名单创建指定账号（未配置时创建演示账号）。"""
     db.init_db()
+    db.backup_database()
     with db.session() as conn:
         if auth.allowed_accounts():
             auth.ensure_allowed_users(conn)
