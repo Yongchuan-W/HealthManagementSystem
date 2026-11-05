@@ -1996,6 +1996,18 @@ a { text-decoration: none; }
   margin: 2px 0 10px;
 }
 
+.login-notice {
+  font-size: 12px;
+  line-height: 1.7;
+  padding: 8px 10px;
+  margin: 2px 0 10px;
+  border-radius: 8px;
+  background: #eefaf6;
+  color: #2b7f6b;
+}
+
+.login-notice.is-warn { background: #fdf2f3; color: #a94442; }
+
 .login-btn {
   width: 100%;
   justify-content: center;
@@ -3026,6 +3038,8 @@ body { color: var(--text); }
   box-shadow: 0 0 0 3px #f3e8dd;
 }
 .login-error { color: #b3482f; }
+.login-notice { background: #f1f8e9; color: #6e3a18; }
+.login-notice.is-warn { background: #fdf2f3; color: #a94442; }
 .pref-chip { background: #f5f8f1; border-color: #e4ece4; color: #6f6154; }
 .pref-chip.selected { background: #e4f0cf; border-color: #c8dcae; color: #6e3a18; }
 .ob-field input:focus, .ob-field select:focus { border-color: #c8a585; }
@@ -4018,6 +4032,8 @@ body { color: var(--text); }
     <div class="login-card">
       <h1 id="authTitle">欢迎回来</h1>
       <p class="login-sub" id="authSub">登录后开始科学管理你的健康</p>
+
+      <div class="login-notice" id="loginNotice" hidden></div>
 
       <form id="loginForm" novalidate>
         <div class="login-field">
@@ -5447,11 +5463,13 @@ body { color: var(--text); }
 const loginView = document.getElementById('loginView');
 const onboardingView = document.getElementById('onboardingView');
 const appShell = document.getElementById('appShell');
+const loginNotice = document.getElementById('loginNotice');
 
 // ---------- 后端接口封装 ----------
 // 通过 python web.py 打开时走 /api/*；直接双击 static 版页面（file: 协议）时只能用本地演示逻辑
 const IS_FILE_PROTOCOL = window.location.protocol === 'file:';
 let serverMode = !IS_FILE_PROTOCOL;
+let demoLoginAllowed = false;
 let currentUser = null;
 
 async function api(path, options) {
@@ -5758,12 +5776,58 @@ function setServerMode(enabled) {
   document.getElementById('logoutBtn').hidden = !serverMode;
 }
 
-// 打开页面时恢复已登录的会话；后端不可达则退回本地演示
+function showLoginNotice(message, warn) {
+  loginNotice.hidden = false;
+  loginNotice.className = warn ? 'login-notice is-warn' : 'login-notice';
+  loginNotice.textContent = message;
+}
+
+// 直接双击 HTML 文件打开：允许进入演示，但明确说明不校验账号
+function enableLocalDemo() {
+  demoLoginAllowed = true;
+  document.getElementById('authTitle').textContent = '本地演示';
+  document.getElementById('authSub').textContent = '数据只保存在本机，不会同步';
+  document.getElementById('loginSubmit').textContent = '进入本地演示';
+  showLoginNotice('当前未连接后端，账号密码不会被校验。正式使用请用电脑运行 python web.py，再通过局域网地址访问。', false);
+}
+
+// 页面被静态托管（如 GitHub Pages）：没有后端，不允许假装登录
+function blockLogin(message) {
+  demoLoginAllowed = false;
+  const submit = document.getElementById('loginSubmit');
+  submit.disabled = true;
+  submit.textContent = '未连接后端';
+  document.getElementById('loginAccount').disabled = true;
+  document.getElementById('loginPassword').disabled = true;
+  showLoginNotice(message, true);
+}
+
+async function detectBackend() {
+  try {
+    const result = await api('/api/health');
+    return !!(result && result.ok && result.data && result.data.ok);
+  } catch (error) {
+    return false;
+  }
+}
+
+// 打开页面时先确认后端可用，再恢复已登录的会话
 async function bootAuth() {
   if (IS_FILE_PROTOCOL) {
     setServerMode(false);
+    enableLocalDemo();
     return;
   }
+
+  // 没有后端就不提供登录入口，避免任意账号“登录成功”的假象
+  const backendReady = await detectBackend();
+  if (!backendReady) {
+    setServerMode(false);
+    blockLogin('这个地址没有运行后端服务，无法登录。请用电脑运行 python web.py，再用它提示的局域网地址访问。');
+    return;
+  }
+
+  setServerMode(true);
 
   let result = null;
   try {
@@ -5773,12 +5837,10 @@ async function bootAuth() {
   }
 
   if (!result) {
-    // 页面被静态托管（没有后端）时，继续使用本地演示数据 + localStorage
-    setServerMode(false);
+    showLoginNotice('连接后端失败，请确认电脑上的服务仍在运行。', true);
     return;
   }
 
-  setServerMode(true);
   if (result.ok) {
     currentUser = result.data.user || null;
     await restoreSession(result.data.profile);
@@ -5819,7 +5881,11 @@ document.getElementById('loginForm').addEventListener('submit', async function (
   }
 
   if (!serverMode) {
-    // 静态演示版没有后端，无法校验账号；数据只存在当前浏览器
+    if (!demoLoginAllowed) {
+      showAuthError('loginError', '当前没有连接到后端，无法登录。');
+      return;
+    }
+    // 本地文件演示没有后端，无法校验账号；数据只存在当前浏览器
     document.getElementById('loginError').hidden = true;
     afterLogin(loadData('profile', null));
     return;
