@@ -1428,11 +1428,23 @@ def ai_clear(ctx):
 # 图片识别（餐食 / 体检报告）
 # ==========================================================
 VISION_DAILY_LIMIT = 20          # 每用户每天最多识别次数，防止额度被刷
-VISION_USAGE = {}                # (user_id, 日期) -> 已用次数，进程内计数
 
 
-def _vision_count(uid):
-    return VISION_USAGE.get((uid, datetime.now().strftime("%Y-%m-%d")), 0)
+def _vision_count(conn, uid):
+    """识别次数按“用户 + 日期”存在数据库，重启服务不清零。"""
+    state = db.state_get(conn, uid, "visionUsage", {})
+    if not isinstance(state, dict):
+        return 0
+    try:
+        return int(state.get(datetime.now().strftime("%Y-%m-%d"), 0))
+    except (TypeError, ValueError):
+        return 0
+
+
+def _vision_bump(conn, uid):
+    today = datetime.now().strftime("%Y-%m-%d")
+    # 只保留当天计数，避免这张状态表无限增长
+    db.state_set(conn, uid, "visionUsage", {today: _vision_count(conn, uid) + 1})
 
 
 def _bounded_float(value, minimum, maximum):
@@ -1537,7 +1549,7 @@ def ai_vision(ctx):
     if not ai.is_configured():
         raise ApiError(503, "尚未配置图像识别模型，请先在 ai_local.env 填入密钥", "ai_not_configured")
 
-    used = _vision_count(ctx.user_id)
+    used = _vision_count(ctx.conn, ctx.user_id)
     if used >= VISION_DAILY_LIMIT:
         raise ApiError(429, "今天的图片识别次数已用完（每天 %d 次）" % VISION_DAILY_LIMIT,
                        "vision_quota")
@@ -1551,8 +1563,7 @@ def ai_vision(ctx):
         raise ApiError(502, "图片识别失败：%s" % error, "vision_failed")
 
     result = normalize_meal_result(raw) if task == "meal" else normalize_report_result(raw)
-    key = (ctx.user_id, datetime.now().strftime("%Y-%m-%d"))
-    VISION_USAGE[key] = used + 1
+    _vision_bump(ctx.conn, ctx.user_id)
 
     return {
         "task": task,

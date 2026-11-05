@@ -111,13 +111,22 @@ def create_session(conn, user_id):
     return token
 
 
+def tls_enabled():
+    """配置了可用的 TLS 证书时返回 True（用于给 Cookie 加 Secure 标记）。"""
+    cert = os.environ.get("HM_TLS_CERT", "").strip()
+    key = os.environ.get("HM_TLS_KEY", "").strip()
+    return bool(cert and key and os.path.isfile(cert) and os.path.isfile(key))
+
+
 def cookie_header(token):
-    return "%s=%s; Path=/; Max-Age=%d; HttpOnly; SameSite=Lax" % (
-        TOKEN_COOKIE, token, SESSION_DAYS * 86400)
+    secure = "; Secure" if tls_enabled() else ""
+    return "%s=%s; Path=/; Max-Age=%d; HttpOnly; SameSite=Lax%s" % (
+        TOKEN_COOKIE, token, SESSION_DAYS * 86400, secure)
 
 
 def clear_cookie_header():
-    return "%s=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax" % TOKEN_COOKIE
+    secure = "; Secure" if tls_enabled() else ""
+    return "%s=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax%s" % (TOKEN_COOKIE, secure)
 
 
 def token_from_headers(headers):

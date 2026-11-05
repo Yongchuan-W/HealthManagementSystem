@@ -16,11 +16,14 @@
 停止服务：在终端按 Ctrl + C。
 """
 
+import os
 import socket
+import ssl
 import threading
 import webbrowser
 from http.server import ThreadingHTTPServer
 
+from backend import auth
 from backend.app import HealthAppHandler, prepare
 
 # ============================================================
@@ -10539,12 +10542,27 @@ def get_lan_ip():
         sock.close()
 
 
+def build_ssl_context():
+    """ai_local.env 里配置了 HM_TLS_CERT / HM_TLS_KEY 时启用 HTTPS。"""
+    if not auth.tls_enabled():
+        return None
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    context.load_cert_chain(
+        os.environ["HM_TLS_CERT"].strip(),
+        os.environ["HM_TLS_KEY"].strip(),
+    )
+    return context
+
+
 def main():
     port = find_free_port()
-    local_url = "http://127.0.0.1:%d/" % port
+    tls = build_ssl_context()
+    scheme = "https" if tls else "http"
+    local_url = "%s://127.0.0.1:%d/" % (scheme, port)
 
     lan_ip = get_lan_ip()
-    mobile_url = "http://%s:%d/" % (lan_ip, port) if lan_ip != "127.0.0.1" else local_url
+    mobile_url = ("%s://%s:%d/" % (scheme, lan_ip, port)
+                  if lan_ip != "127.0.0.1" else local_url)
 
     # 初始化数据库，并按白名单创建指定账号（未配置时创建演示账号）
     prepare()
@@ -10558,12 +10576,18 @@ def main():
 
     # 监听 0.0.0.0，手机与电脑在同一 Wi-Fi 下即可访问
     server = ThreadingHTTPServer(("0.0.0.0", port), HealthAppHandler)
+    if tls:
+        server.socket = tls.wrap_socket(server.socket, server_side=True)
     print("=" * 58)
     print("健康管理系统已启动")
     print("电脑访问：", local_url)
     print("手机访问：", mobile_url, "（需连接同一 Wi-Fi）")
     print("接口地址：", local_url + "api/health")
     print("数据文件：health.db（与本文件同目录）")
+    if tls:
+        print("已启用 HTTPS：首次访问若提示证书不受信任，确认是本机后再继续")
+    else:
+        print("提示：当前为 HTTP，同一 Wi-Fi 下的流量未加密；可在 ai_local.env 配置证书启用 HTTPS")
     print("提示：若 Windows 防火墙弹窗，请允许 Python 访问专用网络")
     print("按 Ctrl + C 停止服务")
     print("=" * 58)
