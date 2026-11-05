@@ -1650,6 +1650,95 @@ a { text-decoration: none; }
 
 .upload-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
 
+.upload-meal {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #6b7688;
+}
+
+.upload-meal select {
+  border: 1px solid #d8dee9;
+  border-radius: 7px;
+  padding: 5px 8px;
+  font-size: 12px;
+  color: var(--text);
+  background: #fff;
+}
+
+.ai-foods { margin-top: 6px; display: flex; flex-direction: column; gap: 4px; }
+
+.ai-food {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--text);
+}
+
+.ai-food b { color: #2b9a7d; font-weight: 600; white-space: nowrap; }
+
+.ai-total {
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #eefaf6;
+  color: #2b7f6b;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.ai-note { margin-top: 6px; font-size: 11.5px; color: #8a94a6; line-height: 1.7; }
+
+.report-items {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.report-item-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px 10px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: #f7faf5;
+  font-size: 12px;
+}
+
+.report-item-row.is-abnormal { background: #fdf2f3; }
+
+.report-item-row .ri-name { color: #4a5568; }
+
+.report-item-row .ri-value {
+  color: #2b7f6b;
+  font-weight: 600;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.report-item-row.is-abnormal .ri-value { color: #d9534f; }
+
+.report-item-row .ri-unit { font-size: 11px; font-weight: 400; color: #8a94a6; }
+
+.report-item-row .ri-ref {
+  grid-column: 1 / -1;
+  font-style: normal;
+  font-size: 11px;
+  color: #9aa7a0;
+}
+
+.report-summary.is-warn {
+  background: #fdf2f3;
+  border-color: #f8e2e6;
+  color: #a94442;
+}
+
 .btn-ghost-sm {
   background: #fff;
   border: 1px solid #d8dee9;
@@ -1876,24 +1965,24 @@ a { text-decoration: none; }
   margin: 2px 0 10px;
 }
 
+.login-notice {
+  font-size: 12px;
+  line-height: 1.7;
+  padding: 8px 10px;
+  margin: 2px 0 10px;
+  border-radius: 8px;
+  background: #eefaf6;
+  color: #2b7f6b;
+}
+
+.login-notice.is-warn { background: #fdf2f3; color: #a94442; }
+
 .login-btn {
   width: 100%;
   justify-content: center;
   padding: 12px;
   font-size: 14px;
 }
-
-.login-hint {
-  margin-top: 16px;
-  padding: 9px 10px;
-  border-radius: 8px;
-  background: #f7f9fc;
-  color: #9aa3b2;
-  font-size: 12px;
-  text-align: center;
-}
-
-.login-hint b { color: #4a5568; letter-spacing: 1px; }
 
 .mobile-hint {
   margin-top: 10px;
@@ -2238,6 +2327,42 @@ a { text-decoration: none; }
   transform: translateY(-1px);
 }
 
+/* 睡眠记录表单 */
+.sleep-form {
+  margin-top: 22px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.sleep-form input,
+.sleep-form select {
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-size: 13px;
+  outline: none;
+}
+
+.sleep-form input { width: 180px; }
+
+.sleep-form input::placeholder { color: rgba(255, 255, 255, 0.72); }
+
+.sleep-form select option { color: #433326; }
+
+.sleep-form .btn-sleep { margin-top: 0; }
+
+.sleep-today {
+  margin-top: 16px;
+  min-height: 18px;
+  font-size: 12.5px;
+  color: #eadfce;
+}
+
 /* ==========================================================
    10. 科普资讯页
    ========================================================== */
@@ -2457,6 +2582,20 @@ a { text-decoration: none; }
 
 .btn-save:hover { background: #3fc0b6; }
 
+/* 个人信息弹窗中的退出登录（仅连后端时显示） */
+.btn-logout {
+  margin-right: auto;
+  background: #f2efe9;
+  color: #8b7d70;
+  border: 0;
+  border-radius: 8px;
+  padding: 9px 14px;
+  font-size: 12px;
+  transition: background 0.2s, color 0.2s;
+}
+
+.btn-logout:hover { background: #fbeee9; color: #b3482f; }
+
 /* ==========================================================
    12. 悬浮客服按钮 + AI 聊天窗口
    ========================================================== */
@@ -2610,6 +2749,15 @@ a { text-decoration: none; }
 
 .chat-input input::placeholder { color: #aab2c0; }
 .chat-input input:focus { border-color: #9fe3d5; }
+
+.chat-note {
+  padding: 7px 12px 0;
+  font-size: 11px;
+  line-height: 1.4;
+  color: #9aa4b2;
+  text-align: center;
+  background: #fff;
+}
 
 .chat-send {
   width: 34px;
@@ -2823,8 +2971,16 @@ body { color: var(--text); }
 }
 .chip { background: #e4f0cf; color: #6e3a18; }
 .report-summary { background: #f1f8e9; border-color: #dfeacd; color: #6e5a3a; }
+.report-summary.is-warn { background: #fdf2f3; border-color: #f8e2e6; color: #a94442; }
 .report-item { background: #f4f8f1; }
 .report-item .value { color: #4a3525; }
+.report-item-row { background: #f7faf5; }
+.report-item-row.is-abnormal { background: #fdf2f3; }
+.report-item-row .ri-name { color: #4a3525; }
+.report-item-row .ri-value { color: #6e3a18; }
+.report-item-row.is-abnormal .ri-value { color: #c0392b; }
+.ai-total { background: #f1f8e9; color: #6e3a18; }
+.ai-food b { color: #6e3a18; }
 
 /* 弹窗与表单 */
 .modal-head { background: linear-gradient(135deg, #8b4a22, #a9653a); }
@@ -2850,9 +3006,9 @@ body { color: var(--text); }
   border-color: #c8a585;
   box-shadow: 0 0 0 3px #f3e8dd;
 }
-.login-hint { background: #eef6ef; color: #8b7d70; }
-.login-hint b { color: #8b4a22; }
 .login-error { color: #b3482f; }
+.login-notice { background: #f1f8e9; color: #6e3a18; }
+.login-notice.is-warn { background: #fdf2f3; color: #a94442; }
 .pref-chip { background: #f5f8f1; border-color: #e4ece4; color: #6f6154; }
 .pref-chip.selected { background: #e4f0cf; border-color: #c8dcae; color: #6e3a18; }
 .ob-field input:focus, .ob-field select:focus { border-color: #c8a585; }
@@ -3141,6 +3297,14 @@ body { color: var(--text); }
   padding: 5px 10px;
   border-radius: 999px;
   line-height: 1.6;
+}
+
+.meal-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex: none;
 }
 
 .meal-log-item button {
@@ -3477,7 +3641,8 @@ body { color: var(--text); }
   cursor: pointer;
 }
 
-.mood-week .day .emoji { font-size: 16px; display: block; }
+.mood-week .day .emoji { font-size: 18px; display: block; line-height: 1.3; }
+.mood-week .day .mood-label { display: block; font-size: 11px; color: #6f5a3a; margin-top: 2px; }
 .mood-week .day .date { font-size: 10px; color: #a08d7d; }
 
 .mood-week .day.selected {
@@ -3834,23 +3999,26 @@ body { color: var(--text); }
     </div>
 
     <div class="login-card">
-      <h1>欢迎回来</h1>
-      <p class="login-sub">登录后开始科学管理你的健康</p>
+      <h1 id="authTitle">欢迎回来</h1>
+      <p class="login-sub" id="authSub">登录后开始科学管理你的健康</p>
+
+      <div class="login-notice" id="loginNotice" hidden></div>
 
       <form id="loginForm" novalidate>
         <div class="login-field">
           <label for="loginAccount">账号</label>
-          <input id="loginAccount" type="text" autocomplete="username" placeholder="请输入账号" value="AAA">
+          <input id="loginAccount" type="text" autocomplete="username" placeholder="请输入账号">
         </div>
         <div class="login-field">
           <label for="loginPassword">密码</label>
-          <input id="loginPassword" type="password" autocomplete="current-password" placeholder="请输入密码" value="123456">
+          <input id="loginPassword" type="password" autocomplete="current-password" placeholder="请输入密码">
         </div>
         <div class="login-error" id="loginError" hidden></div>
-        <button class="btn-primary login-btn" type="submit">登录</button>
+        <button class="btn-primary login-btn" type="submit" id="loginSubmit">登录</button>
       </form>
 
-      <div class="login-hint">演示账号：<b>AAA</b>　密码：<b>123456</b></div>
+      <button class="btn-primary login-btn" type="button" id="demoEnter" hidden>进入本地演示（不校验账号）</button>
+
       <div class="mobile-hint">手机与电脑连接同一 Wi-Fi 后访问：<br><a href="https://yongchuan-w.github.io/HealthManagementSystem/">https://yongchuan-w.github.io/HealthManagementSystem/</a></div>
     </div>
   </div>
@@ -4231,26 +4399,27 @@ body { color: var(--text); }
           <div class="report-grid">
             <div class="report-item">
               <div class="label">体重</div>
-              <div class="value">64.8<span class="unit">kg</span></div>
+              <div class="value"><span id="reportWeight">64.8</span><span class="unit">kg</span></div>
             </div>
             <div class="report-item">
               <div class="label">体脂率</div>
-              <div class="value">24.0<span class="unit">%</span></div>
+              <div class="value"><span id="reportFat">24.0</span><span class="unit">%</span></div>
             </div>
             <div class="report-item">
               <div class="label">BMI</div>
-              <div class="value">23.8</div>
+              <div class="value" id="reportBmi">23.8</div>
             </div>
             <div class="report-item">
               <div class="label">血压</div>
-              <div class="value">112/72<span class="unit">mmHg</span></div>
+              <div class="value"><span id="reportBp">112/72</span><span class="unit">mmHg</span></div>
             </div>
             <div class="report-item">
               <div class="label">血糖</div>
-              <div class="value">5.0<span class="unit">mmol/L</span></div>
+              <div class="value"><span id="reportGlucose">5.0</span><span class="unit">mmol/L</span></div>
             </div>
           </div>
-          <div class="report-summary">综合分析：各项指标总体处于正常范围。建议保持每周 3 次有氧运动，晚餐适当补充优质蛋白，并在 3 个月后复查。</div>
+          <div class="report-items" id="reportItems" hidden></div>
+          <div class="report-summary" id="reportSummary">综合分析：各项指标总体处于正常范围。建议保持每周 3 次有氧运动，晚餐适当补充优质蛋白，并在 3 个月后复查。</div>
           <div class="report-actions">
             <button class="btn-primary" id="applyReport">同步到核心体征</button>
           </div>
@@ -4262,8 +4431,17 @@ body { color: var(--text); }
         <div class="sleep-card">
           <div class="sleep-icon"><svg class="icon"><use href="#i-moon"/></svg></div>
           <h2>优质睡眠，恢复活力</h2>
-          <p>连接你的智能手表或手动记录，分析睡眠周期与质量。</p>
-          <button class="btn-sleep" data-toast="已开始记录睡眠，请保持设备佩戴">开始记录睡眠</button>
+          <p>记录昨晚的睡眠时长与质量，数据会保存在你的健康档案里。</p>
+          <form class="sleep-form" id="sleepForm">
+            <input id="sleepHours" type="number" step="0.5" min="0" max="24" placeholder="睡眠时长（小时）">
+            <select id="sleepQuality" aria-label="睡眠质量">
+              <option>良好</option>
+              <option selected>一般</option>
+              <option>较差</option>
+            </select>
+            <button class="btn-sleep" type="submit">保存睡眠记录</button>
+          </form>
+          <div class="sleep-today" id="sleepToday"></div>
         </div>
       </div>
 
@@ -4399,9 +4577,18 @@ body { color: var(--text); }
                 <div class="upload-file" id="dietFileName"></div>
                 <div class="upload-status" id="dietStatus"></div>
                 <div class="upload-result" id="dietResult" hidden></div>
+                <div class="upload-meal" id="dietMealRow" hidden>
+                  <label for="dietMealType">记录到</label>
+                  <select id="dietMealType">
+                    <option value="早餐">早餐</option>
+                    <option value="午餐" selected>午餐</option>
+                    <option value="晚餐">晚餐</option>
+                    <option value="加餐">加餐</option>
+                  </select>
+                </div>
                 <div class="upload-actions">
                   <button class="btn-ghost-sm" type="button" id="dietReselect">重新上传</button>
-                  <button class="btn-ghost-sm" type="button" id="dietFillMeal" hidden>填入午餐记录</button>
+                  <button class="btn-ghost-sm" type="button" id="dietFillMeal" hidden>加入今日饮食</button>
                 </div>
               </div>
             </div>
@@ -4782,6 +4969,7 @@ body { color: var(--text); }
     </div>
 
     <div class="modal-foot">
+      <button class="btn-logout" id="logoutBtn" hidden>退出登录</button>
       <button class="btn-save" id="saveProfile">保存修改</button>
     </div>
   </div>
@@ -5226,6 +5414,8 @@ body { color: var(--text); }
     <div class="msg bot">你好！我是你的专属 AI 健康助理。请问今天有什么我可以帮你的？关于饮食计算、运动建议或是生理期护理，都可以问我。</div>
   </div>
 
+  <div class="chat-note">AI 生成内容仅供参考，不构成医疗建议</div>
+
   <div class="chat-input">
     <input id="chatInput" type="text" placeholder="输入你想咨询的健康问题...">
     <button class="chat-send" id="chatSend" aria-label="发送">
@@ -5244,27 +5434,441 @@ body { color: var(--text); }
 const loginView = document.getElementById('loginView');
 const onboardingView = document.getElementById('onboardingView');
 const appShell = document.getElementById('appShell');
+const loginNotice = document.getElementById('loginNotice');
 
-// 演示账号
-const DEMO_ACCOUNT = 'AAA';
-const DEMO_PASSWORD = '123456';
+// ---------- 后端接口封装 ----------
+// 通过 python web.py 打开时走 /api/*；直接双击 static 版页面（file: 协议）时只能用本地演示逻辑
+const IS_FILE_PROTOCOL = window.location.protocol === 'file:';
+let serverMode = !IS_FILE_PROTOCOL;
+let currentUser = null;
 
-document.getElementById('loginForm').addEventListener('submit', function (event) {
+async function api(path, options) {
+  const config = Object.assign({ method: 'GET', credentials: 'same-origin' }, options || {});
+  if (config.body && typeof config.body !== 'string') {
+    config.headers = Object.assign({ 'Content-Type': 'application/json' }, config.headers || {});
+    config.body = JSON.stringify(config.body);
+  }
+  const response = await fetch(path, config);
+  let data = {};
+  try {
+    data = await response.json();
+  } catch (error) {
+    data = {};
+  }
+  return { ok: response.ok, status: response.status, data: data };
+}
+
+// ---------- 数据层：内存缓存 + localStorage + 后端整包同步 ----------
+const SYNC_KEYS = [
+  'profile', 'weightHistory', 'vitalsHistory', 'bp', 'glucose', 'mealLog',
+  'moodLog', 'dietActivity', 'sport', 'reminders', 'quickReminders',
+  'familyMembers', 'familyRecords', 'preferences', 'femaleProfile',
+  'femaleStatus', 'reports', 'beautyPlan', 'sleepLog'
+];
+const dataCache = Object.create(null);
+const OWNER_KEY = 'hm_owner';
+let syncTimer = null;
+
+function loadData(key, fallback) {
+  if (Object.prototype.hasOwnProperty.call(dataCache, key)) {
+    return dataCache[key];
+  }
+  try {
+    const raw = window.localStorage.getItem('hm_' + key);
+    if (raw !== null) {
+      const parsed = JSON.parse(raw);
+      dataCache[key] = parsed;
+      return parsed;
+    }
+  } catch (error) {
+    // 隐私模式或数据损坏时退回默认值
+  }
+  return fallback;
+}
+
+function saveData(key, value) {
+  dataCache[key] = value;
+  try {
+    window.localStorage.setItem('hm_' + key, JSON.stringify(value));
+  } catch (error) {
+    // 无痕模式等场景下写入失败，忽略即可
+  }
+  scheduleSync();
+}
+
+function hasLocalData() {
+  try {
+    return window.localStorage.getItem('hm_profile') !== null;
+  } catch (error) {
+    return false;
+  }
+}
+
+// 本机缓存属于哪个账号（空表示是接入账号之前的旧版演示数据）
+function localOwner() {
+  try {
+    return window.localStorage.getItem(OWNER_KEY);
+  } catch (error) {
+    return null;
+  }
+}
+
+function setLocalOwner(userId) {
+  try {
+    window.localStorage.setItem(OWNER_KEY, String(userId));
+  } catch (error) {
+    // 忽略写入失败
+  }
+}
+
+function clearLocalData() {
+  SYNC_KEYS.forEach(function (key) {
+    delete dataCache[key];
+    try {
+      window.localStorage.removeItem('hm_' + key);
+    } catch (error) {
+      // 忽略清理失败
+    }
+  });
+  try {
+    window.localStorage.removeItem(OWNER_KEY);
+    window.localStorage.removeItem('hm_chatLog');
+  } catch (error) {
+    // 忽略清理失败
+  }
+}
+
+// 账号里是否已经有业务数据（有记录就不再重复引导填写）
+function hasAnyRecord() {
+  if ((loadData('weightHistory', []) || []).length) return true;
+  if ((loadData('mealLog', []) || []).length) return true;
+  if (Object.keys(loadData('moodLog', {}) || {}).length) return true;
+  if ((loadData('reminders', []) || []).length) return true;
+  if ((loadData('familyMembers', []) || []).length) return true;
+  const sport = loadData('sport', null);
+  return !!(sport && sport.history && Object.keys(sport.history).length);
+}
+
+// 每日状态标签以 { 日期: {tags, note} } 存放，提交前转成后端需要的数组
+function femaleStatusList() {
+  const status = loadData('femaleStatus', {}) || {};
+  return Object.keys(status).map(function (date) {
+    return { date: date, tags: status[date].tags || [], note: status[date].note || '' };
+  });
+}
+
+// 把当前数据整理成 /api/sync/import 需要的整包
+function buildSyncPayload() {
+  const glucose = loadData('glucose', null);
+  return {
+    replace: true,
+    profile: loadData('profile', {}) || {},
+    weightHistory: loadData('weightHistory', []),
+    vitalsHistory: loadData('vitalsHistory', {}),
+    bp: loadData('bp', null),
+    glucose: (glucose && typeof glucose === 'object') ? glucose.value : glucose,
+    dietActivity: loadData('dietActivity', null),
+    mealLog: loadData('mealLog', []),
+    sport: loadData('sport', {}),
+    moodLog: loadData('moodLog', {}),
+    familyMembers: loadData('familyMembers', []),
+    familyRecords: loadData('familyRecords', []),
+    reminders: loadData('reminders', []),
+    quickReminders: loadData('quickReminders', []),
+    preferences: loadData('preferences', {}),
+    female: {
+      profile: loadData('femaleProfile', {}),
+      status: femaleStatusList()
+    },
+    reports: loadData('reports', []),
+    beautyPlan: loadData('beautyPlan', null),
+    sleepLog: loadData('sleepLog', [])
+  };
+}
+
+// 500ms 内的多次保存合并为一次整包提交，避免频繁请求
+function scheduleSync() {
+  if (!serverMode || !currentUser) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(flushSync, 500);
+}
+
+async function flushSync() {
+  syncTimer = null;
+  if (!serverMode || !currentUser) return;
+  try {
+    await api('/api/sync/import', { method: 'POST', body: buildSyncPayload() });
+  } catch (error) {
+    // 断网时保留本地数据，下次保存会再次尝试
+  }
+}
+
+// 服务端整包里是否有真正的业务数据（quickReminders、运动目标为注册时的默认值，不算）
+function bundleHasData(bundle) {
+  if (!bundle) return false;
+  const profile = bundle.profile || {};
+  if (profile.nickname || profile.height || profile.weight) return true;
+  if ((bundle.weightHistory || []).length) return true;
+  if ((bundle.mealLog || []).length) return true;
+  if (Object.keys(bundle.moodLog || {}).length) return true;
+  if ((bundle.reminders || []).length) return true;
+  if ((bundle.familyMembers || []).length) return true;
+  if ((bundle.familyRecords || []).length) return true;
+  if (Object.keys((bundle.sport || {}).history || {}).length) return true;
+  const vitals = bundle.vitalsHistory || {};
+  return Object.keys(vitals).some(function (key) {
+    return (vitals[key] || []).length > 0;
+  });
+}
+
+// 用服务端整包覆盖本地缓存
+function applyBundle(bundle) {
+  const settings = bundle.settings || {};
+  let bp = settings.bp || null;
+  if (bp && bp.systolic && bp.diastolic) {
+    bp = { systolic: bp.systolic, diastolic: bp.diastolic };
+  }
+  const glucoseState = settings.glucose;
+  const glucose = (glucoseState && typeof glucoseState === 'object')
+    ? glucoseState.value
+    : glucoseState;
+
+  const femaleStatus = {};
+  ((bundle.female || {}).status || []).forEach(function (item) {
+    if (!item || !item.date) return;
+    femaleStatus[item.date] = { tags: item.tags || [], note: item.note || '' };
+  });
+
+  const values = {
+    profile: bundle.profile || {},
+    weightHistory: bundle.weightHistory || [],
+    vitalsHistory: bundle.vitalsHistory || {},
+    bp: bp,
+    glucose: glucose,
+    dietActivity: settings.dietActivity,
+    mealLog: bundle.mealLog || [],
+    moodLog: bundle.moodLog || {},
+    sport: bundle.sport && bundle.sport.goal
+      ? bundle.sport
+      : { goal: { kcal: 500, steps: 8000, minutes: 60 }, history: {} },
+    reminders: bundle.reminders || [],
+    quickReminders: bundle.quickReminders || [],
+    familyMembers: bundle.familyMembers || [],
+    familyRecords: bundle.familyRecords || [],
+    preferences: bundle.preferences || {},
+    femaleProfile: (bundle.female || {}).profile || {},
+    femaleStatus: femaleStatus,
+    reports: bundle.reports || [],
+    beautyPlan: settings.beautyPlan || null,
+    sleepLog: bundle.sleepLog || []
+  };
+
+  Object.keys(values).forEach(function (key) {
+    if (values[key] === undefined) return;
+    dataCache[key] = values[key];
+    try {
+      window.localStorage.setItem('hm_' + key, JSON.stringify(values[key]));
+    } catch (error) {
+      // 忽略写入失败
+    }
+  });
+  if (currentUser && currentUser.id) setLocalOwner(currentUser.id);
+}
+
+// 登录 / 会话恢复后，从后端取回整包数据；账号为空而本机有旧数据时先迁移
+async function hydrateFromServer() {
+  if (!serverMode || !currentUser) return;
+
+  let bundle = null;
+  try {
+    const result = await api('/api/sync/export');
+    if (result.ok) bundle = result.data;
+  } catch (error) {
+    return;
+  }
+  if (!bundle) return;
+
+  // 只有「接入账号之前」的旧版本机数据才迁移，避免把上一个账号的数据写进新账号
+  const isLegacy = hasLocalData() && !localOwner();
+  if (!bundleHasData(bundle) && isLegacy) {
+    await flushSync();
+    try {
+      const again = await api('/api/sync/export');
+      if (again.ok) bundle = again.data;
+    } catch (error) {
+      // 迁移失败时沿用本机数据
+    }
+  }
+
+  applyBundle(bundle);
+}
+
+// ---------- 登录成功后的页面切换 ----------
+
+function showAuthError(id, message) {
+  const box = document.getElementById(id);
+  box.hidden = false;
+  box.textContent = message;
+}
+
+// 登录成功后：档案已填过身高体重（或已有记录）直接进主界面，否则进入信息填写页
+// 注意：新注册账号的昵称默认就是账号名，不能只凭昵称判断档案是否填过
+function afterLogin(profile) {
+  loginView.hidden = true;
+  onboardingView.hidden = true;
+  const hasProfile = !!(profile && profile.height && profile.weight);
+  if (hasProfile || hasAnyRecord()) {
+    enterApp();
+    loadProfileView();
+    renderVitalRanges();
+  } else {
+    onboardingView.hidden = false;
+    window.scrollTo(0, 0);
+    document.getElementById('obName').focus();
+  }
+}
+
+// 刚完成登录：拉取账号信息后决定进入哪个页面
+async function afterAuthenticated() {
+  const result = await api('/api/auth/me');
+  if (!result.ok) {
+    showAuthError('loginError', result.data.error || '会话已失效，请重新登录');
+    return false;
+  }
+  currentUser = result.data.user || currentUser;
+  await restoreSession(result.data.profile);
+  return true;
+}
+
+// ---------- 运行模式：连后端 / 纯静态演示 ----------
+function setServerMode(enabled) {
+  serverMode = !!enabled;
+  document.getElementById('logoutBtn').hidden = !serverMode;
+}
+
+function showLoginNotice(message, warn) {
+  loginNotice.hidden = false;
+  loginNotice.className = warn ? 'login-notice is-warn' : 'login-notice';
+  loginNotice.textContent = message;
+}
+
+// 没有后端时：隐藏账号密码表单，只留「进入本地演示」，避免任意账号被当成登录成功
+function switchToLocalDemo(message, warn) {
+  serverMode = false;
+  const form = document.getElementById('loginForm');
+  form.hidden = true;
+  document.getElementById('loginError').hidden = true;
+  document.getElementById('authTitle').textContent = '本地演示';
+  document.getElementById('authSub').textContent = '数据只保存在本机，不会同步';
+  document.getElementById('demoEnter').hidden = false;
+  showLoginNotice(message, warn);
+}
+
+async function detectBackend() {
+  try {
+    const result = await api('/api/health');
+    return !!(result && result.ok && result.data && result.data.ok);
+  } catch (error) {
+    return false;
+  }
+}
+
+// 打开页面时先确认后端可用，再恢复已登录的会话
+async function bootAuth() {
+  if (IS_FILE_PROTOCOL) {
+    setServerMode(false);
+    switchToLocalDemo('这是静态演示版，没有后端，无法登录指定账号。正式使用请用电脑运行 python web.py，再通过局域网地址访问。', false);
+    return;
+  }
+
+  // 没有后端就不提供登录入口，避免任意账号“登录成功”的假象
+  const backendReady = await detectBackend();
+  if (!backendReady) {
+    setServerMode(false);
+    switchToLocalDemo('这个地址没有运行后端服务，无法登录。请用电脑运行 python web.py，再用它提示的局域网地址访问。', true);
+    return;
+  }
+
+  setServerMode(true);
+
+  let result = null;
+  try {
+    result = await api('/api/auth/me');
+  } catch (error) {
+    result = null;
+  }
+
+  if (!result) {
+    showLoginNotice('连接后端失败，请确认电脑上的服务仍在运行。', true);
+    return;
+  }
+
+  if (result.ok) {
+    currentUser = result.data.user || null;
+    await restoreSession(result.data.profile);
+  }
+}
+
+document.getElementById('demoEnter').addEventListener('click', function () {
+  document.getElementById('loginError').hidden = true;
+  afterLogin(loadData('profile', null));
+});
+
+// 已登录会话恢复：先取回账号数据，再决定进入哪个页面并重绘
+async function restoreSession(profile) {
+  await hydrateFromServer();
+  afterLogin(profile);
+  refreshAllViews();
+  await loadChatHistory();
+}
+
+document.getElementById('logoutBtn').addEventListener('click', async function () {
+  if (serverMode) {
+    try {
+      await api('/api/auth/logout', { method: 'POST' });
+    } catch (error) {
+      // 网络异常时也允许本地退出
+    }
+  }
+  // 清掉本机的账号数据，避免下一个登录的账号读到上一个账号的内容
+  clearLocalData();
+  window.location.reload();
+});
+
+document.getElementById('loginForm').addEventListener('submit', async function (event) {
   event.preventDefault();
 
   const account = document.getElementById('loginAccount').value.trim();
   const password = document.getElementById('loginPassword').value;
-  const error = document.getElementById('loginError');
+  const submit = document.getElementById('loginSubmit');
 
-  if (account === DEMO_ACCOUNT && password === DEMO_PASSWORD) {
-    error.hidden = true;
-    loginView.hidden = true;
-    onboardingView.hidden = false;
-    window.scrollTo(0, 0);
-    document.getElementById('obName').focus();
-  } else {
-    error.hidden = false;
-    error.textContent = '账号或密码不正确，请使用演示账号 AAA / 123456';
+  if (!account || !password) {
+    showAuthError('loginError', '请输入账号与密码');
+    return;
+  }
+
+  if (!serverMode) {
+    showAuthError('loginError', '当前没有连接到后端，无法登录。');
+    return;
+  }
+
+  submit.disabled = true;
+  submit.textContent = '登录中…';
+  try {
+    const result = await api('/api/auth/login', { method: 'POST', body: { account, password } });
+    if (!result.ok) {
+      showAuthError('loginError', result.data.error || '账号或密码不正确');
+      return;
+    }
+    document.getElementById('loginError').hidden = true;
+    currentUser = result.data.user || null;
+    document.getElementById('loginAccount').value = account;
+    await afterAuthenticated();
+  } catch (error) {
+    showAuthError('loginError', '无法连接服务器，请确认服务已启动');
+  } finally {
+    submit.disabled = false;
+    submit.textContent = '登录';
   }
 });
 
@@ -5385,6 +5989,20 @@ document.getElementById('onboardingForm').addEventListener('submit', function (e
     gender: gender,
     height: height > 0 ? height : 0,
     weight: weight > 0 ? weight : 0
+  });
+
+  // 健康情况与饮食偏好单独存档，用于饮食建议与后续个性化
+  const previousPreferences = loadData('preferences', {}) || {};
+  saveData('preferences', {
+    age: previousPreferences.age || '',
+    sleepQuality: document.getElementById('obSleep').value,
+    exerciseFrequency: document.getElementById('obExercise').value,
+    goal: goal,
+    conditions: getChipValues('obConditions'),
+    taste: taste,
+    dietType: dietType,
+    restrictions: restrictions,
+    meals: document.getElementById('obMeals').value
   });
 
   // 同步到核心体征并重算 BMI
@@ -5842,11 +6460,33 @@ document.querySelectorAll('.meal-btn').forEach(function (btn) {
 
 /* ==========================================================
    四之二、图片上传
-   说明：餐食图片仅做预览；体检报告为示例指标。
-        接入豆包视觉模型 / OCR 后可替换为真实识别。
+   说明：图片上传到后端 /api/uploads 并随记录一起存档；
+        识别结果仍为示例数据，接入豆包视觉模型 / OCR 后可替换。
    ========================================================== */
 
-// ---------- 餐食图片上传（当前仅预览，未接入视觉识别） ----------
+// 上传图片到后端，返回可访问的图片地址；静态演示模式不落库，返回 null
+function uploadImage(file) {
+  if (!serverMode) return Promise.resolve(null);
+  const headers = {
+    'Content-Type': file.type || 'application/octet-stream',
+    'X-File-Name': encodeURIComponent(file.name || 'upload')
+  };
+  return fetch('/api/uploads', {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: headers,
+    body: file
+  }).then(function (response) {
+    return response.json().then(function (data) {
+      if (!response.ok || !data.file || !data.file.url) {
+        throw new Error(data.error || '图片上传失败');
+      }
+      return data.file.url;
+    });
+  });
+}
+
+// ---------- 餐食图片上传 ----------
 const dietImageInput = document.getElementById('dietImageInput');
 const dietPreview = document.getElementById('dietPreview');
 const dietUploadEmpty = document.getElementById('dietUploadEmpty');
@@ -5855,8 +6495,12 @@ const dietFileName = document.getElementById('dietFileName');
 const dietStatus = document.getElementById('dietStatus');
 const dietResult = document.getElementById('dietResult');
 const dietFillMeal = document.getElementById('dietFillMeal');
+const dietMealRow = document.getElementById('dietMealRow');
+const dietMealType = document.getElementById('dietMealType');
 
-let dietImageUrl = null;
+let dietImageUrl = null;        // 本地预览地址
+let pendingMealImage = '';      // 待写入下一条饮食记录的图片地址
+let mealRecognition = null;     // 最近一次识别出的食物与营养
 
 function chooseDietImage() {
   dietImageInput.value = '';
@@ -5870,6 +6514,87 @@ document.getElementById('dietReselect').addEventListener('click', chooseDietImag
 dietUploadEmpty.addEventListener('click', function (event) {
   if (event.target.tagName !== 'BUTTON') chooseDietImage();
 });
+
+// 按当前时间推测该记录到哪一餐
+function defaultMealType() {
+  const hour = new Date().getHours();
+  if (hour < 10) return '早餐';
+  if (hour < 15) return '午餐';
+  if (hour < 21) return '晚餐';
+  return '加餐';
+}
+
+function nutritionNumber(value, digits) {
+  const number = Number(value);
+  const safe = isFinite(number) ? number : 0;
+  return digits ? Math.round(safe * 10) / 10 : Math.round(safe);
+}
+
+// 渲染识别出的食物清单、合计营养与说明
+function renderMealRecognition(result) {
+  mealRecognition = result || null;
+  const foods = (result && result.foods) || [];
+  const total = (result && result.total) || {};
+
+  if (!foods.length) {
+    dietResult.innerHTML = '<div>没有识别出明确的食物，可以换一张更清晰的照片，或在下方手动记录。</div>';
+    dietResult.hidden = false;
+    dietMealRow.hidden = true;
+    dietFillMeal.hidden = true;
+    return;
+  }
+
+  const rows = foods.map(function (item) {
+    return '<div class="ai-food"><span>' + escapeHtml(item.name) +
+      (item.portion ? ' · ' + escapeHtml(item.portion) : '') + '</span><b>' +
+      nutritionNumber(item.kcal) + ' kcal</b></div>';
+  }).join('');
+
+  const note = result.note
+    ? '<div class="ai-note">' + escapeHtml(result.note) + '</div>'
+    : '';
+
+  dietResult.innerHTML =
+    '<div class="ai-foods">' + rows + '</div>' +
+    '<div class="ai-total">共约 ' + nutritionNumber(total.kcal) + ' kcal · 蛋白质 ' +
+    nutritionNumber(total.protein, true) + 'g · 碳水 ' + nutritionNumber(total.carb, true) +
+    'g · 脂肪 ' + nutritionNumber(total.fat, true) + 'g · 纤维 ' +
+    nutritionNumber(total.fiber, true) + 'g</div>' + note;
+  dietResult.hidden = false;
+  dietMealRow.hidden = false;
+  dietFillMeal.hidden = false;
+}
+
+// 调用后端多模态识别接口
+async function recognizeMealImage(url) {
+  dietStatus.className = 'upload-status scanning';
+  dietStatus.textContent = 'AI 正在识别食物与热量...';
+  mealRecognition = null;
+  dietResult.hidden = true;
+  dietMealRow.hidden = true;
+  dietFillMeal.hidden = true;
+
+  const response = await api('/api/ai/vision', {
+    method: 'POST',
+    body: { task: 'meal', imageUrl: url }
+  });
+
+  dietStatus.className = 'upload-status';
+
+  if (!response.ok) {
+    const message = (response.data && response.data.error) || '图片识别失败';
+    dietStatus.textContent = message + '。图片已保存，也可以直接在下方手动记录。';
+    showToast(message);
+    return;
+  }
+
+  const result = (response.data && response.data.result) || {};
+  renderMealRecognition(result);
+  const left = response.data.quotaLeft;
+  dietStatus.textContent = '识别完成' +
+    (typeof left === 'number' ? '（今日还可识别 ' + left + ' 次）' : '') +
+    '，确认餐次后点「加入今日饮食」。';
+}
 
 dietImageInput.addEventListener('change', function () {
   const file = dietImageInput.files[0];
@@ -5888,21 +6613,62 @@ dietImageInput.addEventListener('change', function () {
   dietUploadEmpty.hidden = true;
   dietPreview.hidden = false;
 
-  // 目前版本没有接入视觉识别模型：保留图片预览，但不编造识别结果
-  dietStatus.className = 'upload-status';
-  dietStatus.textContent = '图片已保存。当前版本未接入图像识别模型。';
-  dietResult.innerHTML = '<div>请在下方「今日饮食记录」中按实际食物手动填写（例如：米饭 鸡胸肉 西兰花），' +
-    '系统会按食物成分表估算热量与蛋白质等营养。配置豆包视觉模型后可自动识别。</div>';
-  dietResult.hidden = false;
+  mealRecognition = null;
+  pendingMealImage = '';
+  dietResult.hidden = true;
+  dietResult.innerHTML = '';
+  dietMealRow.hidden = true;
   dietFillMeal.hidden = true;
+  dietMealType.value = defaultMealType();
+
+  if (!serverMode) {
+    dietStatus.className = 'upload-status';
+    dietStatus.textContent = '静态演示版无法连接识别服务，请在下方手动记录饮食。';
+    return;
+  }
+
+  dietStatus.className = 'upload-status scanning';
+  dietStatus.textContent = '图片上传中...';
+
+  uploadImage(file).then(function (url) {
+    pendingMealImage = url || '';
+    if (!url) {
+      dietStatus.className = 'upload-status';
+      dietStatus.textContent = '图片上传失败，暂时无法识别；可在下方手动记录。';
+      return;
+    }
+    return recognizeMealImage(url);
+  }).catch(function (error) {
+    dietStatus.className = 'upload-status';
+    dietStatus.textContent = '图片上传失败：' + error.message + '。仍可手动记录饮食。';
+  });
 });
 
-// 把识别结果填入午餐记录
+// 把识别结果写入选定的餐次
 dietFillMeal.addEventListener('click', function () {
-  const lunchInput = document.querySelector('.meal input[data-meal="午餐"]');
-  if (!lunchInput) return;
-  lunchInput.value = dietFillMeal.dataset.foods || '';
-  showToast('已将识别结果填入午餐记录');
+  if (!mealRecognition || !(mealRecognition.foods || []).length) {
+    showToast('没有可记录的食物');
+    return;
+  }
+
+  const meal = dietMealType.value || '午餐';
+  const text = mealRecognition.foods.map(function (item) {
+    return item.name;
+  }).join(' ');
+  const total = mealRecognition.total || {};
+
+  saveMealRecord(meal, text, {
+    kcal: nutritionNumber(total.kcal),
+    protein: nutritionNumber(total.protein, true),
+    carb: nutritionNumber(total.carb, true),
+    fat: nutritionNumber(total.fat, true),
+    fiber: nutritionNumber(total.fiber, true)
+  });
+
+  dietFillMeal.hidden = true;
+  dietMealRow.hidden = true;
+  dietResult.innerHTML = '<div>已记录到今天的' + escapeHtml(meal) + '，可以继续上传下一张照片。</div>';
+  showToast('已加入今天的' + meal + '：' + text);
 });
 
 // ---------- 体检报告图片识别 ----------
@@ -5914,7 +6680,152 @@ const reportFileName = document.getElementById('reportFileName');
 const reportStatus = document.getElementById('reportStatus');
 const reportResult = document.getElementById('reportResult');
 
-let reportImageUrl = null;
+let reportImageUrl = null;      // 本地预览地址
+let reportImagePath = '';       // 已上传到后端的图片地址
+let reportUploadTask = null;    // 正在上传的任务，点击同步前先等它完成
+
+// 识别结果可能缺少某些指标，用 null 表示“报告上没有”，避免误填 0
+let reportMetrics = { weight: null, fat: null, systolic: null, diastolic: null, glucose: null };
+let reportMetricsDate = toISODate(new Date());
+
+function reportNumber(value) {
+  if (value === null || value === undefined || value === '') return null;
+  const number = Number(value);
+  return isFinite(number) ? number : null;
+}
+
+function reportText(value, digits) {
+  return value === null ? '—' : value.toFixed(digits === undefined ? 1 : digits);
+}
+
+// 渲染识别出的报告明细与总结
+function renderReportItems(items, abnormal, hasMetrics) {
+  const box = document.getElementById('reportItems');
+  const summary = document.getElementById('reportSummary');
+  const list = (items || []).filter(function (item) {
+    return item && item.name;
+  });
+
+  if (!list.length) {
+    box.hidden = true;
+    box.innerHTML = '';
+  } else {
+    box.innerHTML = list.slice(0, 60).map(function (item) {
+      return '<div class="report-item-row' + (item.abnormal ? ' is-abnormal' : '') + '">' +
+        '<span class="ri-name">' + escapeHtml(item.name) + '</span>' +
+        '<b class="ri-value">' + escapeHtml(item.value) +
+        (item.unit ? '<span class="ri-unit"> ' + escapeHtml(item.unit) + '</span>' : '') + '</b>' +
+        (item.ref ? '<em class="ri-ref">参考范围 ' + escapeHtml(item.ref) + '</em>' : '') +
+        '</div>';
+    }).join('');
+    box.hidden = false;
+  }
+
+  if (abnormal && abnormal.length) {
+    summary.className = 'report-summary is-warn';
+    summary.textContent = '有 ' + abnormal.length + ' 项需要留意：' + abnormal.join('；') +
+      '。识别结果仅供参考，请以报告原文和医生意见为准。';
+  } else if (list.length) {
+    summary.className = 'report-summary';
+    summary.textContent = '这些指标未见明显异常标记。识别结果仅供参考，请以报告原文和医生意见为准。';
+  } else {
+    summary.className = 'report-summary';
+    summary.textContent = hasMetrics
+      ? '已回填基础指标。识别结果仅供参考，请以报告原文和医生意见为准。'
+      : '这次没有识别到可回填的指标，可以换一张更清晰的照片，或手动填写核心体征。';
+  }
+}
+
+// 把一份报告指标渲染到结果卡片
+function renderReportResult(record, date) {
+  reportMetrics = {
+    weight: reportNumber(record.weight),
+    fat: reportNumber(record.fat),
+    systolic: reportNumber(record.systolic),
+    diastolic: reportNumber(record.diastolic),
+    glucose: reportNumber(record.glucose)
+  };
+  reportMetricsDate = date || toISODate(new Date());
+
+  // 报告存档里带了图片地址时，把预览区换成存档图片（刷新后也能看到）
+  if (record.imageUrl) {
+    reportImagePath = record.imageUrl;
+    reportPreviewImg.src = record.imageUrl;
+    reportFileName.textContent = '体检报告图片';
+    reportUploadEmpty.hidden = true;
+    reportPreview.hidden = false;
+  }
+
+  document.getElementById('reportWeight').textContent = reportText(reportMetrics.weight);
+  document.getElementById('reportFat').textContent = reportText(reportMetrics.fat);
+  document.getElementById('reportBp').textContent =
+    reportMetrics.systolic === null || reportMetrics.diastolic === null
+      ? '—'
+      : Math.round(reportMetrics.systolic) + '/' + Math.round(reportMetrics.diastolic);
+  document.getElementById('reportGlucose').textContent = reportText(reportMetrics.glucose);
+
+  const bmi = reportNumber(record.bmi) || (reportMetrics.weight
+    ? reportMetrics.weight / Math.pow(currentHeightMeters(), 2)
+    : null);
+  document.getElementById('reportBmi').textContent = reportText(bmi);
+
+  const parsed = parseISODate(reportMetricsDate);
+  document.getElementById('reportDateText').textContent =
+    parsed ? formatYMD(parsed) : reportMetricsDate;
+
+  renderReportItems(record.items, record.abnormal,
+    reportMetrics.weight !== null || reportMetrics.systolic !== null ||
+    reportMetrics.glucose !== null);
+  reportResult.hidden = false;
+}
+
+// 调用后端 OCR 接口识别体检报告
+async function recognizeReportImage(url) {
+  reportStatus.className = 'upload-status scanning';
+  reportStatus.textContent = 'AI 正在识别报告指标...';
+
+  const response = await api('/api/ai/vision', {
+    method: 'POST',
+    body: { task: 'report', imageUrl: url }
+  });
+
+  reportStatus.className = 'upload-status';
+
+  if (!response.ok) {
+    const message = (response.data && response.data.error) || '识别失败';
+    reportStatus.textContent = message + '。可以换一张清晰照片，或手动填写核心体征。';
+    showToast(message);
+    return;
+  }
+
+  const result = (response.data && response.data.result) || {};
+  renderReportResult(Object.assign({ imageUrl: reportImagePath }, result),
+    result.date || toISODate(new Date()));
+
+  const found = ['weight', 'fat', 'systolic', 'diastolic', 'glucose'].filter(function (key) {
+    return reportNumber(result[key]) !== null;
+  }).length;
+  const left = response.data.quotaLeft;
+  reportStatus.textContent = '识别完成，回填 ' + found + ' 项基础指标' +
+    (typeof left === 'number' ? '（今日还可识别 ' + left + ' 次）' : '') +
+    '，核对后点「同步到核心体征」。';
+  showToast('报告识别完成，请核对结果');
+}
+
+// 同一天的报告只保留一条，避免重复堆积
+function saveReportRecord(record) {
+  const list = (loadData('reports', []) || []).slice();
+  const date = record.date;
+  const index = list.findIndex(function (item) {
+    return item.date === date;
+  });
+  if (index >= 0) {
+    list[index] = Object.assign({}, list[index], record);
+  } else {
+    list.push(record);
+  }
+  saveData('reports', list);
+}
 
 function chooseReportImage() {
   reportImageInput.value = '';
@@ -5950,37 +6861,93 @@ reportImageInput.addEventListener('change', function () {
   reportUploadEmpty.hidden = true;
   reportPreview.hidden = false;
 
-  reportStatus.className = 'upload-status scanning';
-  reportStatus.textContent = 'AI 正在识别报告指标...';
   reportResult.hidden = true;
+  reportImagePath = '';
 
-  setTimeout(function () {
+  if (!serverMode) {
     reportStatus.className = 'upload-status';
-    reportStatus.textContent = '当前未接入 OCR，以下为示例指标，请按实际报告修改';
-    reportResult.hidden = false;
-    document.getElementById('reportDateText').textContent = formatYMD(new Date());
-    showToast('已填入示例指标（未接入 OCR）');
-  }, 1100);
+    reportStatus.textContent = '静态演示版无法调用 OCR，请在下方手动填写核心体征。';
+    return;
+  }
+
+  reportStatus.className = 'upload-status scanning';
+  reportStatus.textContent = '图片上传中，随后开始识别...';
+
+  reportUploadTask = uploadImage(file).then(function (url) {
+    reportImagePath = url || '';
+    return reportImagePath;
+  });
+
+  reportUploadTask.then(function (url) {
+    if (!url) {
+      reportStatus.className = 'upload-status';
+      reportStatus.textContent = '图片上传失败，无法识别；可以手动填写核心体征。';
+      return;
+    }
+    return recognizeReportImage(url);
+  }).catch(function (error) {
+    reportStatus.className = 'upload-status';
+    reportStatus.textContent = '图片识别失败：' + error.message + '。可以手动填写核心体征。';
+  });
 });
 
-// 将识别结果同步到核心体征
-document.getElementById('applyReport').addEventListener('click', function () {
-  document.getElementById('weightValue').textContent = '64.8';
-  document.getElementById('fatValue').textContent = '24.0';
-  document.getElementById('bpValue').textContent = '112/72';
-  document.getElementById('glucoseValue').textContent = '5.0';
+// 将识别结果同步到核心体征，并把这份报告存档
+document.getElementById('applyReport').addEventListener('click', async function () {
+  // 图片可能还在上传，先等上传完成再存档
+  if (reportUploadTask) {
+    try {
+      reportImagePath = (await reportUploadTask) || '';
+    } catch (error) {
+      reportImagePath = '';
+      showToast('报告图片上传失败：' + error.message);
+    }
+    reportUploadTask = null;
+  }
 
-  // BMI 由体重和身高算出，不直接写入固定值
-  setBmiDisplay(64.8 / Math.pow(currentHeightMeters(), 2));
+  const hasAny = reportMetrics.weight !== null || reportMetrics.fat !== null ||
+    reportMetrics.systolic !== null || reportMetrics.diastolic !== null ||
+    reportMetrics.glucose !== null;
+  if (!hasAny) {
+    showToast('还没有可同步的指标，请先上传报告或手动填写');
+    return;
+  }
 
-  // 体检同步的体重也进入趋势记录
-  addWeightRecord(64.8);
-  saveData('bp', { systolic: 112, diastolic: 72 });
-  saveData('glucose', 5.0);
+  if (reportMetrics.weight !== null) {
+    document.getElementById('weightValue').textContent = reportMetrics.weight.toFixed(1);
+    // 体检同步的体重也进入趋势记录
+    addWeightRecord(reportMetrics.weight);
+    // BMI 由体重和身高算出，不直接写入固定值
+    setBmiDisplay(reportMetrics.weight / Math.pow(currentHeightMeters(), 2));
+  }
+
+  if (reportMetrics.fat !== null) {
+    document.getElementById('fatValue').textContent = reportMetrics.fat.toFixed(1);
+  }
+
+  if (reportMetrics.systolic !== null && reportMetrics.diastolic !== null) {
+    document.getElementById('bpValue').textContent =
+      Math.round(reportMetrics.systolic) + '/' + Math.round(reportMetrics.diastolic);
+    saveData('bp', { systolic: reportMetrics.systolic, diastolic: reportMetrics.diastolic });
+  }
+
+  if (reportMetrics.glucose !== null) {
+    document.getElementById('glucoseValue').textContent = reportMetrics.glucose.toFixed(1);
+    saveData('glucose', reportMetrics.glucose);
+  }
+
+  saveReportRecord({
+    date: reportMetricsDate,
+    weight: reportMetrics.weight,
+    fat: reportMetrics.fat,
+    systolic: reportMetrics.systolic,
+    diastolic: reportMetrics.diastolic,
+    glucose: reportMetrics.glucose,
+    imageUrl: reportImagePath || ''
+  });
   refreshDietViews();
   renderVitalRanges();
 
-  showToast('体检指标已同步到核心体征');
+  showToast('体检指标已同步到核心体征并保存');
 });
 
 /* ==========================================================
@@ -6491,36 +7458,44 @@ function updateBeautyProgress() {
     isWeightType ? Math.round(percent) + '%' : '进行中';
 }
 
-document.getElementById('generatePlan').addEventListener('click', function () {
-  const type = document.getElementById('beautyType').value;
-  const target = parseFloat(document.getElementById('beautyTarget').value);
-  const weeks = parseInt(document.getElementById('beautyWeeks').value, 10);
-  const times = parseInt(document.getElementById('beautyTimes').value, 10);
+// 生成计划：点击按钮与登录后恢复共用同一套逻辑，silent 时跳过校验与提示
+function generateBeautyPlan(type, target, weeks, times, silent) {
   const current = parseFloat(document.getElementById('weightValue').textContent) || 60.0;
 
-  if (!target || target < 20 || target > 200) {
-    showToast('请输入 20-200 kg 的目标体重');
-    return;
-  }
-  if (!weeks || weeks < 2 || weeks > 52) {
-    showToast('目标周期请设置在 2-52 周');
-    return;
-  }
-  if (!times || times < 2 || times > 7) {
-    showToast('每周运动次数请设置在 2-7 次');
-    return;
-  }
-  if (type === '健身减脂' && target >= current) {
-    showToast('减脂目标体重应低于当前体重');
-    return;
-  }
-  if (type === '增肌塑形' && target <= current) {
-    showToast('增肌目标体重应高于当前体重');
-    return;
+  if (!silent) {
+    if (!target || target < 20 || target > 200) {
+      showToast('请输入 20-200 kg 的目标体重');
+      return false;
+    }
+    if (!weeks || weeks < 2 || weeks > 52) {
+      showToast('目标周期请设置在 2-52 周');
+      return false;
+    }
+    if (!times || times < 2 || times > 7) {
+      showToast('每周运动次数请设置在 2-7 次');
+      return false;
+    }
+    if (type === '健身减脂' && target >= current) {
+      showToast('减脂目标体重应低于当前体重');
+      return false;
+    }
+    if (type === '增肌塑形' && target <= current) {
+      showToast('增肌目标体重应高于当前体重');
+      return false;
+    }
   }
 
+  // 目标与当前体重方向不符时，恢复计划只做展示，不重算热量缺口
+  const validTarget = target >= 20 && target <= 200;
+  if (!validTarget) return false;
+
   beautyState.type = type;
-  beautyState.startWeight = current;
+  // 起始体重用于计算进度：恢复计划时沿用当时保存的值
+  const previousPlan = loadData('beautyPlan', null);
+  const startWeight = silent && previousPlan && previousPlan.startWeight
+    ? Number(previousPlan.startWeight)
+    : current;
+  beautyState.startWeight = startWeight;
   beautyState.currentWeight = current;
   beautyState.targetWeight = target;
   beautyState.weeks = weeks;
@@ -6608,8 +7583,42 @@ document.getElementById('generatePlan').addEventListener('click', function () {
   renderWeightChart();
 
   updateBeautyProgress();
-  showToast('已生成' + type + '计划');
+
+  // 计划的目标设定写回账号，下次登录可恢复
+  saveData('beautyPlan', {
+    type: type,
+    targetWeight: target,
+    weeks: weeks,
+    times: times,
+    startWeight: startWeight
+  });
+  if (!silent) showToast('已生成' + type + '计划');
+  return true;
+}
+
+document.getElementById('generatePlan').addEventListener('click', function () {
+  generateBeautyPlan(
+    document.getElementById('beautyType').value,
+    parseFloat(document.getElementById('beautyTarget').value),
+    parseInt(document.getElementById('beautyWeeks').value, 10),
+    parseInt(document.getElementById('beautyTimes').value, 10),
+    false
+  );
 });
+
+// 登录后恢复上次保存的变美计划
+function restoreBeautyPlan() {
+  const plan = loadData('beautyPlan', null);
+  if (!plan || !plan.type || !plan.targetWeight) return;
+
+  document.getElementById('beautyType').value = plan.type;
+  document.getElementById('beautyTarget').value = plan.targetWeight;
+  document.getElementById('beautyWeeks').value = plan.weeks || 12;
+  document.getElementById('beautyTimes').value = String(plan.times || 4);
+
+  generateBeautyPlan(plan.type, Number(plan.targetWeight),
+    Number(plan.weeks) || 12, Number(plan.times) || 4, true);
+}
 
 // 记录当前体重并更新目标进度
 document.getElementById('logBeautyWeight').addEventListener('click', function () {
@@ -6733,14 +7742,37 @@ fillSelect(periodDaysSelect, 3, 10, '天', periodDays);
 fillSelect(cycleDaysMainSelect, 21, 40, '天', cycleDays);
 fillSelect(cycleDaysInput, 21, 40, '天', cycleDays);
 
+// 周期设置写回账号
+function saveFemaleProfile() {
+  saveData('femaleProfile', {
+    periodDays: periodDays,
+    cycleDays: cycleDays,
+    lastPeriodStart: toISODate(lastPeriodStart)
+  });
+}
+
+// 从账号取回周期设置
+function applyFemaleProfile(profile) {
+  if (!profile) return;
+  const days = parseInt(profile.periodDays, 10);
+  const cycle = parseInt(profile.cycleDays, 10);
+  const start = parseISODate(profile.lastPeriodStart);
+  if (days >= 1 && days <= 15) periodDays = days;
+  if (cycle >= 15 && cycle <= 60) cycleDays = cycle;
+  if (start) lastPeriodStart = start;
+  renderCycle();
+}
+
 periodDaysSelect.addEventListener('change', function () {
   periodDays = parseInt(periodDaysSelect.value, 10);
   renderCycle();
+  saveFemaleProfile();
 });
 
 cycleDaysMainSelect.addEventListener('change', function () {
   cycleDays = parseInt(cycleDaysMainSelect.value, 10);
   renderCycle();
+  saveFemaleProfile();
 });
 
 // ---------- 弹窗开关辅助 ----------
@@ -6829,6 +7861,7 @@ document.getElementById('periodSave').addEventListener('click', function () {
   cycleDays = nextCycle;
 
   renderCycle();
+  saveFemaleProfile();
   closeMask(periodMask);
   showToast('生理期记录已保存');
 });
@@ -6895,6 +7928,7 @@ function createTagEditor(config) {
         selected.delete(value);
         renderTags();
         renderOptions();
+        if (config.onChange) config.onChange(Array.from(selected));
       });
 
       tag.appendChild(remove);
@@ -6920,6 +7954,7 @@ function createTagEditor(config) {
         }
         option.classList.toggle('selected');
         renderTags(); // 勾选后立即同步标签区
+        if (config.onChange) config.onChange(Array.from(selected));
       });
       optionsEl.appendChild(option);
     });
@@ -6944,13 +7979,32 @@ function createTagEditor(config) {
   renderTags();
 }
 
+// 今日状态标签按日期保存，便于跨设备查看当天记录
+function saveFemaleStatus(tags) {
+  const map = loadData('femaleStatus', {}) || {};
+  const today = toISODate(new Date());
+  if (tags.length) {
+    map[today] = { tags: tags, note: ((map[today] || {}).note) || '' };
+  } else {
+    delete map[today];
+  }
+  saveData('femaleStatus', map);
+}
+
+function todayFemaleTags() {
+  const map = loadData('femaleStatus', {}) || {};
+  const entry = map[toISODate(new Date())];
+  return (entry && entry.tags) || [];
+}
+
 createTagEditor({
   tagsId: 'femaleTags',
   addBtnId: 'femaleAddTag',
   menuId: 'femaleTagMenu',
   optionsId: 'femaleTagOptions',
   values: femaleTagValues,
-  initial: ['轻微腹痛', '情绪平稳']
+  initial: todayFemaleTags(),
+  onChange: saveFemaleStatus
 });
 
 // 点击标签面板以外的地方时收起面板
@@ -6960,6 +8014,54 @@ document.addEventListener('click', function (event) {
   }
 });
 
+// ---------- 睡眠记录 ----------
+function renderSleepToday() {
+  const log = loadData('sleepLog', []) || [];
+  const today = toISODate(new Date());
+  const entry = log.find(function (item) {
+    return item.date === today;
+  });
+  const box = document.getElementById('sleepToday');
+
+  if (!entry) {
+    box.textContent = '还没有记录今天的睡眠。';
+    return;
+  }
+  box.textContent = '今日已记录：' + entry.hours + ' 小时 · ' + entry.quality;
+  document.getElementById('sleepHours').value = entry.hours;
+  document.getElementById('sleepQuality').value = entry.quality;
+}
+
+document.getElementById('sleepForm').addEventListener('submit', function (event) {
+  event.preventDefault();
+
+  const hours = parseFloat(document.getElementById('sleepHours').value);
+  const quality = document.getElementById('sleepQuality').value;
+
+  if (isNaN(hours) || hours < 0 || hours > 24) {
+    showToast('请输入 0-24 之间的睡眠时长');
+    return;
+  }
+
+  const log = (loadData('sleepLog', []) || []).slice();
+  const today = toISODate(new Date());
+  const record = { date: today, hours: hours, quality: quality, note: '' };
+  const index = log.findIndex(function (item) {
+    return item.date === today;
+  });
+  if (index >= 0) {
+    log[index] = Object.assign({}, log[index], record);
+  } else {
+    log.push(record);
+  }
+
+  saveData('sleepLog', log);
+  renderSleepToday();
+  showToast('睡眠记录已保存');
+});
+
+renderSleepToday();
+
 // ---------- 家人健康：成员、健康记录与关怀提醒 ----------
 const familyMask = document.getElementById('familyMask');
 const memberMask = document.getElementById('memberMask');
@@ -6968,8 +8070,8 @@ const familyPersonSelect = document.getElementById('familyPerson');
 const familyTypeSelect = document.getElementById('familyType');
 const reminderMemberSelect = document.getElementById('reminderMember');
 
-// 家人列表（可通过「添加家人」继续扩展）
-let familyMembers = [
+// 家人列表（读取已保存的档案，首次使用时给出示例后可通过「添加家人」扩展）
+let familyMembers = loadData('familyMembers', [
   {
     id: 'm1',
     relation: '母亲',
@@ -6990,19 +8092,19 @@ let familyMembers = [
     emergencyName: '',
     emergencyPhone: ''
   }
-];
+]);
 
 const todayDate = new Date();
 
 // 健康记录
-let familyRecords = [
+let familyRecords = loadData('familyRecords', [
   {
     memberId: 'm1',
     type: '体检',
     date: toISODate(addDays(todayDate, -39)),
     content: '各项指标正常'
   }
-];
+]);
 
 // 关怀提醒：默认给出「今天」与「三天后」两条示例，之后读取本地保存的数据
 let reminders = loadData('reminders', [
@@ -7517,6 +8619,7 @@ document.getElementById('familySave').addEventListener('click', function () {
     date: toISODate(date),
     content: content
   });
+  saveData('familyRecords', familyRecords);
 
   renderFamilyMembers();
 
@@ -7573,6 +8676,7 @@ document.getElementById('memberSave').addEventListener('click', function () {
     emergencyName: emergencyName,
     emergencyPhone: emergencyPhone
   });
+  saveData('familyMembers', familyMembers);
 
   renderFamilyMembers();
   renderMemberOptions();
@@ -7641,26 +8745,8 @@ renderReminders();
 renderQuickReminders();
 
 /* ==========================================================
-   六之三、本地数据层与新增功能
+   六之三、核心体征记录（数据读写见「零、数据层」）
    ========================================================== */
-
-// ---------- localStorage 读写 ----------
-function loadData(key, fallback) {
-  try {
-    const raw = window.localStorage.getItem('hm_' + key);
-    return raw ? JSON.parse(raw) : fallback;
-  } catch (error) {
-    return fallback;
-  }
-}
-
-function saveData(key, value) {
-  try {
-    window.localStorage.setItem('hm_' + key, JSON.stringify(value));
-  } catch (error) {
-    // 无痕模式等场景下写入失败，忽略即可
-  }
-}
 
 // ---------- 核心数据：修改弹窗 + 近一个月记录 ----------
 const vitalMask = document.getElementById('vitalMask');
@@ -8221,8 +9307,10 @@ function saveMealRecord(meal, text, nutrition) {
     protein: nutrition.protein,
     carb: nutrition.carb,
     fat: nutrition.fat,
-    fiber: nutrition.fiber
+    fiber: nutrition.fiber,
+    image: pendingMealImage || ''
   });
+  pendingMealImage = '';
 
   // 只保留最近 30 天，避免数据无限增长
   const cutoff = toISODate(addDays(new Date(), -30));
@@ -8375,7 +9463,18 @@ function renderMealLog() {
   items.forEach(function (item) {
     const chip = document.createElement('span');
     chip.className = 'meal-log-item';
-    chip.textContent = item.meal + ' · ' + item.text + '（约 ' + Math.round(item.kcal) + ' kcal）';
+
+    // 上传过餐食图片的记录带一个小缩略图
+    if (item.image) {
+      const thumb = document.createElement('img');
+      thumb.className = 'meal-thumb';
+      thumb.src = item.image;
+      thumb.alt = '餐食图片';
+      chip.appendChild(thumb);
+    }
+
+    chip.appendChild(document.createTextNode(
+      item.meal + ' · ' + item.text + '（约 ' + Math.round(item.kcal) + ' kcal）'));
 
     const del = document.createElement('button');
     del.type = 'button';
@@ -8980,22 +10079,43 @@ document.getElementById('saveMood').addEventListener('click', function () {
   showToast('今日心情已保存：' + currentMood);
 });
 
-// 回显今天已保存的心情
-const savedMood = loadData('moodLog', {})[toISODate(new Date())];
-if (savedMood) {
-  currentMood = savedMood.mood;
-  document.getElementById('moodNote').value = savedMood.note || '';
-  const moodBtn = document.querySelector('#moodPicker .mood-opt[data-mood="' + savedMood.mood + '"]');
-  if (moodBtn) moodBtn.classList.add('selected');
-  document.getElementById('moodTip').textContent = moodTips[savedMood.mood] || '';
+// 心情与表情包对应关系
+const moodEmojis = {
+  '开心': '😄',
+  '平静': '🙂',
+  '疲惫': '😴',
+  '焦虑': '😰',
+  '低落': '😔'
+};
+
+function moodEmojiOf(mood) {
+  return moodEmojis[mood] || '🙂';
 }
 
-// 一周心情记录：用表情展示，点击查看当天备注
+// 回显今天已保存的心情（登录后数据同步完成时也会再调用一次）
+function renderMoodToday() {
+  const saved = loadData('moodLog', {})[toISODate(new Date())];
+
+  document.querySelectorAll('#moodPicker .mood-opt').forEach(function (btn) {
+    btn.classList.toggle('selected', !!saved && btn.dataset.mood === saved.mood);
+  });
+
+  currentMood = saved ? saved.mood : '';
+  document.getElementById('moodNote').value = saved ? (saved.note || '') : '';
+  document.getElementById('moodTip').textContent = saved
+    ? saved.mood + '｜' + (saved.note || moodTips[saved.mood] || '')
+    : '选择今天的心情后，这里会给出对应的小贴士。';
+}
+
+renderMoodToday();
+
+// 一周心情记录：每天一张卡片，用表情包展示心情
 function renderMoodWeek() {
   const box = document.getElementById('moodWeek');
   if (!box) return;
 
   const today = new Date();
+  const todayKey = toISODate(today);
   const monday = addDays(today, -((today.getDay() + 6) % 7));
   const log = loadData('moodLog', {});
   box.innerHTML = '';
@@ -9006,9 +10126,11 @@ function renderMoodWeek() {
     const entry = log[key];
 
     const item = document.createElement('div');
-    item.className = 'day' + (key === toISODate(today) ? ' selected' : '');
-    item.innerHTML = '<span class="emoji">' + (entry ? moodEmojiOf(entry.mood) : '·') + '</span>' +
-      '<span class="date">' + (day.getMonth() + 1) + '/' + day.getDate() + '</span>';
+    item.className = 'day' + (key === todayKey ? ' selected' : '');
+    item.innerHTML =
+      '<span class="emoji">' + (entry ? moodEmojiOf(entry.mood) : '·') + '</span>' +
+      '<span class="mood-label">' + (entry ? entry.mood : '未记录') + '</span>' +
+      '<span class="date">' + (key === todayKey ? '今天' : (day.getMonth() + 1) + '/' + day.getDate()) + '</span>';
     item.title = entry ? (entry.mood + (entry.note ? '：' + entry.note : '')) : '未记录';
 
     item.addEventListener('click', function () {
@@ -9017,7 +10139,8 @@ function renderMoodWeek() {
         return;
       }
       document.getElementById('moodTip').textContent =
-        entry.mood + '｜' + (entry.note || moodTips[entry.mood] || '');
+        (day.getMonth() + 1) + ' 月 ' + day.getDate() + ' 日｜' + entry.mood +
+        (entry.note ? '：' + entry.note : '');
     });
 
     box.appendChild(item);
@@ -9147,6 +10270,74 @@ renderWeightChart();
 renderMoodWeek();
 renderWeekPanel();
 
+// 从后端取回数据后，把内存变量与页面重新同步成最新状态
+function refreshAllViews() {
+  weightHistory = loadData('weightHistory', []);
+  mealLog = loadData('mealLog', []);
+  reminders = loadData('reminders', []);
+  quickReminders = loadData('quickReminders', []);
+  familyMembers = loadData('familyMembers', []);
+  familyRecords = loadData('familyRecords', []);
+
+  const sport = loadData('sport', null);
+  if (sport && sport.goal) {
+    sportState.goal = sport.goal;
+    sportState.history = sport.history || {};
+    pruneSportHistory();
+  }
+
+  const bp = loadData('bp', null);
+  const bpBox = document.getElementById('bpValue');
+  if (bpBox && bp && bp.systolic && bp.diastolic) {
+    bpBox.textContent = bp.systolic + '/' + bp.diastolic;
+  }
+  const glucose = loadData('glucose', null);
+  const glucoseBox = document.getElementById('glucoseValue');
+  if (glucoseBox && glucose) {
+    glucoseBox.textContent = Number(glucose).toFixed(1);
+  }
+  const activity = loadData('dietActivity', null);
+  if (activity) document.getElementById('dietActivity').value = String(activity);
+
+  loadProfileView();
+  renderVitalRanges();
+  renderMealLog();
+  refreshDietViews();
+  fillSportInputs();
+  renderExercise('today');
+  renderWeightChart();
+  renderMoodToday();
+  renderMoodWeek();
+  renderWeekPanel();
+  renderReminders();
+  renderQuickReminders();
+  renderFamilyMembers();
+  renderMemberOptions();
+  applyFemaleProfile(loadData('femaleProfile', null));
+  renderCycle();
+  renderSleepToday();
+  restoreBeautyPlan();
+  restoreReport();
+  applyGenderView();
+}
+
+// 恢复最近一份体检报告的指标
+function restoreReport() {
+  const list = loadData('reports', []);
+  if (!list || !list.length) return;
+  const latest = list.slice().sort(function (a, b) {
+    return String(a.date) < String(b.date) ? 1 : -1;
+  })[0];
+  renderReportResult(latest, latest.date);
+  reportStatus.className = 'upload-status';
+  reportStatus.textContent = '显示上次同步的体检指标（报告日期见下方）';
+}
+
+/* ==========================================================
+   页面启动：尝试恢复已登录的会话（后端不可用时退回本地演示）
+   ========================================================== */
+bootAuth();
+
 /* ==========================================================
    七、AI 健康小管家聊天
    ========================================================== */
@@ -9229,6 +10420,34 @@ function getReply(text) {
   return '收到～我是健康小管家。你可以问我饮食搭配、运动计划、睡眠改善或生理期护理等问题，我会给出简单可执行的建议。';
 }
 
+// 聊天记录：连后端时由服务端保存，纯静态演示时存本机
+function renderChatLog(messages) {
+  chatBody.innerHTML = '';
+  messages.forEach(function (item) {
+    addBubble(item.content, item.role === 'user' ? 'user' : 'bot');
+  });
+}
+
+async function loadChatHistory() {
+  if (!serverMode || !currentUser) {
+    // 静态演示：沿用本机保存的记录
+    const local = loadData('chatLog', []);
+    if (local && local.length) renderChatLog(local);
+    return;
+  }
+
+  let result = null;
+  try {
+    result = await api('/api/ai/history?limit=50');
+  } catch (error) {
+    return;
+  }
+  if (!result || !result.ok) return;
+
+  const messages = result.data.messages || [];
+  if (messages.length) renderChatLog(messages);
+}
+
 // 发送消息
 function sendChat() {
   const text = chatInput.value.trim();
@@ -9240,10 +10459,39 @@ function sendChat() {
   // 模拟 AI “正在输入”
   const typingBubble = addBubble('正在输入...', 'bot typing');
 
-  setTimeout(function () {
-    typingBubble.remove();
-    addBubble(getReply(text), 'bot');
-  }, 500);
+  // 纯静态演示：本地规则回复，并把对话留在本机
+  if (!serverMode || !currentUser) {
+    const reply = getReply(text);
+    const log = (loadData('chatLog', []) || []).slice();
+    log.push({ role: 'user', content: text }, { role: 'assistant', content: reply });
+    saveData('chatLog', log.slice(-100));
+
+    setTimeout(function () {
+      typingBubble.remove();
+      addBubble(reply, 'bot');
+    }, 500);
+    return;
+  }
+
+  // 连后端：消息与回复都由服务端保存
+  api('/api/ai/chat', { method: 'POST', body: { message: text } })
+    .then(function (result) {
+      typingBubble.remove();
+      if (result.ok && result.data.reply) {
+        addBubble(result.data.reply, 'bot');
+        if (result.data.degraded) {
+          showToast(result.data.configured
+            ? 'AI 服务暂时不可用，已返回兜底建议'
+            : '尚未配置 AI 密钥，当前为兜底回复');
+        }
+      } else {
+        addBubble('抱歉，暂时无法获取回复，请稍后再试。', 'bot');
+      }
+    })
+    .catch(function () {
+      typingBubble.remove();
+      addBubble('网络异常，请稍后再试。', 'bot');
+    });
 }
 
 document.getElementById('chatSend').addEventListener('click', sendChat);

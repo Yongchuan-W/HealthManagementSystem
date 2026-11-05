@@ -4048,6 +4048,8 @@ body { color: var(--text); }
         <button class="btn-primary login-btn" type="submit" id="loginSubmit">登录</button>
       </form>
 
+      <button class="btn-primary login-btn" type="button" id="demoEnter" hidden>进入本地演示（不校验账号）</button>
+
       <div class="mobile-hint">手机与电脑连接同一 Wi-Fi 后访问：<br><a href="__MOBILE_URL__">__MOBILE_URL__</a></div>
     </div>
   </div>
@@ -5469,7 +5471,6 @@ const loginNotice = document.getElementById('loginNotice');
 // 通过 python web.py 打开时走 /api/*；直接双击 static 版页面（file: 协议）时只能用本地演示逻辑
 const IS_FILE_PROTOCOL = window.location.protocol === 'file:';
 let serverMode = !IS_FILE_PROTOCOL;
-let demoLoginAllowed = false;
 let currentUser = null;
 
 async function api(path, options) {
@@ -5782,24 +5783,16 @@ function showLoginNotice(message, warn) {
   loginNotice.textContent = message;
 }
 
-// 直接双击 HTML 文件打开：允许进入演示，但明确说明不校验账号
-function enableLocalDemo() {
-  demoLoginAllowed = true;
+// 没有后端时：隐藏账号密码表单，只留「进入本地演示」，避免任意账号被当成登录成功
+function switchToLocalDemo(message, warn) {
+  serverMode = false;
+  const form = document.getElementById('loginForm');
+  form.hidden = true;
+  document.getElementById('loginError').hidden = true;
   document.getElementById('authTitle').textContent = '本地演示';
   document.getElementById('authSub').textContent = '数据只保存在本机，不会同步';
-  document.getElementById('loginSubmit').textContent = '进入本地演示';
-  showLoginNotice('当前未连接后端，账号密码不会被校验。正式使用请用电脑运行 python web.py，再通过局域网地址访问。', false);
-}
-
-// 页面被静态托管（如 GitHub Pages）：没有后端，不允许假装登录
-function blockLogin(message) {
-  demoLoginAllowed = false;
-  const submit = document.getElementById('loginSubmit');
-  submit.disabled = true;
-  submit.textContent = '未连接后端';
-  document.getElementById('loginAccount').disabled = true;
-  document.getElementById('loginPassword').disabled = true;
-  showLoginNotice(message, true);
+  document.getElementById('demoEnter').hidden = false;
+  showLoginNotice(message, warn);
 }
 
 async function detectBackend() {
@@ -5815,7 +5808,7 @@ async function detectBackend() {
 async function bootAuth() {
   if (IS_FILE_PROTOCOL) {
     setServerMode(false);
-    enableLocalDemo();
+    switchToLocalDemo('这是静态演示版，没有后端，无法登录指定账号。正式使用请用电脑运行 python web.py，再通过局域网地址访问。', false);
     return;
   }
 
@@ -5823,7 +5816,7 @@ async function bootAuth() {
   const backendReady = await detectBackend();
   if (!backendReady) {
     setServerMode(false);
-    blockLogin('这个地址没有运行后端服务，无法登录。请用电脑运行 python web.py，再用它提示的局域网地址访问。');
+    switchToLocalDemo('这个地址没有运行后端服务，无法登录。请用电脑运行 python web.py，再用它提示的局域网地址访问。', true);
     return;
   }
 
@@ -5846,6 +5839,11 @@ async function bootAuth() {
     await restoreSession(result.data.profile);
   }
 }
+
+document.getElementById('demoEnter').addEventListener('click', function () {
+  document.getElementById('loginError').hidden = true;
+  afterLogin(loadData('profile', null));
+});
 
 // 已登录会话恢复：先取回账号数据，再决定进入哪个页面并重绘
 async function restoreSession(profile) {
@@ -5881,13 +5879,7 @@ document.getElementById('loginForm').addEventListener('submit', async function (
   }
 
   if (!serverMode) {
-    if (!demoLoginAllowed) {
-      showAuthError('loginError', '当前没有连接到后端，无法登录。');
-      return;
-    }
-    // 本地文件演示没有后端，无法校验账号；数据只存在当前浏览器
-    document.getElementById('loginError').hidden = true;
-    afterLogin(loadData('profile', null));
+    showAuthError('loginError', '当前没有连接到后端，无法登录。');
     return;
   }
 
