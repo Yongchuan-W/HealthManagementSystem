@@ -3558,7 +3558,8 @@ body { color: var(--text); }
   cursor: pointer;
 }
 
-.mood-week .day .emoji { font-size: 16px; display: block; }
+.mood-week .day .emoji { font-size: 18px; display: block; line-height: 1.3; }
+.mood-week .day .mood-label { display: block; font-size: 11px; color: #6f5a3a; margin-top: 2px; }
 .mood-week .day .date { font-size: 10px; color: #a08d7d; }
 
 .mood-week .day.selected {
@@ -9709,22 +9710,43 @@ document.getElementById('saveMood').addEventListener('click', function () {
   showToast('今日心情已保存：' + currentMood);
 });
 
-// 回显今天已保存的心情
-const savedMood = loadData('moodLog', {})[toISODate(new Date())];
-if (savedMood) {
-  currentMood = savedMood.mood;
-  document.getElementById('moodNote').value = savedMood.note || '';
-  const moodBtn = document.querySelector('#moodPicker .mood-opt[data-mood="' + savedMood.mood + '"]');
-  if (moodBtn) moodBtn.classList.add('selected');
-  document.getElementById('moodTip').textContent = moodTips[savedMood.mood] || '';
+// 心情与表情包对应关系
+const moodEmojis = {
+  '开心': '😄',
+  '平静': '🙂',
+  '疲惫': '😴',
+  '焦虑': '😰',
+  '低落': '😔'
+};
+
+function moodEmojiOf(mood) {
+  return moodEmojis[mood] || '🙂';
 }
 
-// 一周心情记录：用表情展示，点击查看当天备注
+// 回显今天已保存的心情（登录后数据同步完成时也会再调用一次）
+function renderMoodToday() {
+  const saved = loadData('moodLog', {})[toISODate(new Date())];
+
+  document.querySelectorAll('#moodPicker .mood-opt').forEach(function (btn) {
+    btn.classList.toggle('selected', !!saved && btn.dataset.mood === saved.mood);
+  });
+
+  currentMood = saved ? saved.mood : '';
+  document.getElementById('moodNote').value = saved ? (saved.note || '') : '';
+  document.getElementById('moodTip').textContent = saved
+    ? saved.mood + '｜' + (saved.note || moodTips[saved.mood] || '')
+    : '选择今天的心情后，这里会给出对应的小贴士。';
+}
+
+renderMoodToday();
+
+// 一周心情记录：每天一张卡片，用表情包展示心情
 function renderMoodWeek() {
   const box = document.getElementById('moodWeek');
   if (!box) return;
 
   const today = new Date();
+  const todayKey = toISODate(today);
   const monday = addDays(today, -((today.getDay() + 6) % 7));
   const log = loadData('moodLog', {});
   box.innerHTML = '';
@@ -9735,9 +9757,11 @@ function renderMoodWeek() {
     const entry = log[key];
 
     const item = document.createElement('div');
-    item.className = 'day' + (key === toISODate(today) ? ' selected' : '');
-    item.innerHTML = '<span class="emoji">' + (entry ? moodEmojiOf(entry.mood) : '·') + '</span>' +
-      '<span class="date">' + (day.getMonth() + 1) + '/' + day.getDate() + '</span>';
+    item.className = 'day' + (key === todayKey ? ' selected' : '');
+    item.innerHTML =
+      '<span class="emoji">' + (entry ? moodEmojiOf(entry.mood) : '·') + '</span>' +
+      '<span class="mood-label">' + (entry ? entry.mood : '未记录') + '</span>' +
+      '<span class="date">' + (key === todayKey ? '今天' : (day.getMonth() + 1) + '/' + day.getDate()) + '</span>';
     item.title = entry ? (entry.mood + (entry.note ? '：' + entry.note : '')) : '未记录';
 
     item.addEventListener('click', function () {
@@ -9746,7 +9770,8 @@ function renderMoodWeek() {
         return;
       }
       document.getElementById('moodTip').textContent =
-        entry.mood + '｜' + (entry.note || moodTips[entry.mood] || '');
+        (day.getMonth() + 1) + ' 月 ' + day.getDate() + ' 日｜' + entry.mood +
+        (entry.note ? '：' + entry.note : '');
     });
 
     box.appendChild(item);
@@ -9912,6 +9937,7 @@ function refreshAllViews() {
   fillSportInputs();
   renderExercise('today');
   renderWeightChart();
+  renderMoodToday();
   renderMoodWeek();
   renderWeekPanel();
   renderReminders();
