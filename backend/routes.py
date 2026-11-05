@@ -198,6 +198,8 @@ def api_index(_ctx):
 
 @route("POST", "/api/auth/register", auth_required=False)
 def auth_register(ctx):
+    if auth.allowed_accounts():
+        raise ApiError(403, "当前仅限指定账号登录，暂不开放注册", "registration_closed")
     if auth.user_from_token(ctx.conn, ctx.token):
         raise ApiError(409, "当前已登录，无需重复注册")
     account = ctx.body.get("account")

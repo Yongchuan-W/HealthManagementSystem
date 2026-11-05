@@ -1911,37 +1911,6 @@ a { text-decoration: none; }
   font-size: 14px;
 }
 
-.login-hint {
-  margin-top: 16px;
-  padding: 9px 10px;
-  border-radius: 8px;
-  background: #f7f9fc;
-  color: #9aa3b2;
-  font-size: 12px;
-  text-align: center;
-}
-
-.login-hint b { color: #4a5568; letter-spacing: 1px; }
-
-.login-switch {
-  margin-top: 16px;
-  font-size: 13px;
-  color: #8a94a6;
-  text-align: center;
-}
-
-.login-switch button {
-  border: 0;
-  background: transparent;
-  padding: 0;
-  margin-left: 4px;
-  color: var(--teal);
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.login-switch button:hover { text-decoration: underline; }
-
 .mobile-hint {
   margin-top: 10px;
   font-size: 12px;
@@ -2956,8 +2925,6 @@ body { color: var(--text); }
   border-color: #c8a585;
   box-shadow: 0 0 0 3px #f3e8dd;
 }
-.login-hint { background: #eef6ef; color: #8b7d70; }
-.login-hint b { color: #8b4a22; }
 .login-error { color: #b3482f; }
 .pref-chip { background: #f5f8f1; border-color: #e4ece4; color: #6f6154; }
 .pref-chip.selected { background: #e4f0cf; border-color: #c8dcae; color: #6e3a18; }
@@ -3954,39 +3921,16 @@ body { color: var(--text); }
       <form id="loginForm" novalidate>
         <div class="login-field">
           <label for="loginAccount">账号</label>
-          <input id="loginAccount" type="text" autocomplete="username" placeholder="请输入账号" value="AAA">
+          <input id="loginAccount" type="text" autocomplete="username" placeholder="请输入账号">
         </div>
         <div class="login-field">
           <label for="loginPassword">密码</label>
-          <input id="loginPassword" type="password" autocomplete="current-password" placeholder="请输入密码" value="123456">
+          <input id="loginPassword" type="password" autocomplete="current-password" placeholder="请输入密码">
         </div>
         <div class="login-error" id="loginError" hidden></div>
         <button class="btn-primary login-btn" type="submit" id="loginSubmit">登录</button>
       </form>
 
-      <form id="registerForm" novalidate hidden>
-        <div class="login-field">
-          <label for="registerAccount">账号</label>
-          <input id="registerAccount" type="text" autocomplete="username" placeholder="2-32 位，字母、数字或下划线">
-        </div>
-        <div class="login-field">
-          <label for="registerPassword">密码</label>
-          <input id="registerPassword" type="password" autocomplete="new-password" placeholder="6-64 位">
-        </div>
-        <div class="login-field">
-          <label for="registerPassword2">确认密码</label>
-          <input id="registerPassword2" type="password" autocomplete="new-password" placeholder="再次输入密码">
-        </div>
-        <div class="login-error" id="registerError" hidden></div>
-        <button class="btn-primary login-btn" type="submit" id="registerSubmit">注册并登录</button>
-      </form>
-
-      <div class="login-switch" id="authSwitch">
-        <span id="authSwitchText">还没有账号？</span>
-        <button type="button" id="authSwitchBtn">立即注册</button>
-      </div>
-
-      <div class="login-hint">演示账号：<b>AAA</b>　密码：<b>123456</b></div>
       <div class="mobile-hint">手机与电脑连接同一 Wi-Fi 后访问：<br><a href="__MOBILE_URL__">__MOBILE_URL__</a></div>
     </div>
   </div>
@@ -5393,10 +5337,6 @@ const loginView = document.getElementById('loginView');
 const onboardingView = document.getElementById('onboardingView');
 const appShell = document.getElementById('appShell');
 
-// 演示账号（后端首次启动时会自动创建同名账号）
-const DEMO_ACCOUNT = 'AAA';
-const DEMO_PASSWORD = '123456';
-
 // ---------- 后端接口封装 ----------
 // 通过 python web.py 打开时走 /api/*；直接双击 static 版页面（file: 协议）时只能用本地演示逻辑
 const IS_FILE_PROTOCOL = window.location.protocol === 'file:';
@@ -5664,31 +5604,7 @@ async function hydrateFromServer() {
   applyBundle(bundle);
 }
 
-// ---------- 登录 / 注册面板切换 ----------
-let authMode = 'login';
-
-function setAuthMode(mode) {
-  authMode = mode === 'register' ? 'register' : 'login';
-  const isRegister = authMode === 'register';
-
-  document.getElementById('loginForm').hidden = isRegister;
-  document.getElementById('registerForm').hidden = !isRegister;
-  document.getElementById('authTitle').textContent = isRegister ? '创建账号' : '欢迎回来';
-  document.getElementById('authSub').textContent = isRegister
-    ? '注册后可在任意设备登录，数据自动同步'
-    : '登录后开始科学管理你的健康';
-  document.getElementById('authSwitchText').textContent = isRegister ? '已有账号？' : '还没有账号？';
-  document.getElementById('authSwitchBtn').textContent = isRegister ? '返回登录' : '立即注册';
-  document.getElementById('loginError').hidden = true;
-  document.getElementById('registerError').hidden = true;
-
-  const target = document.getElementById(isRegister ? 'registerAccount' : 'loginAccount');
-  if (target) target.focus();
-}
-
-document.getElementById('authSwitchBtn').addEventListener('click', function () {
-  setAuthMode(authMode === 'login' ? 'register' : 'login');
-});
+// ---------- 登录成功后的页面切换 ----------
 
 function showAuthError(id, message) {
   const box = document.getElementById(id);
@@ -5713,12 +5629,11 @@ function afterLogin(profile) {
   }
 }
 
-// 刚完成登录 / 注册：拉取账号信息后决定进入哪个页面
+// 刚完成登录：拉取账号信息后决定进入哪个页面
 async function afterAuthenticated() {
   const result = await api('/api/auth/me');
   if (!result.ok) {
-    showAuthError(authMode === 'register' ? 'registerError' : 'loginError',
-      result.data.error || '会话已失效，请重新登录');
+    showAuthError('loginError', result.data.error || '会话已失效，请重新登录');
     return false;
   }
   currentUser = result.data.user || currentUser;
@@ -5730,8 +5645,6 @@ async function afterAuthenticated() {
 function setServerMode(enabled) {
   serverMode = !!enabled;
   document.getElementById('logoutBtn').hidden = !serverMode;
-  document.getElementById('authSwitch').hidden = !serverMode;
-  if (!serverMode) setAuthMode('login');
 }
 
 // 打开页面时恢复已登录的会话；后端不可达则退回本地演示
@@ -5749,7 +5662,7 @@ async function bootAuth() {
   }
 
   if (!result) {
-    // 页面被静态托管（没有后端）时，继续使用演示账号 + localStorage
+    // 页面被静态托管（没有后端）时，继续使用本地演示数据 + localStorage
     setServerMode(false);
     return;
   }
@@ -5795,13 +5708,9 @@ document.getElementById('loginForm').addEventListener('submit', async function (
   }
 
   if (!serverMode) {
-    // 静态演示版：沿用本地演示账号
-    if (account === DEMO_ACCOUNT && password === DEMO_PASSWORD) {
-      document.getElementById('loginError').hidden = true;
-      afterLogin(loadData('profile', null));
-    } else {
-      showAuthError('loginError', '账号或密码不正确，请使用演示账号 AAA / 123456');
-    }
+    // 静态演示版没有后端，无法校验账号；数据只存在当前浏览器
+    document.getElementById('loginError').hidden = true;
+    afterLogin(loadData('profile', null));
     return;
   }
 
@@ -5822,52 +5731,6 @@ document.getElementById('loginForm').addEventListener('submit', async function (
   } finally {
     submit.disabled = false;
     submit.textContent = '登录';
-  }
-});
-
-document.getElementById('registerForm').addEventListener('submit', async function (event) {
-  event.preventDefault();
-
-  const account = document.getElementById('registerAccount').value.trim();
-  const password = document.getElementById('registerPassword').value;
-  const confirm = document.getElementById('registerPassword2').value;
-  const submit = document.getElementById('registerSubmit');
-
-  if (!serverMode) {
-    showAuthError('registerError', '当前为静态演示版，不支持注册账号');
-    return;
-  }
-  if (account.length < 2 || account.length > 32) {
-    showAuthError('registerError', '账号需为 2-32 个字符');
-    return;
-  }
-  if (password.length < 6 || password.length > 64) {
-    showAuthError('registerError', '密码需为 6-64 个字符');
-    return;
-  }
-  if (password !== confirm) {
-    showAuthError('registerError', '两次输入的密码不一致');
-    return;
-  }
-
-  submit.disabled = true;
-  submit.textContent = '注册中…';
-  try {
-    const result = await api('/api/auth/register', { method: 'POST', body: { account, password } });
-    if (!result.ok) {
-      showAuthError('registerError', result.data.error || '注册失败，请稍后再试');
-      return;
-    }
-    document.getElementById('registerError').hidden = true;
-    currentUser = result.data.user || null;
-
-    // 注册成功后新账号还没有档案，直接进入引导页
-    await afterAuthenticated();
-  } catch (error) {
-    showAuthError('registerError', '无法连接服务器，请确认服务已启动');
-  } finally {
-    submit.disabled = false;
-    submit.textContent = '注册并登录';
   }
 });
 
@@ -10318,7 +10181,7 @@ def main():
     lan_ip = get_lan_ip()
     mobile_url = "http://%s:%d/" % (lan_ip, port) if lan_ip != "127.0.0.1" else local_url
 
-    # 初始化数据库（health.db）并确保演示账号存在
+    # 初始化数据库，并按白名单创建指定账号（未配置时创建演示账号）
     prepare()
 
     # 把页面与手机访问地址注入后端处理器

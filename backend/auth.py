@@ -10,6 +10,7 @@ from __future__ import annotations
 import base64
 import hashlib
 import hmac
+import os
 import secrets
 from datetime import datetime, timedelta
 from urllib.parse import unquote
@@ -71,6 +72,28 @@ def clean_password(value):
     return password
 
 
+# ---------- 指定账号白名单 ----------
+
+def allowed_accounts():
+    """读取 HM_ALLOWED_USERS（格式 `账号:密码,账号:密码`）。
+
+    来自环境变量或本地 ai_local.env；未配置时返回空字典，表示不启用白名单。
+    """
+    raw = os.environ.get("HM_ALLOWED_USERS", "").strip()
+    if not raw:
+        return {}
+
+    pairs = {}
+    for item in raw.split(","):
+        account, sep, password = item.strip().partition(":")
+        if not sep:
+            continue
+        account, password = account.strip(), password.strip()
+        if account and password:
+            pairs[account] = password
+    return pairs
+
+
 # ---------- 会话 ----------
 
 def _fmt(moment):
@@ -124,7 +147,14 @@ def user_from_token(conn, token):
         conn.execute("DELETE FROM sessions WHERE token = ?", (token,))
         return None
 
-    return conn.execute("SELECT * FROM users WHERE id = ?", (row["user_id"],)).fetchone()
+    user = conn.execute("SELECT * FROM users WHERE id = ?", (row["user_id"],)).fetchone()
+
+    # 启用白名单后，名单外账号的旧会话立即失效
+    allowed = allowed_accounts()
+    if user is not None and allowed and user["account"] not in allowed:
+        conn.execute("DELETE FROM sessions WHERE token = ?", (token,))
+        return None
+    return user
 
 
 def require_user(conn, token):
@@ -195,8 +225,14 @@ def register(conn, account, password, nickname=""):
 
 
 def login(conn, account, password):
+    account = str(account or "").strip()
+
+    allowed = allowed_accounts()
+    if allowed and account not in allowed:
+        raise ApiError(401, "账号或密码不正确", "invalid_credentials")
+
     row = conn.execute(
-        "SELECT * FROM users WHERE account = ?", (str(account or "").strip(),)
+        "SELECT * FROM users WHERE account = ?", (account,)
     ).fetchone()
     if row is None or not verify_password(str(password or ""), row["password_hash"], row["salt"]):
         raise ApiError(401, "账号或密码不正确", "invalid_credentials")
@@ -219,8 +255,28 @@ def change_password(conn, user, old_password, new_password, keep_token=None):
         )
 
 
+def ensure_allowed_users(conn):
+    """按 HM_ALLOWED_USERS 创建或同步指定账号；密码以配置为准。"""
+    for account, password in allowed_accounts().items():
+        try:
+            clean_account(account)
+            clean_password(password)
+        except ApiError:
+            continue
+
+        row = conn.execute("SELECT * FROM users WHERE account = ?", (account,)).fetchone()
+        if row is None:
+            register(conn, account, password, account)
+        elif not verify_password(password, row["password_hash"], row["salt"]):
+            password_hash, salt = hash_password(password)
+            conn.execute(
+                "UPDATE users SET password_hash = ?, salt = ? WHERE id = ?",
+                (password_hash, salt, row["id"]),
+            )
+
+
 def ensure_demo_user(conn):
-    """首次启动时创建演示账号 AAA / 123456。"""
+    """未配置白名单时，首次启动创建演示账号 AAA / 123456。"""
     if conn.execute("SELECT id FROM users WHERE account = 'AAA'").fetchone():
         return
     register(conn, "AAA", "123456", "张三")
