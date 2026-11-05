@@ -1678,6 +1678,95 @@ a { text-decoration: none; }
 
 .upload-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
 
+.upload-meal {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #6b7688;
+}
+
+.upload-meal select {
+  border: 1px solid #d8dee9;
+  border-radius: 7px;
+  padding: 5px 8px;
+  font-size: 12px;
+  color: var(--text);
+  background: #fff;
+}
+
+.ai-foods { margin-top: 6px; display: flex; flex-direction: column; gap: 4px; }
+
+.ai-food {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--text);
+}
+
+.ai-food b { color: #2b9a7d; font-weight: 600; white-space: nowrap; }
+
+.ai-total {
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #eefaf6;
+  color: #2b7f6b;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.ai-note { margin-top: 6px; font-size: 11.5px; color: #8a94a6; line-height: 1.7; }
+
+.report-items {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.report-item-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px 10px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: #f7faf5;
+  font-size: 12px;
+}
+
+.report-item-row.is-abnormal { background: #fdf2f3; }
+
+.report-item-row .ri-name { color: #4a5568; }
+
+.report-item-row .ri-value {
+  color: #2b7f6b;
+  font-weight: 600;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.report-item-row.is-abnormal .ri-value { color: #d9534f; }
+
+.report-item-row .ri-unit { font-size: 11px; font-weight: 400; color: #8a94a6; }
+
+.report-item-row .ri-ref {
+  grid-column: 1 / -1;
+  font-style: normal;
+  font-size: 11px;
+  color: #9aa7a0;
+}
+
+.report-summary.is-warn {
+  background: #fdf2f3;
+  border-color: #f8e2e6;
+  color: #a94442;
+}
+
 .btn-ghost-sm {
   background: #fff;
   border: 1px solid #d8dee9;
@@ -2898,8 +2987,16 @@ body { color: var(--text); }
 }
 .chip { background: #e4f0cf; color: #6e3a18; }
 .report-summary { background: #f1f8e9; border-color: #dfeacd; color: #6e5a3a; }
+.report-summary.is-warn { background: #fdf2f3; border-color: #f8e2e6; color: #a94442; }
 .report-item { background: #f4f8f1; }
 .report-item .value { color: #4a3525; }
+.report-item-row { background: #f7faf5; }
+.report-item-row.is-abnormal { background: #fdf2f3; }
+.report-item-row .ri-name { color: #4a3525; }
+.report-item-row .ri-value { color: #6e3a18; }
+.report-item-row.is-abnormal .ri-value { color: #c0392b; }
+.ai-total { background: #f1f8e9; color: #6e3a18; }
+.ai-food b { color: #6e3a18; }
 
 /* 弹窗与表单 */
 .modal-head { background: linear-gradient(135deg, #8b4a22, #a9653a); }
@@ -4331,7 +4428,8 @@ body { color: var(--text); }
               <div class="value"><span id="reportGlucose">5.0</span><span class="unit">mmol/L</span></div>
             </div>
           </div>
-          <div class="report-summary">综合分析：各项指标总体处于正常范围。建议保持每周 3 次有氧运动，晚餐适当补充优质蛋白，并在 3 个月后复查。</div>
+          <div class="report-items" id="reportItems" hidden></div>
+          <div class="report-summary" id="reportSummary">综合分析：各项指标总体处于正常范围。建议保持每周 3 次有氧运动，晚餐适当补充优质蛋白，并在 3 个月后复查。</div>
           <div class="report-actions">
             <button class="btn-primary" id="applyReport">同步到核心体征</button>
           </div>
@@ -4489,9 +4587,18 @@ body { color: var(--text); }
                 <div class="upload-file" id="dietFileName"></div>
                 <div class="upload-status" id="dietStatus"></div>
                 <div class="upload-result" id="dietResult" hidden></div>
+                <div class="upload-meal" id="dietMealRow" hidden>
+                  <label for="dietMealType">记录到</label>
+                  <select id="dietMealType">
+                    <option value="早餐">早餐</option>
+                    <option value="午餐" selected>午餐</option>
+                    <option value="晚餐">晚餐</option>
+                    <option value="加餐">加餐</option>
+                  </select>
+                </div>
                 <div class="upload-actions">
                   <button class="btn-ghost-sm" type="button" id="dietReselect">重新上传</button>
-                  <button class="btn-ghost-sm" type="button" id="dietFillMeal" hidden>填入午餐记录</button>
+                  <button class="btn-ghost-sm" type="button" id="dietFillMeal" hidden>加入今日饮食</button>
                 </div>
               </div>
             </div>
@@ -6358,9 +6465,12 @@ const dietFileName = document.getElementById('dietFileName');
 const dietStatus = document.getElementById('dietStatus');
 const dietResult = document.getElementById('dietResult');
 const dietFillMeal = document.getElementById('dietFillMeal');
+const dietMealRow = document.getElementById('dietMealRow');
+const dietMealType = document.getElementById('dietMealType');
 
 let dietImageUrl = null;        // 本地预览地址
 let pendingMealImage = '';      // 待写入下一条饮食记录的图片地址
+let mealRecognition = null;     // 最近一次识别出的食物与营养
 
 function chooseDietImage() {
   dietImageInput.value = '';
@@ -6374,6 +6484,87 @@ document.getElementById('dietReselect').addEventListener('click', chooseDietImag
 dietUploadEmpty.addEventListener('click', function (event) {
   if (event.target.tagName !== 'BUTTON') chooseDietImage();
 });
+
+// 按当前时间推测该记录到哪一餐
+function defaultMealType() {
+  const hour = new Date().getHours();
+  if (hour < 10) return '早餐';
+  if (hour < 15) return '午餐';
+  if (hour < 21) return '晚餐';
+  return '加餐';
+}
+
+function nutritionNumber(value, digits) {
+  const number = Number(value);
+  const safe = isFinite(number) ? number : 0;
+  return digits ? Math.round(safe * 10) / 10 : Math.round(safe);
+}
+
+// 渲染识别出的食物清单、合计营养与说明
+function renderMealRecognition(result) {
+  mealRecognition = result || null;
+  const foods = (result && result.foods) || [];
+  const total = (result && result.total) || {};
+
+  if (!foods.length) {
+    dietResult.innerHTML = '<div>没有识别出明确的食物，可以换一张更清晰的照片，或在下方手动记录。</div>';
+    dietResult.hidden = false;
+    dietMealRow.hidden = true;
+    dietFillMeal.hidden = true;
+    return;
+  }
+
+  const rows = foods.map(function (item) {
+    return '<div class="ai-food"><span>' + escapeHtml(item.name) +
+      (item.portion ? ' · ' + escapeHtml(item.portion) : '') + '</span><b>' +
+      nutritionNumber(item.kcal) + ' kcal</b></div>';
+  }).join('');
+
+  const note = result.note
+    ? '<div class="ai-note">' + escapeHtml(result.note) + '</div>'
+    : '';
+
+  dietResult.innerHTML =
+    '<div class="ai-foods">' + rows + '</div>' +
+    '<div class="ai-total">共约 ' + nutritionNumber(total.kcal) + ' kcal · 蛋白质 ' +
+    nutritionNumber(total.protein, true) + 'g · 碳水 ' + nutritionNumber(total.carb, true) +
+    'g · 脂肪 ' + nutritionNumber(total.fat, true) + 'g · 纤维 ' +
+    nutritionNumber(total.fiber, true) + 'g</div>' + note;
+  dietResult.hidden = false;
+  dietMealRow.hidden = false;
+  dietFillMeal.hidden = false;
+}
+
+// 调用后端多模态识别接口
+async function recognizeMealImage(url) {
+  dietStatus.className = 'upload-status scanning';
+  dietStatus.textContent = 'AI 正在识别食物与热量...';
+  mealRecognition = null;
+  dietResult.hidden = true;
+  dietMealRow.hidden = true;
+  dietFillMeal.hidden = true;
+
+  const response = await api('/api/ai/vision', {
+    method: 'POST',
+    body: { task: 'meal', imageUrl: url }
+  });
+
+  dietStatus.className = 'upload-status';
+
+  if (!response.ok) {
+    const message = (response.data && response.data.error) || '图片识别失败';
+    dietStatus.textContent = message + '。图片已保存，也可以直接在下方手动记录。';
+    showToast(message);
+    return;
+  }
+
+  const result = (response.data && response.data.result) || {};
+  renderMealRecognition(result);
+  const left = response.data.quotaLeft;
+  dietStatus.textContent = '识别完成' +
+    (typeof left === 'number' ? '（今日还可识别 ' + left + ' 次）' : '') +
+    '，确认餐次后点「加入今日饮食」。';
+}
 
 dietImageInput.addEventListener('change', function () {
   const file = dietImageInput.files[0];
@@ -6392,32 +6583,62 @@ dietImageInput.addEventListener('change', function () {
   dietUploadEmpty.hidden = true;
   dietPreview.hidden = false;
 
-  // 目前版本没有接入视觉识别模型：保留图片预览，但不编造识别结果
-  dietStatus.className = 'upload-status';
-  dietStatus.textContent = '图片上传中...';
+  mealRecognition = null;
   pendingMealImage = '';
+  dietResult.hidden = true;
+  dietResult.innerHTML = '';
+  dietMealRow.hidden = true;
+  dietFillMeal.hidden = true;
+  dietMealType.value = defaultMealType();
+
+  if (!serverMode) {
+    dietStatus.className = 'upload-status';
+    dietStatus.textContent = '静态演示版无法连接识别服务，请在下方手动记录饮食。';
+    return;
+  }
+
+  dietStatus.className = 'upload-status scanning';
+  dietStatus.textContent = '图片上传中...';
 
   uploadImage(file).then(function (url) {
     pendingMealImage = url || '';
-    dietStatus.textContent = url
-      ? '图片已保存，会随下一条饮食记录一起存档。'
-      : '当前为静态演示模式，图片只做本地预览，不会保存。';
+    if (!url) {
+      dietStatus.className = 'upload-status';
+      dietStatus.textContent = '图片上传失败，暂时无法识别；可在下方手动记录。';
+      return;
+    }
+    return recognizeMealImage(url);
   }).catch(function (error) {
+    dietStatus.className = 'upload-status';
     dietStatus.textContent = '图片上传失败：' + error.message + '。仍可手动记录饮食。';
   });
-
-  dietResult.innerHTML = '<div>请在下方「今日饮食记录」中按实际食物手动填写（例如：米饭 鸡胸肉 西兰花），' +
-    '系统会按食物成分表估算热量与蛋白质等营养。配置豆包视觉模型后可自动识别。</div>';
-  dietResult.hidden = false;
-  dietFillMeal.hidden = true;
 });
 
-// 把识别结果填入午餐记录
+// 把识别结果写入选定的餐次
 dietFillMeal.addEventListener('click', function () {
-  const lunchInput = document.querySelector('.meal input[data-meal="午餐"]');
-  if (!lunchInput) return;
-  lunchInput.value = dietFillMeal.dataset.foods || '';
-  showToast('已将识别结果填入午餐记录');
+  if (!mealRecognition || !(mealRecognition.foods || []).length) {
+    showToast('没有可记录的食物');
+    return;
+  }
+
+  const meal = dietMealType.value || '午餐';
+  const text = mealRecognition.foods.map(function (item) {
+    return item.name;
+  }).join(' ');
+  const total = mealRecognition.total || {};
+
+  saveMealRecord(meal, text, {
+    kcal: nutritionNumber(total.kcal),
+    protein: nutritionNumber(total.protein, true),
+    carb: nutritionNumber(total.carb, true),
+    fat: nutritionNumber(total.fat, true),
+    fiber: nutritionNumber(total.fiber, true)
+  });
+
+  dietFillMeal.hidden = true;
+  dietMealRow.hidden = true;
+  dietResult.innerHTML = '<div>已记录到今天的' + escapeHtml(meal) + '，可以继续上传下一张照片。</div>';
+  showToast('已加入今天的' + meal + '：' + text);
 });
 
 // ---------- 体检报告图片识别 ----------
@@ -6433,19 +6654,66 @@ let reportImageUrl = null;      // 本地预览地址
 let reportImagePath = '';       // 已上传到后端的图片地址
 let reportUploadTask = null;    // 正在上传的任务，点击同步前先等它完成
 
-// 未接入 OCR 时的示例指标（识别结果与同步都基于这份数据）
-const reportDemoMetrics = { weight: 64.8, fat: 24.0, systolic: 112, diastolic: 72, glucose: 5.0 };
-let reportMetrics = Object.assign({}, reportDemoMetrics);
+// 识别结果可能缺少某些指标，用 null 表示“报告上没有”，避免误填 0
+let reportMetrics = { weight: null, fat: null, systolic: null, diastolic: null, glucose: null };
 let reportMetricsDate = toISODate(new Date());
+
+function reportNumber(value) {
+  if (value === null || value === undefined || value === '') return null;
+  const number = Number(value);
+  return isFinite(number) ? number : null;
+}
+
+function reportText(value, digits) {
+  return value === null ? '—' : value.toFixed(digits === undefined ? 1 : digits);
+}
+
+// 渲染识别出的报告明细与总结
+function renderReportItems(items, abnormal, hasMetrics) {
+  const box = document.getElementById('reportItems');
+  const summary = document.getElementById('reportSummary');
+  const list = (items || []).filter(function (item) {
+    return item && item.name;
+  });
+
+  if (!list.length) {
+    box.hidden = true;
+    box.innerHTML = '';
+  } else {
+    box.innerHTML = list.slice(0, 60).map(function (item) {
+      return '<div class="report-item-row' + (item.abnormal ? ' is-abnormal' : '') + '">' +
+        '<span class="ri-name">' + escapeHtml(item.name) + '</span>' +
+        '<b class="ri-value">' + escapeHtml(item.value) +
+        (item.unit ? '<span class="ri-unit"> ' + escapeHtml(item.unit) + '</span>' : '') + '</b>' +
+        (item.ref ? '<em class="ri-ref">参考范围 ' + escapeHtml(item.ref) + '</em>' : '') +
+        '</div>';
+    }).join('');
+    box.hidden = false;
+  }
+
+  if (abnormal && abnormal.length) {
+    summary.className = 'report-summary is-warn';
+    summary.textContent = '有 ' + abnormal.length + ' 项需要留意：' + abnormal.join('；') +
+      '。识别结果仅供参考，请以报告原文和医生意见为准。';
+  } else if (list.length) {
+    summary.className = 'report-summary';
+    summary.textContent = '这些指标未见明显异常标记。识别结果仅供参考，请以报告原文和医生意见为准。';
+  } else {
+    summary.className = 'report-summary';
+    summary.textContent = hasMetrics
+      ? '已回填基础指标。识别结果仅供参考，请以报告原文和医生意见为准。'
+      : '这次没有识别到可回填的指标，可以换一张更清晰的照片，或手动填写核心体征。';
+  }
+}
 
 // 把一份报告指标渲染到结果卡片
 function renderReportResult(record, date) {
   reportMetrics = {
-    weight: Number(record.weight) || 0,
-    fat: Number(record.fat) || 0,
-    systolic: Number(record.systolic) || 0,
-    diastolic: Number(record.diastolic) || 0,
-    glucose: Number(record.glucose) || 0
+    weight: reportNumber(record.weight),
+    fat: reportNumber(record.fat),
+    systolic: reportNumber(record.systolic),
+    diastolic: reportNumber(record.diastolic),
+    glucose: reportNumber(record.glucose)
   };
   reportMetricsDate = date || toISODate(new Date());
 
@@ -6458,19 +6726,60 @@ function renderReportResult(record, date) {
     reportPreview.hidden = false;
   }
 
-  document.getElementById('reportWeight').textContent = reportMetrics.weight.toFixed(1);
-  document.getElementById('reportFat').textContent = reportMetrics.fat.toFixed(1);
+  document.getElementById('reportWeight').textContent = reportText(reportMetrics.weight);
+  document.getElementById('reportFat').textContent = reportText(reportMetrics.fat);
   document.getElementById('reportBp').textContent =
-    reportMetrics.systolic + '/' + reportMetrics.diastolic;
-  document.getElementById('reportGlucose').textContent = reportMetrics.glucose.toFixed(1);
-  document.getElementById('reportBmi').textContent = reportMetrics.weight
-    ? (reportMetrics.weight / Math.pow(currentHeightMeters(), 2)).toFixed(1)
-    : '—';
+    reportMetrics.systolic === null || reportMetrics.diastolic === null
+      ? '—'
+      : Math.round(reportMetrics.systolic) + '/' + Math.round(reportMetrics.diastolic);
+  document.getElementById('reportGlucose').textContent = reportText(reportMetrics.glucose);
+
+  const bmi = reportNumber(record.bmi) || (reportMetrics.weight
+    ? reportMetrics.weight / Math.pow(currentHeightMeters(), 2)
+    : null);
+  document.getElementById('reportBmi').textContent = reportText(bmi);
 
   const parsed = parseISODate(reportMetricsDate);
   document.getElementById('reportDateText').textContent =
     parsed ? formatYMD(parsed) : reportMetricsDate;
+
+  renderReportItems(record.items, record.abnormal,
+    reportMetrics.weight !== null || reportMetrics.systolic !== null ||
+    reportMetrics.glucose !== null);
   reportResult.hidden = false;
+}
+
+// 调用后端 OCR 接口识别体检报告
+async function recognizeReportImage(url) {
+  reportStatus.className = 'upload-status scanning';
+  reportStatus.textContent = 'AI 正在识别报告指标...';
+
+  const response = await api('/api/ai/vision', {
+    method: 'POST',
+    body: { task: 'report', imageUrl: url }
+  });
+
+  reportStatus.className = 'upload-status';
+
+  if (!response.ok) {
+    const message = (response.data && response.data.error) || '识别失败';
+    reportStatus.textContent = message + '。可以换一张清晰照片，或手动填写核心体征。';
+    showToast(message);
+    return;
+  }
+
+  const result = (response.data && response.data.result) || {};
+  renderReportResult(Object.assign({ imageUrl: reportImagePath }, result),
+    result.date || toISODate(new Date()));
+
+  const found = ['weight', 'fat', 'systolic', 'diastolic', 'glucose'].filter(function (key) {
+    return reportNumber(result[key]) !== null;
+  }).length;
+  const left = response.data.quotaLeft;
+  reportStatus.textContent = '识别完成，回填 ' + found + ' 项基础指标' +
+    (typeof left === 'number' ? '（今日还可识别 ' + left + ' 次）' : '') +
+    '，核对后点「同步到核心体征」。';
+  showToast('报告识别完成，请核对结果');
 }
 
 // 同一天的报告只保留一条，避免重复堆积
@@ -6522,22 +6831,34 @@ reportImageInput.addEventListener('change', function () {
   reportUploadEmpty.hidden = true;
   reportPreview.hidden = false;
 
-  reportStatus.className = 'upload-status scanning';
-  reportStatus.textContent = 'AI 正在识别报告指标...';
   reportResult.hidden = true;
-
   reportImagePath = '';
+
+  if (!serverMode) {
+    reportStatus.className = 'upload-status';
+    reportStatus.textContent = '静态演示版无法调用 OCR，请在下方手动填写核心体征。';
+    return;
+  }
+
+  reportStatus.className = 'upload-status scanning';
+  reportStatus.textContent = '图片上传中，随后开始识别...';
+
   reportUploadTask = uploadImage(file).then(function (url) {
     reportImagePath = url || '';
     return reportImagePath;
   });
 
-  setTimeout(function () {
+  reportUploadTask.then(function (url) {
+    if (!url) {
+      reportStatus.className = 'upload-status';
+      reportStatus.textContent = '图片上传失败，无法识别；可以手动填写核心体征。';
+      return;
+    }
+    return recognizeReportImage(url);
+  }).catch(function (error) {
     reportStatus.className = 'upload-status';
-    reportStatus.textContent = '当前未接入 OCR，以下为示例指标，请按实际报告修改';
-    renderReportResult(reportDemoMetrics, toISODate(new Date()));
-    showToast('已填入示例指标（未接入 OCR）');
-  }, 1100);
+    reportStatus.textContent = '图片识别失败：' + error.message + '。可以手动填写核心体征。';
+  });
 });
 
 // 将识别结果同步到核心体征，并把这份报告存档
@@ -6553,19 +6874,37 @@ document.getElementById('applyReport').addEventListener('click', async function 
     reportUploadTask = null;
   }
 
-  document.getElementById('weightValue').textContent = reportMetrics.weight.toFixed(1);
-  document.getElementById('fatValue').textContent = reportMetrics.fat.toFixed(1);
-  document.getElementById('bpValue').textContent =
-    reportMetrics.systolic + '/' + reportMetrics.diastolic;
-  document.getElementById('glucoseValue').textContent = reportMetrics.glucose.toFixed(1);
+  const hasAny = reportMetrics.weight !== null || reportMetrics.fat !== null ||
+    reportMetrics.systolic !== null || reportMetrics.diastolic !== null ||
+    reportMetrics.glucose !== null;
+  if (!hasAny) {
+    showToast('还没有可同步的指标，请先上传报告或手动填写');
+    return;
+  }
 
-  // BMI 由体重和身高算出，不直接写入固定值
-  setBmiDisplay(reportMetrics.weight / Math.pow(currentHeightMeters(), 2));
+  if (reportMetrics.weight !== null) {
+    document.getElementById('weightValue').textContent = reportMetrics.weight.toFixed(1);
+    // 体检同步的体重也进入趋势记录
+    addWeightRecord(reportMetrics.weight);
+    // BMI 由体重和身高算出，不直接写入固定值
+    setBmiDisplay(reportMetrics.weight / Math.pow(currentHeightMeters(), 2));
+  }
 
-  // 体检同步的体重也进入趋势记录
-  addWeightRecord(reportMetrics.weight);
-  saveData('bp', { systolic: reportMetrics.systolic, diastolic: reportMetrics.diastolic });
-  saveData('glucose', reportMetrics.glucose);
+  if (reportMetrics.fat !== null) {
+    document.getElementById('fatValue').textContent = reportMetrics.fat.toFixed(1);
+  }
+
+  if (reportMetrics.systolic !== null && reportMetrics.diastolic !== null) {
+    document.getElementById('bpValue').textContent =
+      Math.round(reportMetrics.systolic) + '/' + Math.round(reportMetrics.diastolic);
+    saveData('bp', { systolic: reportMetrics.systolic, diastolic: reportMetrics.diastolic });
+  }
+
+  if (reportMetrics.glucose !== null) {
+    document.getElementById('glucoseValue').textContent = reportMetrics.glucose.toFixed(1);
+    saveData('glucose', reportMetrics.glucose);
+  }
+
   saveReportRecord({
     date: reportMetricsDate,
     weight: reportMetrics.weight,
