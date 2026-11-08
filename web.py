@@ -10613,7 +10613,8 @@ def build_ssl_context():
 
 
 def main():
-    port = find_free_port()
+    # 服务器部署时用 HM_PORT 固定端口；本机未配置时从 8000 起自动找空闲端口
+    port = int(os.environ.get("HM_PORT", "0") or 0) or find_free_port()
     tls = build_ssl_context()
     scheme = "https" if tls else "http"
     local_url = "%s://127.0.0.1:%d/" % (scheme, port)
@@ -10629,8 +10630,9 @@ def main():
     HealthAppHandler.page_html = PAGE_HTML
     HealthAppHandler.mobile_url = mobile_url
 
-    # 服务启动后 0.8 秒自动打开浏览器
-    threading.Timer(0.8, lambda: webbrowser.open(local_url)).start()
+    # 本机使用时自动打开浏览器；服务器部署（HM_NO_BROWSER=1 或非 Windows）不弹窗
+    if os.name == "nt" and os.environ.get("HM_NO_BROWSER", "") != "1":
+        threading.Timer(0.8, lambda: webbrowser.open(local_url)).start()
 
     # 监听 0.0.0.0，手机与电脑在同一 Wi-Fi 下即可访问
     server = ThreadingHTTPServer(("0.0.0.0", port), HealthAppHandler)
@@ -10640,6 +10642,9 @@ def main():
     print("健康管理系统已启动")
     print("电脑访问：", local_url)
     print("手机访问：", mobile_url, "（需连接同一 Wi-Fi）")
+    public_url = os.environ.get("HM_PUBLIC_URL", "").strip()
+    if public_url:
+        print("公网访问：", public_url)
     print("接口地址：", local_url + "api/health")
     print("数据文件：health.db（与本文件同目录）")
     if tls:
