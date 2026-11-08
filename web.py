@@ -5626,11 +5626,15 @@ function scheduleSync() {
 
 async function flushSync() {
   syncTimer = null;
-  if (!serverMode || !currentUser) return;
+  if (!serverMode || !currentUser) return false;
   try {
-    await api('/api/sync/import', { method: 'POST', body: buildSyncPayload() });
+    const result = await api('/api/sync/import', { method: 'POST', body: buildSyncPayload() });
+    if (!result.ok) throw new Error(result.data.error || '保存失败');
+    return true;
   } catch (error) {
-    // 断网时保留本地数据，下次保存会再次尝试
+    // 失败时保留本地数据，并明确提示，避免用户以为已经保存
+    showToast('数据未能保存到服务器，请检查网络后重试');
+    return false;
   }
 }
 
@@ -5719,10 +5723,13 @@ async function hydrateFromServer() {
   }
   if (!bundle) return;
 
-  // 只有「接入账号之前」的旧版本机数据才迁移，避免把上一个账号的数据写进新账号
-  const isLegacy = hasLocalData() && !localOwner();
-  if (!bundleHasData(bundle) && isLegacy) {
-    await flushSync();
+  // 本机有数据时先迁移：未绑定账号的旧版数据，或属于当前账号但服务器还没有记录
+  const owner = localOwner();
+  const sameOwner = !!(owner && currentUser && owner === String(currentUser.id));
+  const isLegacy = hasLocalData() && !owner;
+  if (!bundleHasData(bundle) && (isLegacy || sameOwner)) {
+    const pushed = await flushSync();
+    if (!pushed) return;   // 推不上去就保留本机数据，不用空数据覆盖
     try {
       const again = await api('/api/sync/export');
       if (again.ok) bundle = again.data;
@@ -5854,6 +5861,10 @@ async function restoreSession(profile) {
 }
 
 document.getElementById('logoutBtn').addEventListener('click', async function () {
+  // 退出前先确保最后一次修改已经写入服务器，否则直接把本地数据清掉会真的丢失
+  const saved = await flushSync();
+  if (serverMode && !saved) return;
+
   if (serverMode) {
     try {
       await api('/api/auth/logout', { method: 'POST' });
@@ -5864,6 +5875,17 @@ document.getElementById('logoutBtn').addEventListener('click', async function ()
   // 清掉本机的账号数据，避免下一个登录的账号读到上一个账号的内容
   clearLocalData();
   window.location.reload();
+});
+
+// 关闭页面或切到后台时，把还没来得及提交的修改补发一次
+window.addEventListener('pagehide', function () {
+  if (!serverMode || !currentUser) return;
+  try {
+    const payload = new Blob([JSON.stringify(buildSyncPayload())], { type: 'application/json' });
+    navigator.sendBeacon('/api/sync/import', payload);
+  } catch (error) {
+    // 浏览器不支持时忽略，下次打开仍会同步
+  }
 });
 
 document.getElementById('loginForm').addEventListener('submit', async function (event) {
