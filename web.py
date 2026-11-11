@@ -2431,6 +2431,8 @@ a { text-decoration: none; }
 .news-img.green  { background: linear-gradient(135deg, #e8f8f2, #d6f2e8); color: #3fc7a4; }
 .news-img.blue   { background: linear-gradient(135deg, #eaf2ff, #dbe8ff); color: #5b8def; }
 .news-img.purple { background: linear-gradient(135deg, #efebff, #e2dcff); color: #7f74e8; }
+.news-img.orange { background: linear-gradient(135deg, #fff1e6, #ffe3cc); color: #e98b3c; }
+.news-img.pink   { background: linear-gradient(135deg, #ffeef4, #ffdfe9); color: #e8709a; }
 
 .news-body { padding: 18px; }
 
@@ -2438,6 +2440,15 @@ a { text-decoration: none; }
 .news-cat.green  { color: #27b389; }
 .news-cat.blue   { color: #5b8def; }
 .news-cat.purple { color: #7f74e8; }
+.news-cat.orange { color: #e98b3c; }
+.news-cat.pink   { color: #e8709a; }
+
+.news-title mark {
+  background: #fff3c4;
+  color: inherit;
+  border-radius: 3px;
+  padding: 0 1px;
+}
 
 .news-title {
   font-size: 15px;
@@ -3585,6 +3596,30 @@ body { color: var(--text); }
 }
 
 .news-count { font-size: 12px; color: #8b7d70; }
+
+/* 热门搜索词 */
+.news-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0 4px;
+  font-size: 12px;
+  color: #a08d7d;
+}
+
+.news-tag {
+  padding: 5px 11px;
+  border: 1px solid #e8ded1;
+  border-radius: 99px;
+  background: #fff;
+  color: #7a644f;
+  font-size: 12px;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.news-tag:hover { background: #fdf6ec; border-color: #dcc7a9; }
+.news-tag.active { background: #f6ead9; border-color: #d9b98f; color: #6e3a18; }
 
 .news-refresh {
   display: inline-flex;
@@ -5117,6 +5152,15 @@ body { color: var(--text); }
         <button class="news-refresh" id="newsRefresh" type="button">
           <svg class="icon"><use href="#i-refresh"/></svg>刷新
         </button>
+      </div>
+      <div class="news-tags" id="newsTags">
+        <span>热门：</span>
+        <button class="news-tag" type="button" data-tag="失眠">失眠</button>
+        <button class="news-tag" type="button" data-tag="减肥">减肥</button>
+        <button class="news-tag" type="button" data-tag="颈椎">颈椎</button>
+        <button class="news-tag" type="button" data-tag="早餐">早餐</button>
+        <button class="news-tag" type="button" data-tag="血压">血压</button>
+        <button class="news-tag" type="button" data-tag="护眼">护眼</button>
       </div>
       <div class="news-empty" id="newsEmpty" hidden>没有找到相关内容，换个关键词试试。</div>
 
@@ -10498,6 +10542,8 @@ dietActivity.addEventListener('change', function () {
 const newsArticles = {
   diet: {
     title: '如何科学搭配三餐饮食？',
+    cat: '饮食营养', color: 'green', icon: 'i-fork',
+    desc: '合理的饮食搭配不仅能提供充足的能量，还能帮助预防慢性疾病，让身体保持良好状态。',
     keywords: ['饮食', '三餐', '营养', '膳食', '搭配', '吃什么', '蛋白质', '蔬菜', '水果', '主食', '减脂餐', '外卖'],
     html: '<p>《中国居民膳食指南》建议，每天的食物应尽量覆盖谷薯类、蔬菜水果、畜禽鱼蛋奶和豆类四大类，平均每天摄入 12 种以上食物，每周 25 种以上。</p>' +
       '<h4>一、三餐怎么分配</h4>' +
@@ -10512,6 +10558,8 @@ const newsArticles = {
   },
   stretch: {
     title: '久坐族的5分钟拉伸指南',
+    cat: '运动指南', color: 'blue', icon: 'i-dumbbell',
+    desc: '长时间面对电脑工作，肩颈酸痛？这几个动作帮你缓解疲劳，恢复身体活力。',
     keywords: ['拉伸', '久坐', '肩颈', '颈椎', '腰背', '腰痛', '放松', '运动', '僵硬', '驼背', '工位'],
     html: '<p>连续久坐超过 60 分钟，肩颈和腰背的肌肉会持续处于紧张状态。每坐 45-60 分钟起身活动 3-5 分钟，比一次性长时间拉伸更有效。</p>' +
       '<h4>动作一：颈部侧屈（每侧 20 秒）</h4>' +
@@ -10526,6 +10574,8 @@ const newsArticles = {
   },
   sleep: {
     title: '为什么你总是睡不够？',
+    cat: '睡眠健康', color: 'purple', icon: 'i-moon',
+    desc: '了解深度睡眠的重要性，以及如何通过改善卧室环境提升睡眠质量，找回好状态。',
     keywords: ['睡眠', '失眠', '睡不着', '睡不好', '熬夜', '早醒', '深睡', '打鼾', '作息', '多梦', '困', '疲劳'],
     html: '<p>成年人建议每晚睡 7-9 小时，但“睡够时长”并不等于“睡得好”。一整夜会经历 4-6 个睡眠周期，每个周期包含浅睡、深睡和快速眼动睡眠。</p>' +
       '<h4>深睡决定恢复质量</h4>' +
@@ -10541,6 +10591,8 @@ const newsArticles = {
   },
   bp: {
     title: '血压血糖，家庭自测怎么做才准？',
+    cat: '慢病管理', color: 'green', icon: 'i-heart',
+    desc: '测压姿势、测量时间、记录方式都会影响结果，掌握几个细节让数据更可信。',
     keywords: ['血压', '血糖', '高血压', '糖尿病', '测量', '自测', '体检', '指标', '血压计', '空腹'],
     html: '<p>家庭自测能反映日常状态，比诊室单次测量更有参考价值。建议固定在早晨起床后 1 小时内、排尿后、早餐和服药前测量。</p>' +
       '<h4>测血压的四个要点</h4>' +
@@ -10554,52 +10606,136 @@ const newsArticles = {
       '<h4>记录比单次数值更重要</h4>' +
       '<p>把日期、时间、数值和当时的状态（是否运动、是否服药）一起记录，复诊时医生才能判断趋势。若出现血压持续高于 180/110 mmHg，或血糖低于 3.9 mmol/L 伴心慌出汗，应及时就医。</p>' +
       '<p class="note">以上为健康科普内容，用药与治疗请遵循医生意见。</p>'
+  },
+  weightloss: {
+    title: '想减脂，先搞清楚这三件事',
+    cat: '体重管理', color: 'orange', icon: 'i-flame',
+    desc: '减重不是饿肚子：热量缺口、蛋白质和力量训练才是关键，别让体重秤骗了你。',
+    keywords: ['减肥', '减脂', '瘦身', '体重', '掉秤', '热量', '卡路里', '基础代谢', '平台期', '节食', '轻断食', '燃脂', '体脂', '碳水', '减重'],
+    html: '<p>减脂的核心只有一个：让消耗长期大于摄入。但“吃少一点”不等于“饿着”，过度节食会让基础代谢下降、肌肉流失，体重反弹往往更快。</p>' +
+      '<h4>一、热量缺口别开太大</h4>' +
+      '<p>每天 300-500 千卡的热量缺口比较可持续，对应每周减重约 0.3-0.5 公斤。缺口过大容易疲劳、掉发、月经紊乱，也很难坚持。</p>' +
+      '<h4>二、蛋白质吃够</h4>' +
+      '<p>减脂期每公斤体重建议摄入 1.2-1.6 克蛋白质，优先选择鸡蛋、鱼虾、瘦肉、豆制品和低脂奶。蛋白质饱腹感强，还能减少肌肉流失。</p>' +
+      '<h4>三、别只看体重秤</h4>' +
+      '<p>力量训练会让肌肉增加、脂肪减少，体重可能不变但围度变小。建议同时记录腰围、体脂率，以及同样强度运动时的心率变化。</p>' +
+      '<p class="note">有基础疾病、正在服药或处于孕期，请先咨询医生再调整饮食与运动方案。</p>'
+  },
+  breakfast: {
+    title: '不吃早餐，真的会胖吗？',
+    cat: '饮食营养', color: 'green', icon: 'i-clock',
+    desc: '早餐吃与不吃，关键看全天总热量和食物质量，别再被“必须吃早餐”绑住。',
+    keywords: ['早餐', '早饭', '不吃早餐', '空腹', '早上', '牛奶', '鸡蛋', '燕麦', '豆浆', '主食', 'brunch'],
+    html: '<p>“不吃早餐一定变胖”并不严谨。研究发现，真正影响体重的是全天的总热量和食物质量，而不是早餐这一顿本身。</p>' +
+      '<h4>不吃早餐的常见代价</h4>' +
+      '<p>跳过早餐的人容易在午餐、晚餐吃得更多，或靠高糖零食续命，血糖波动大、注意力下降。如果你不吃早餐但全天饮食均衡，影响并不大。</p>' +
+      '<h4>一份合格早餐长什么样</h4>' +
+      '<p>主食 + 蛋白质 + 蔬果的组合最稳：例如燕麦牛奶配鸡蛋和半个苹果，或全麦面包夹鸡胸肉配一杯无糖豆浆。避免油条、甜面包加含糖饮料的组合。</p>' +
+      '<p class="note">胃病患者、青少年、孕期女性和重体力劳动者，建议规律吃早餐，不要长时间空腹。</p>'
+  },
+  water: {
+    title: '每天 8 杯水，到底该怎么喝？',
+    cat: '生活习惯', color: 'blue', icon: 'i-droplet',
+    desc: '喝水没有统一公式，看尿色比数杯数更靠谱，运动、天热要额外补。',
+    keywords: ['喝水', '饮水', '水', '脱水', '饮料', '奶茶', '咖啡', '尿黄', '口渴', '水肿', '每天八杯水'],
+    html: '<p>“每天 8 杯水”只是一个便于记忆的说法，实际需求因人而异。一般成年人每天饮水 1500-1700 毫升，天热、运动、出汗多时要相应增加。</p>' +
+      '<h4>用尿色判断更直观</h4>' +
+      '<p>淡黄色接近透明说明水分充足；颜色偏深像浓茶，通常提示需要补水。不要等到口渴才喝，口渴时身体已经轻度缺水。</p>' +
+      '<h4>少量多次，别一次猛灌</h4>' +
+      '<p>每次 150-200 毫升，分散在全天。晨起一杯温水，运动前后各补一次。剧烈运动大量出汗时，可适当补充含电解质的饮品。</p>' +
+      '<h4>这些“水”要算进去</h4>' +
+      '<p>茶、咖啡、汤、牛奶都能补水，但含糖饮料和奶茶会额外带来糖与热量。心肾功能不全、需要限水的人群，饮水量应遵医嘱。</p>' +
+      '<p class="note">出现明显水肿、少尿或持续口渴，建议及时就医检查。</p>'
+  },
+  cervical: {
+    title: '低头玩手机，颈椎在替你负重',
+    cat: '骨骼关节', color: 'purple', icon: 'i-yoga',
+    desc: '头越低，颈椎承受的压力越大。三个习惯帮你把颈椎从屏幕里救出来。',
+    keywords: ['颈椎', '低头', '手机', '脖子', '肩颈', '头晕', '富贵包', '圆肩', '手麻', '落枕', '颈椎病'],
+    html: '<p>成年人的头部约重 5 公斤。低头 15 度时颈椎承受约 12 公斤，低头 60 度时可超过 27 公斤，相当于脖子上坐了一个小孩。</p>' +
+      '<h4>把屏幕抬到视线高度</h4>' +
+      '<p>手机尽量举到与眼睛平齐，电脑屏幕顶部与视线齐平，减少长时间低头。每用 30-40 分钟，抬头活动 1 分钟。</p>' +
+      '<h4>三个简单动作</h4>' +
+      '<p>下巴微收（像做双下巴）保持 5 秒，重复 10 次；肩胛骨向后向下夹紧 5 秒，重复 10 次；靠墙站立，后脑勺、肩胛、臀部贴墙 1 分钟。</p>' +
+      '<h4>这些信号要就医</h4>' +
+      '<p>手臂持续麻木、力量下降、走路发飘，或伴随剧烈头痛、眩晕，可能不只是肌肉疲劳，应尽快到骨科或康复科就诊。</p>' +
+      '<p class="note">按摩、正骨需谨慎，急性疼痛期不要盲目大力扳动颈部。</p>'
+  },
+  eyes: {
+    title: '盯屏幕一小时，眼睛经历了什么？',
+    cat: '用眼健康', color: 'blue', icon: 'i-search',
+    desc: '眨眼次数骤减、泪膜蒸发加快，干涩和酸胀就是这样来的。',
+    keywords: ['眼睛', '护眼', '近视', '干眼', '视疲劳', '屏幕', '蓝光', '眼药水', '酸胀', '视力', '眨眼'],
+    html: '<p>正常情况下人每分钟眨眼 15-20 次，专注看屏幕时会降到 5-7 次。眨眼减少会让泪膜蒸发加快，出现干涩、异物感和酸胀。</p>' +
+      '<h4>20-20-20 法则</h4>' +
+      '<p>每看屏幕 20 分钟，抬头看 6 米外的地方 20 秒。这个动作能让睫状肌放松，缓解调节痉挛引起的视疲劳。</p>' +
+      '<h4>环境与习惯</h4>' +
+      '<p>屏幕亮度与环境光接近，避免关灯玩手机；屏幕略低于视线 10-15 度；有意识地完整眨眼。空调房里可用加湿器缓解干燥。</p>' +
+      '<h4>眼药水别乱滴</h4>' +
+      '<p>含防腐剂的人工泪液不宜长期高频使用；宣称“去红血丝”的滴眼液可能掩盖炎症。持续干涩、视力波动应到眼科检查。</p>' +
+      '<p class="note">儿童青少年每天户外活动 2 小时，是目前证据较充分的近视预防措施。</p>'
+  },
+  mood: {
+    title: '压力大时，身体会发生什么？',
+    cat: '心理健康', color: 'purple', icon: 'i-smile',
+    desc: '心跳加快、睡不好、胃口变化，都是压力激素在起作用。学会给身体“踩刹车”。',
+    keywords: ['压力', '焦虑', '情绪', '紧张', '抑郁', '心情', '放松', '冥想', '深呼吸', '失眠', '烦躁', '内耗'],
+    html: '<p>压力来时，身体会分泌肾上腺素和皮质醇，让心跳加快、肌肉紧绷、注意力集中。短期这是保护机制，长期持续则会拖垮睡眠和免疫。</p>' +
+      '<h4>身体会给出的信号</h4>' +
+      '<p>入睡困难、早醒、心慌、胃口明显变化、肩颈僵硬、容易感冒、注意力下降，都可能是长期压力的表现。</p>' +
+      '<h4>三个可操作的减压方式</h4>' +
+      '<p>4-7-8 呼吸：吸气 4 秒、屏息 7 秒、呼气 8 秒，重复 4 轮；每天 10 分钟快走或拉伸；把担心的事写下来，区分“能改变的”和“改变不了的”。</p>' +
+      '<h4>什么时候需要求助</h4>' +
+      '<p>情绪低落持续两周以上、对原本喜欢的事失去兴趣、影响工作和人际，或出现伤害自己的念头，请及时寻求心理科或专业心理咨询帮助。</p>' +
+      '<p class="note">心理问题和感冒一样需要治疗，求助不是软弱。</p>'
+  },
+  immunity: {
+    title: '免疫力不是越高越好',
+    cat: '免疫健康', color: 'green', icon: 'i-leaf',
+    desc: '真正有用的是免疫平衡：睡够、吃好、动起来，比乱补保健品靠谱。',
+    keywords: ['免疫', '抵抗力', '感冒', '维生素', '发烧', '疫苗', '熬夜', '营养', '保健品', '过敏', '发炎'],
+    html: '<p>免疫系统需要的是“平衡”，而不是“越强越好”。免疫力过强可能带来过敏、自身免疫病，盲目进补反而添乱。</p>' +
+      '<h4>最有效的四件事</h4>' +
+      '<p>睡够 7-9 小时；每天吃够蔬菜水果和优质蛋白；每周 150 分钟中等强度运动；按程序接种疫苗。这四件事的证据远比保健品充分。</p>' +
+      '<h4>关于维生素</h4>' +
+      '<p>饮食均衡的人通常不需要额外补充。长期缺乏、特殊人群可在医生指导下补充，过量脂溶性维生素反而有中毒风险。</p>' +
+      '<h4>感冒了怎么办</h4>' +
+      '<p>多数普通感冒 7-10 天自愈，注意休息和补水即可。持续高热超过 3 天、呼吸困难、精神差，应及时就医。</p>' +
+      '<p class="note">不要用“提高免疫力”作为长期服用保健品的理由。</p>'
+  },
+  women: {
+    title: '经期不适，哪些情况该就医？',
+    cat: '女性健康', color: 'pink', icon: 'i-female',
+    desc: '痛经、周期紊乱、经量异常，哪些可以观察，哪些不能拖。',
+    keywords: ['经期', '月经', '痛经', '例假', '周期', '经量', '女性', '妇科', '红糖水', '止痛药', '推迟', '闭经'],
+    html: '<p>轻度痛经、乳房胀痛、情绪波动属于常见经期反应，可通过热敷、规律作息和适度运动缓解。</p>' +
+      '<h4>痛经可以吃止痛药</h4>' +
+      '<p>原发性痛经与前列腺素分泌有关，布洛芬等药物在疼痛开始时按说明服用效果更好。担心伤胃可以饭后服用，不必硬扛。</p>' +
+      '<h4>这些情况建议就诊</h4>' +
+      '<p>痛经逐年加重、止痛药无效；周期短于 21 天或长于 35 天；经量突然明显增多或减少；非经期出血；闭经超过 3 个月。这些可能提示子宫内膜异位症、多囊卵巢等问题。</p>' +
+      '<h4>红糖水更多是心理安慰</h4>' +
+      '<p>热饮能让人舒服，但红糖本质是糖，缓解痛经的证据有限。经期注意保暖、少熬夜，比喝糖水更有意义。</p>' +
+      '<p class="note">以上为科普内容，具体诊断与用药请咨询妇科医生。</p>'
   }
 };
 
 const newsMask = document.getElementById('newsMask');
 
-// 点击资讯卡片：在新标签页打开浏览器搜索，查看该主题的完整内容
+// 点击卡片：在新标签页打开浏览器搜索，查看该主题的完整内容
 function openArticleInBrowser(title) {
   const url = 'https://www.baidu.com/s?wd=' + encodeURIComponent(title + ' 健康科普');
   window.open(url, '_blank', 'noopener');
 }
 
-document.querySelectorAll('.news-card').forEach(function (card) {
-  card.addEventListener('click', function () {
-    const article = newsArticles[card.dataset.article];
-    if (!article) return;
-    openArticleInBrowser(article.title);
-  });
-});
-
-// “速读摘要”：在页面内查看简短介绍
-document.querySelectorAll('.news-quick').forEach(function (btn) {
-  btn.addEventListener('click', function (event) {
-    event.stopPropagation();
-    const card = btn.closest('.news-card');
-    const article = newsArticles[card.dataset.article];
-    if (!article) return;
-
-    document.getElementById('newsTitle').textContent = article.title;
-    document.getElementById('newsBody').innerHTML = article.html;
-    openMask(newsMask);
-  });
-});
-
-document.getElementById('newsClose').addEventListener('click', function () {
-  closeMask(newsMask);
-});
-
-newsMask.addEventListener('click', function (event) {
-  if (event.target === newsMask) closeMask(newsMask);
-});
-
-// ---------- 科普资讯搜索：支持口语化关键词，找不到时给出推荐 ----------
+// ---------- 科普资讯：卡片渲染、搜索排序与换一批 ----------
+const newsGrid = document.querySelector('.news-grid');
 const newsSearch = document.getElementById('newsSearch');
+const newsCount = document.getElementById('newsCount');
+let newsOrder = Object.keys(newsArticles);
 
 // 中文按 2 字切分，这样「睡眠不好」也能命中「睡眠」相关文章
 function newsTokens(keyword) {
+  if (!keyword) return [];
   if (keyword.length < 2) return [keyword];
   const tokens = [keyword];
   for (let i = 0; i < keyword.length - 1; i++) {
@@ -10608,54 +10744,132 @@ function newsTokens(keyword) {
   return tokens;
 }
 
-function articleMatched(article, card, keyword) {
-  if (!keyword) return true;
-  const text = ((article ? article.title + ' ' + (article.keywords || []).join(' ') : '') +
-    ' ' + card.textContent + ' ' + (article ? article.html : '')).toLowerCase();
+function escapeNewsHtml(text) {
+  return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
 
-  return newsTokens(keyword).some(function (token) {
-    return token && text.indexOf(token) !== -1;
-  });
+function highlightNewsTitle(title, keyword) {
+  const token = newsTokens(keyword)
+    .filter(function (item) { return item.length >= 2; })
+    .sort(function (a, b) { return b.length - a.length; })[0];
+  const index = token ? title.indexOf(token) : -1;
+  if (index === -1) return escapeNewsHtml(title);
+  return escapeNewsHtml(title.slice(0, index)) +
+    '<mark>' + escapeNewsHtml(token) + '</mark>' +
+    escapeNewsHtml(title.slice(index + token.length));
+}
+
+// 标题命中权重最高，其次关键词、摘要、正文
+function scoreArticle(article, keyword) {
+  if (!keyword) return 1;
+  const title = article.title.toLowerCase();
+  const keys = (article.keywords || []).join(' ').toLowerCase();
+  const desc = (article.desc || '').toLowerCase();
+  const body = (article.html || '').toLowerCase();
+
+  return newsTokens(keyword).reduce(function (score, token) {
+    if (!token) return score;
+    if (title.indexOf(token) !== -1) score += 8;
+    if (keys.indexOf(token) !== -1) score += 5;
+    if (desc.indexOf(token) !== -1) score += 3;
+    if (body.indexOf(token) !== -1) score += 1;
+    return score;
+  }, 0);
+}
+
+function newsCardHtml(key, article, keyword) {
+  return '<article class="news-card" data-article="' + key + '">' +
+    '<div class="news-img ' + article.color + '"><svg class="icon"><use href="#' + article.icon + '"/></svg></div>' +
+    '<div class="news-body">' +
+      '<div class="news-cat ' + article.color + '">' + escapeNewsHtml(article.cat) + '</div>' +
+      '<div class="news-title">' + highlightNewsTitle(article.title, keyword) + '</div>' +
+      '<p class="news-desc">' + escapeNewsHtml(article.desc) + '</p>' +
+      '<span class="read-more">在浏览器中查看全文 ›</span>' +
+      '<span class="news-quick" data-quick="1">速读摘要</span>' +
+    '</div></article>';
 }
 
 function filterNews() {
-  const keyword = newsSearch.value.trim().toLowerCase();
-  const cards = Array.from(document.querySelectorAll('.news-card'));
-  let visible = 0;
+  const raw = newsSearch.value.trim();
+  const keyword = raw.toLowerCase();
 
-  cards.forEach(function (card) {
-    const matched = articleMatched(newsArticles[card.dataset.article], card, keyword);
-    card.style.display = matched ? '' : 'none';
-    if (matched) visible += 1;
+  const list = Object.keys(newsArticles).map(function (key) {
+    return { key: key, article: newsArticles[key], score: scoreArticle(newsArticles[key], keyword) };
   });
 
-  // 实在没有匹配项时，展示全部作为推荐，避免出现空白页
-  if (keyword && visible === 0) {
-    cards.forEach(function (card) { card.style.display = ''; });
-    document.getElementById('newsCount').textContent =
-      '未找到「' + newsSearch.value.trim() + '」，为你推荐';
-    document.getElementById('newsEmpty').hidden = true;
+  let visible = list.filter(function (item) { return item.score > 0; });
+  let recommend = false;
+
+  // 一条都匹配不上时，全部作为推荐展示，避免出现空白
+  if (keyword && visible.length === 0) {
+    visible = list;
+    recommend = true;
+  }
+
+  if (keyword) {
+    visible.sort(function (a, b) { return b.score - a.score; });
+  } else {
+    visible.sort(function (a, b) { return newsOrder.indexOf(a.key) - newsOrder.indexOf(b.key); });
+  }
+
+  newsGrid.innerHTML = visible.map(function (item) {
+    return newsCardHtml(item.key, item.article, keyword);
+  }).join('');
+
+  newsCount.textContent = !keyword ? '' :
+    (recommend ? '未找到「' + raw + '」，为你推荐 ' + visible.length + ' 条' : '找到 ' + visible.length + ' 条');
+  document.getElementById('newsEmpty').hidden = true;
+
+  document.querySelectorAll('.news-tag').forEach(function (tag) {
+    tag.classList.toggle('active', tag.dataset.tag === raw);
+  });
+}
+
+// 点击卡片：普通点击跳百度看全文，点「速读摘要」在站内弹窗看
+newsGrid.addEventListener('click', function (event) {
+  const card = event.target.closest('.news-card');
+  if (!card) return;
+  const article = newsArticles[card.dataset.article];
+  if (!article) return;
+
+  if (event.target.closest('.news-quick')) {
+    event.stopPropagation();
+    document.getElementById('newsTitle').textContent = article.title;
+    document.getElementById('newsBody').innerHTML = article.html;
+    openMask(newsMask);
     return;
   }
 
-  document.getElementById('newsCount').textContent = keyword ? '找到 ' + visible + ' 条' : '';
-  document.getElementById('newsEmpty').hidden = visible > 0;
-}
+  openArticleInBrowser(article.title);
+});
+
+// 热门词一键搜索
+document.querySelectorAll('.news-tag').forEach(function (tag) {
+  tag.addEventListener('click', function () {
+    newsSearch.value = tag.dataset.tag;
+    filterNews();
+  });
+});
 
 newsSearch.addEventListener('input', filterNews);
 
 // ---------- 刷新：重新排序科普内容，相当于“换一批” ----------
-const newsGrid = document.querySelector('.news-grid');
-
 document.getElementById('newsRefresh').addEventListener('click', function () {
-  const cards = Array.from(newsGrid.children);
-  cards.sort(function () { return Math.random() - 0.5; });
-  cards.forEach(function (card) {
-    newsGrid.appendChild(card);
-  });
+  newsOrder = newsOrder.slice().sort(function () { return Math.random() - 0.5; });
   newsSearch.value = '';
   filterNews();
-  showToast('已为你换一批科普内容');
+  showToast('已为你换一批科普内容，共 ' + newsOrder.length + ' 篇');
+});
+
+filterNews();
+
+document.getElementById('newsClose').addEventListener('click', function () {
+  closeMask(newsMask);
+});
+
+newsMask.addEventListener('click', function (event) {
+  if (event.target === newsMask) closeMask(newsMask);
 });
 
 // ---------- 新功能初始化 ----------
