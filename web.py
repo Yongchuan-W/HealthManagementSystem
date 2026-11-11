@@ -2649,7 +2649,12 @@ a { text-decoration: none; }
   align-items: center;
   justify-content: center;
   transition: transform 0.2s;
+  touch-action: none;
+  cursor: grab;
 }
+
+.fab.dragging { transition: none; cursor: grabbing; }
+.fab.dragging .ai-run { animation-play-state: paused; }
 
 .fab:hover { transform: scale(1.06); }
 .fab .icon { width: 26px; height: 26px; }
@@ -3128,11 +3133,12 @@ body { color: var(--text); }
   .hero-title h1 { font-size: 21px; letter-spacing: 2px; }
   .hero-title p { font-size: 12px; }
   .hero-underline { width: 38px; height: 3px; margin-top: 6px; }
-  .score-group { gap: 8px; }
-  .score { grid-template-columns: 26px minmax(0, 1fr); padding: 7px 8px; gap: 6px; }
-  .score .score-ico { width: 26px; height: 26px; }
+  .score-group { grid-template-columns: 1fr; gap: 6px; }
+  .score { grid-template-columns: 30px minmax(0, 1fr); padding: 9px 10px; gap: 9px; }
+  .score .score-ico { width: 28px; height: 28px; }
+  .score .row { font-size: 12px; margin-bottom: 5px; }
+  .side-nav button { padding: 7px 8px; font-size: 13px; }
   .score .score-ico .icon { width: 14px; height: 14px; }
-  .score .row { font-size: 11px; margin-bottom: 4px; }
   .score .score-num { font-size: 9px; }
   .score .score-num b { font-size: 15px; }
   .macros { grid-template-columns: repeat(2, 1fr); }
@@ -7931,7 +7937,8 @@ document.getElementById('logBeautyWeight').addEventListener('click', function ()
 
   beautyState.currentWeight = value;
   document.getElementById('beautyCurrent').textContent = value.toFixed(1);
-  addWeightRecord(value);
+  // 同步健康数据、个人档案与体重曲线，保证各处显示一致
+  applyWeightChange(value);
   updateBeautyProgress();
   showToast('已记录当前体重：' + value.toFixed(1) + ' kg');
 });
@@ -9319,15 +9326,14 @@ function applyWeightChange(weight) {
   document.getElementById('weightValue').textContent = weight.toFixed(1);
   document.getElementById('pWeight').value = weight.toFixed(1);
 
-  // 已保存档案时同步体重，刷新页面后仍能恢复
+  // 同步到个人档案，刷新页面或重新登录后仍能恢复
   const profile = readProfile();
-  if (profile.weight !== undefined) {
-    profile.weight = weight;
-    saveData('profile', profile);
-  }
+  profile.weight = weight;
+  saveData('profile', profile);
 
   const bmi = weight / Math.pow(currentHeightMeters(), 2);
   setBmiDisplay(bmi);
+  renderVitalRanges();
   addWeightRecord(weight);
   return bmi;
 }
@@ -9672,23 +9678,12 @@ function updateFoodTotal() {
     'g，脂肪 ' + (total.fat * count).toFixed(1) + 'g。';
 }
 
-// 输入食物后先校验是否为常见食物，再弹出分量参考
-function requestMealRecord(meal, rawText, input) {
-  const text = (rawText || '').trim();
-  if (!text) {
-    showToast('请先输入吃了什么，例如：米饭 鸡胸肉 西兰花');
-    return;
-  }
-
-  const matches = matchFoods(text);
-  if (!matches.length) {
-    showToast('「' + text + '」不在常见食物库中，请按“食物名 + 分量”输入，例如：米饭 150g、牛奶 1 杯');
-    return;
-  }
-
+// 弹出分量参考弹窗（source: local 食物库 / ai 模型估算）
+function showFoodModal(meal, text, matches, input, source) {
   pendingMeal = { meal: meal, text: text, input: input, matches: matches };
   document.getElementById('foodSummary').textContent =
-    '本餐识别到 ' + matches.length + ' 种食物：' + matches.map(function (food) {
+    (source === 'ai' ? 'AI 估算到 ' : '本餐识别到 ') + matches.length + ' 种食物：' +
+    matches.map(function (food) {
       return food.name;
     }).join('、');
 
@@ -9700,6 +9695,52 @@ function requestMealRecord(meal, rawText, input) {
   foodCountInput.value = 1;
   updateFoodTotal();
   openMask(foodMask);
+}
+
+// 输入食物：先查本地食物库，查不到就让 AI 估算，不限制菜名
+function requestMealRecord(meal, rawText, input) {
+  const text = (rawText || '').trim();
+  if (!text) {
+    showToast('请先输入吃了什么，例如：米饭 鸡胸肉 西兰花');
+    return;
+  }
+
+  const matches = matchFoods(text);
+  if (matches.length) {
+    showFoodModal(meal, text, matches, input, 'local');
+    return;
+  }
+
+  // 静态演示版没有后端，按常见一餐粗略估算
+  if (!serverMode || !currentUser) {
+    const rough = estimateNutrition(text);
+    showFoodModal(meal, text, [{
+      name: text, portion: '按常见一人份估算', kcal: rough.kcal,
+      protein: rough.protein, carb: rough.carb, fat: rough.fat, fiber: rough.fiber
+    }], input, 'ai');
+    return;
+  }
+
+  showToast('正在用 AI 估算「' + text + '」的热量…');
+  api('/api/ai/food', { method: 'POST', body: { text: text } })
+    .then(function (result) {
+      if (!result.ok || !result.data.foods) {
+        showToast((result.data && result.data.error) || '估算失败，请稍后再试');
+        return;
+      }
+      const foods = result.data.foods.map(function (food) {
+        return {
+          name: food.name,
+          portion: food.portion || '1 份',
+          kcal: Number(food.kcal) || 0,
+          protein: Number(food.protein) || 0,
+          carb: Number(food.carb) || 0,
+          fat: Number(food.fat) || 0,
+          fiber: Number(food.fiber) || 0
+        };
+      });
+      showFoodModal(meal, text, foods, input, 'ai');
+    });
 }
 
 foodCountInput.addEventListener('input', updateFoodTotal);
@@ -10457,6 +10498,7 @@ dietActivity.addEventListener('change', function () {
 const newsArticles = {
   diet: {
     title: '如何科学搭配三餐饮食？',
+    keywords: ['饮食', '三餐', '营养', '膳食', '搭配', '吃什么', '蛋白质', '蔬菜', '水果', '主食', '减脂餐', '外卖'],
     html: '<p>《中国居民膳食指南》建议，每天的食物应尽量覆盖谷薯类、蔬菜水果、畜禽鱼蛋奶和豆类四大类，平均每天摄入 12 种以上食物，每周 25 种以上。</p>' +
       '<h4>一、三餐怎么分配</h4>' +
       '<p>早餐占全天能量的 25%-30%，午餐 30%-40%，晚餐 30%-35%。早餐建议包含主食 + 蛋白质 + 蔬果，例如燕麦牛奶配一个鸡蛋和半个苹果。</p>' +
@@ -10470,6 +10512,7 @@ const newsArticles = {
   },
   stretch: {
     title: '久坐族的5分钟拉伸指南',
+    keywords: ['拉伸', '久坐', '肩颈', '颈椎', '腰背', '腰痛', '放松', '运动', '僵硬', '驼背', '工位'],
     html: '<p>连续久坐超过 60 分钟，肩颈和腰背的肌肉会持续处于紧张状态。每坐 45-60 分钟起身活动 3-5 分钟，比一次性长时间拉伸更有效。</p>' +
       '<h4>动作一：颈部侧屈（每侧 20 秒）</h4>' +
       '<p>坐直，右手轻扶头部左侧，缓慢向右侧倾斜，感受左侧颈部拉伸，不要耸肩，保持均匀呼吸后换另一侧。</p>' +
@@ -10483,6 +10526,7 @@ const newsArticles = {
   },
   sleep: {
     title: '为什么你总是睡不够？',
+    keywords: ['睡眠', '失眠', '睡不着', '睡不好', '熬夜', '早醒', '深睡', '打鼾', '作息', '多梦', '困', '疲劳'],
     html: '<p>成年人建议每晚睡 7-9 小时，但“睡够时长”并不等于“睡得好”。一整夜会经历 4-6 个睡眠周期，每个周期包含浅睡、深睡和快速眼动睡眠。</p>' +
       '<h4>深睡决定恢复质量</h4>' +
       '<p>深睡阶段身体修复组织、分泌生长激素、巩固免疫记忆。频繁被打断、睡前饮酒、卧室过亮或过热，都会压缩深睡时间。</p>' +
@@ -10497,6 +10541,7 @@ const newsArticles = {
   },
   bp: {
     title: '血压血糖，家庭自测怎么做才准？',
+    keywords: ['血压', '血糖', '高血压', '糖尿病', '测量', '自测', '体检', '指标', '血压计', '空腹'],
     html: '<p>家庭自测能反映日常状态，比诊室单次测量更有参考价值。建议固定在早晨起床后 1 小时内、排尿后、早餐和服药前测量。</p>' +
       '<h4>测血压的四个要点</h4>' +
       '<ul><li>测量前安静坐 5 分钟，不说话、不翘腿</li>' +
@@ -10550,21 +10595,48 @@ newsMask.addEventListener('click', function (event) {
   if (event.target === newsMask) closeMask(newsMask);
 });
 
-// ---------- 科普资讯搜索：按标题、摘要与正文关键词过滤 ----------
+// ---------- 科普资讯搜索：支持口语化关键词，找不到时给出推荐 ----------
 const newsSearch = document.getElementById('newsSearch');
+
+// 中文按 2 字切分，这样「睡眠不好」也能命中「睡眠」相关文章
+function newsTokens(keyword) {
+  if (keyword.length < 2) return [keyword];
+  const tokens = [keyword];
+  for (let i = 0; i < keyword.length - 1; i++) {
+    tokens.push(keyword.slice(i, i + 2));
+  }
+  return tokens;
+}
+
+function articleMatched(article, card, keyword) {
+  if (!keyword) return true;
+  const text = ((article ? article.title + ' ' + (article.keywords || []).join(' ') : '') +
+    ' ' + card.textContent + ' ' + (article ? article.html : '')).toLowerCase();
+
+  return newsTokens(keyword).some(function (token) {
+    return token && text.indexOf(token) !== -1;
+  });
+}
 
 function filterNews() {
   const keyword = newsSearch.value.trim().toLowerCase();
+  const cards = Array.from(document.querySelectorAll('.news-card'));
   let visible = 0;
 
-  document.querySelectorAll('.news-card').forEach(function (card) {
-    const article = newsArticles[card.dataset.article];
-    const text = (card.textContent + (article ? article.html : '')).toLowerCase();
-    const matched = !keyword || text.indexOf(keyword) !== -1;
-
+  cards.forEach(function (card) {
+    const matched = articleMatched(newsArticles[card.dataset.article], card, keyword);
     card.style.display = matched ? '' : 'none';
     if (matched) visible += 1;
   });
+
+  // 实在没有匹配项时，展示全部作为推荐，避免出现空白页
+  if (keyword && visible === 0) {
+    cards.forEach(function (card) { card.style.display = ''; });
+    document.getElementById('newsCount').textContent =
+      '未找到「' + newsSearch.value.trim() + '」，为你推荐';
+    document.getElementById('newsEmpty').hidden = true;
+    return;
+  }
 
   document.getElementById('newsCount').textContent = keyword ? '找到 ' + visible + ' 条' : '';
   document.getElementById('newsEmpty').hidden = visible > 0;
@@ -10703,7 +10775,89 @@ function toggleChat() {
   }
 }
 
-document.getElementById('fab').addEventListener('click', toggleChat);
+// AI 悬浮球：支持拖动，位置记在本机
+const fab = document.getElementById('fab');
+const FAB_POS_KEY = 'fabPos';
+let fabDragging = false;
+
+function clampFab(right, bottom) {
+  const size = 58;
+  return {
+    right: Math.min(Math.max(right, 8), Math.max(8, window.innerWidth - size - 8)),
+    bottom: Math.min(Math.max(bottom, 8), Math.max(8, window.innerHeight - size - 8))
+  };
+}
+
+function placeFab(right, bottom) {
+  const pos = clampFab(right, bottom);
+  fab.style.right = pos.right + 'px';
+  fab.style.bottom = pos.bottom + 'px';
+  fab.style.left = 'auto';
+  return pos;
+}
+
+(function restoreFabPosition() {
+  const saved = loadData(FAB_POS_KEY, null);
+  if (saved && typeof saved.right === 'number' && typeof saved.bottom === 'number') {
+    placeFab(saved.right, saved.bottom);
+  }
+})();
+
+window.addEventListener('resize', function () {
+  if (!fab.style.right) return;
+  placeFab(parseFloat(fab.style.right) || 26, parseFloat(fab.style.bottom) || 26);
+});
+
+(function enableFabDrag() {
+  let start = null;
+
+  fab.addEventListener('pointerdown', function (event) {
+    if (event.button !== undefined && event.button !== 0) return;
+    start = {
+      x: event.clientX,
+      y: event.clientY,
+      right: parseFloat(getComputedStyle(fab).right) || 26,
+      bottom: parseFloat(getComputedStyle(fab).bottom) || 26
+    };
+    fabDragging = false;
+    fab.setPointerCapture(event.pointerId);
+  });
+
+  fab.addEventListener('pointermove', function (event) {
+    if (!start) return;
+    const dx = event.clientX - start.x;
+    const dy = event.clientY - start.y;
+
+    if (!fabDragging && Math.abs(dx) + Math.abs(dy) < 6) return;
+    fabDragging = true;
+    fab.classList.add('dragging');
+    placeFab(start.right - dx, start.bottom - dy);
+  });
+
+  function endDrag() {
+    if (!start) return;
+    start = null;
+    fab.classList.remove('dragging');
+    if (!fabDragging) return;
+    saveData(FAB_POS_KEY, {
+      right: parseFloat(fab.style.right) || 26,
+      bottom: parseFloat(fab.style.bottom) || 26
+    });
+    // 让随后的 click 事件不要误触发聊天窗口
+    setTimeout(function () { fabDragging = false; }, 0);
+  }
+
+  fab.addEventListener('pointerup', endDrag);
+  fab.addEventListener('pointercancel', endDrag);
+})();
+
+fab.addEventListener('click', function (event) {
+  if (fabDragging) {
+    event.preventDefault();
+    return;
+  }
+  toggleChat();
+});
 document.getElementById('chatClose').addEventListener('click', closeChat);
 
 // 生成一条聊天气泡

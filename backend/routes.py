@@ -1676,6 +1676,49 @@ def ai_vision(ctx):
     }
 
 
+@route("POST", "/api/ai/food")
+def ai_food(ctx):
+    """按用户输入的食物名称估算热量，覆盖食物库以外的家常菜。"""
+    text = clean_text(ctx.body.get("text"), "text", 200, required=True)
+
+    if not ai.is_configured():
+        raise ApiError(503, "尚未配置 AI 密钥，暂时无法自动估算热量", "ai_not_configured")
+
+    try:
+        raw, meta = ai.estimate_food(text)
+    except ai.AiError as error:
+        raise ApiError(502, "热量估算失败：%s" % error, "food_failed")
+
+    foods = []
+    for item in (raw.get("foods") or [])[:8]:
+        if not isinstance(item, dict):
+            continue
+        name = str(item.get("name") or "").strip()[:24]
+        if not name:
+            continue
+        foods.append({
+            "name": name,
+            "portion": str(item.get("portion") or "").strip()[:40] or "1 份",
+            "kcal": round(_bounded_float(item.get("kcal"), 0, 3000) or 0, 1),
+            "protein": round(_bounded_float(item.get("protein"), 0, 500) or 0, 1),
+            "carb": round(_bounded_float(item.get("carb"), 0, 800) or 0, 1),
+            "fat": round(_bounded_float(item.get("fat"), 0, 500) or 0, 1),
+            "fiber": round(_bounded_float(item.get("fiber"), 0, 200) or 0, 1),
+        })
+
+    if not foods:
+        raise ApiError(502, "没能估算出热量，请换一种说法再试", "food_failed")
+
+    total = {key: round(sum(food[key] for food in foods), 1)
+             for key in ("kcal", "protein", "carb", "fat", "fiber")}
+    return {
+        "foods": foods,
+        "total": total,
+        "provider": meta["provider"],
+        "model": meta["model"],
+    }
+
+
 # ==========================================================
 # 首次填写与饮食偏好
 # ==========================================================

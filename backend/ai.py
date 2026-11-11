@@ -199,6 +199,52 @@ def generate_reply(message, history=None, context=None):
 
 
 # ==========================================================
+# 食物热量估算（纯文本）
+# ==========================================================
+FOOD_SYSTEM = (
+    "你是注册营养师，擅长按常见中式饮食估算热量。"
+    "必须严格按要求只输出一个 JSON 对象，不要输出解释、Markdown 或代码块标记。"
+)
+
+FOOD_PROMPT = (
+    "食物：%s\n"
+    "按种类拆开分别估算，没写分量按常见一人份；青菜、白菜等家常菜要直接给出估算。\n"
+    "只输出 JSON，不要解释："
+    '{"foods":[{"name":"白菜","portion":"半碗约75g","kcal":10,'
+    '"protein":1,"carb":2,"fat":0,"fiber":1}]}\n'
+    "kcal 为千卡，其余为克，全部用数字。最多 8 种。"
+)
+
+
+def estimate_food(text):
+    """用模型估算任意食物的热量，返回 (JSON dict, 元信息)。"""
+    text = (text or "").strip()
+    if not text:
+        raise AiError("请先输入食物名称")
+
+    settings = config()
+    if settings is None:
+        raise AiError("未配置 HM_AI_API_KEY")
+
+    body = _post(settings, {
+        "model": settings["model"],
+        "messages": [
+            {"role": "system", "content": FOOD_SYSTEM},
+            {"role": "user", "content": FOOD_PROMPT % text},
+        ],
+        "temperature": 0.2,
+        # 推理类模型会先输出思考过程，额度给小了正文会为空
+        "max_tokens": 1500,
+        "stream": False,
+    }, timeout=30, not_found_hint="当前模型不可用，请确认 HM_AI_MODEL")
+
+    return parse_json_object(_message_text(body)), {
+        "model": settings["model"],
+        "provider": provider_name(settings),
+    }
+
+
+# ==========================================================
 # 图片识别（多模态）
 # ==========================================================
 VISION_SYSTEM = (
