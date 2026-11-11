@@ -17,7 +17,7 @@ import urllib.request
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta
 
-from . import ai, auth, db
+from . import ai, asr, auth, db
 from .errors import ApiError
 
 # ==========================================================
@@ -355,6 +355,38 @@ def news_list(ctx):
         return {"items": items, "source": "rss", "cached": False}
     return {"items": [], "source": "rss", "cached": False,
             "error": "资讯服务暂时不可用，请稍后再试"}
+
+
+# ==========================================================
+# 语音识别：阿里云一句话识别（前端上传 WAV）
+# ==========================================================
+@route("GET", "/api/asr/status")
+def asr_status(ctx):
+    return {"configured": asr.is_configured()}
+
+
+@route("POST", "/api/asr")
+def asr_recognize(ctx):
+    if not asr.is_configured():
+        raise ApiError(503, "尚未配置语音识别服务", "asr_not_configured")
+
+    raw = str(ctx.body.get("audio") or "").strip()
+    if not raw:
+        raise ApiError(400, "没有收到录音内容", "empty_audio")
+    if raw.startswith("data:"):
+        raw = raw.split(",", 1)[-1]
+    try:
+        audio = base64.b64decode(raw, validate=False)
+    except Exception:
+        raise ApiError(400, "录音数据格式不正确", "bad_audio")
+    if len(audio) < 1600:
+        raise ApiError(400, "录音太短，请按住多说几个字", "audio_too_short")
+
+    try:
+        text = asr.recognize(audio)
+    except asr.AsrError as error:
+        raise ApiError(502, str(error), "asr_failed")
+    return {"text": text}
 
 
 # ==========================================================

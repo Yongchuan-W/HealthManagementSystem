@@ -11442,6 +11442,144 @@ function resetVoiceButton() {
   voiceFabText.textContent = '语音输入';
 }
 
+/* ---------- 服务器语音识别（阿里云）：录音 -> 上传 -> 填字 ---------- */
+let asrStatusCache = null;   // null=还没查询，true/false=服务端是否已配置
+let recorder = null;
+let voiceBusy = false;
+
+function writeWavString(view, offset, text) {
+  for (let i = 0; i < text.length; i++) view.setUint8(offset + i, text.charCodeAt(i));
+}
+
+// 合并录音片段，降采样到 16k，并编码成 WAV
+function encodeWav(chunks, inputRate) {
+  let length = 0;
+  chunks.forEach(function (chunk) { length += chunk.length; });
+  const merged = new Float32Array(length);
+  let offset = 0;
+  chunks.forEach(function (chunk) { merged.set(chunk, offset); offset += chunk.length; });
+
+  const targetRate = 16000;
+  const ratio = (inputRate || 48000) / targetRate;
+  const outLength = Math.max(1, Math.floor(merged.length / ratio));
+  const samples = new Int16Array(outLength);
+  for (let i = 0; i < outLength; i++) {
+    const start = Math.floor(i * ratio);
+    const end = Math.min(merged.length, Math.floor((i + 1) * ratio));
+    let sum = 0;
+    let count = 0;
+    for (let j = start; j < end; j++) { sum += merged[j]; count++; }
+    let value = count ? sum / count : 0;
+    value = Math.max(-1, Math.min(1, value));
+    samples[i] = value < 0 ? value * 0x8000 : value * 0x7FFF;
+  }
+
+  const buffer = new ArrayBuffer(44 + samples.length * 2);
+  const view = new DataView(buffer);
+  writeWavString(view, 0, 'RIFF');
+  view.setUint32(4, 36 + samples.length * 2, true);
+  writeWavString(view, 8, 'WAVE');
+  writeWavString(view, 12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
+  view.setUint32(24, targetRate, true);
+  view.setUint32(28, targetRate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+  writeWavString(view, 36, 'data');
+  view.setUint32(40, samples.length * 2, true);
+  new Int16Array(buffer, 44).set(samples);
+  return new Uint8Array(buffer);
+}
+
+function bytesToBase64(bytes) {
+  let binary = '';
+  const step = 0x8000;
+  for (let i = 0; i < bytes.length; i += step) {
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + step));
+  }
+  return btoa(binary);
+}
+
+async function fetchAsrStatus() {
+  if (!serverMode) return false;
+  if (asrStatusCache !== null) return asrStatusCache;
+  try {
+    const result = await api('/api/asr/status');
+    asrStatusCache = !!(result.ok && result.data.configured);
+  } catch (error) {
+    asrStatusCache = false;
+  }
+  return asrStatusCache;
+}
+
+async function startRecorder() {
+  const stream = await navigator.mediaDevices.getUserMedia({
+    audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true }
+  });
+  const Ctx = window.AudioContext || window.webkitAudioContext;
+  const ctx = new Ctx();
+  const source = ctx.createMediaStreamSource(stream);
+  const processor = ctx.createScriptProcessor(4096, 1, 1);
+  const chunks = [];
+  processor.onaudioprocess = function (event) {
+    chunks.push(new Float32Array(event.inputBuffer.getChannelData(0)));
+  };
+  source.connect(processor);
+  processor.connect(ctx.destination);
+  recorder = {
+    stream: stream, ctx: ctx, source: source, processor: processor, chunks: chunks,
+    timer: setTimeout(function () { stopRecorder(true); }, 20000)
+  };
+  voiceFab.classList.add('listening');
+  voiceFabText.textContent = '录音中，再点结束';
+}
+
+function releaseRecorder() {
+  if (!recorder) return null;
+  clearTimeout(recorder.timer);
+  try { recorder.processor.disconnect(); } catch (error) {}
+  try { recorder.source.disconnect(); } catch (error) {}
+  recorder.stream.getTracks().forEach(function (track) { track.stop(); });
+  const audio = { chunks: recorder.chunks, rate: recorder.ctx.sampleRate || 48000 };
+  try { recorder.ctx.close(); } catch (error) {}
+  recorder = null;
+  return audio;
+}
+
+async function stopRecorder(auto) {
+  if (!recorder || voiceBusy) return;
+  voiceBusy = true;
+  const audio = releaseRecorder();
+  voiceFab.classList.remove('listening');
+  voiceFabText.textContent = '识别中…';
+
+  try {
+    const wav = encodeWav(audio.chunks, audio.rate);
+    if (wav.length < 3200) {
+      showToast('录音太短，请多说几个字');
+      return;
+    }
+    const result = await api('/api/asr', {
+      method: 'POST',
+      body: { audio: bytesToBase64(wav), format: 'wav' }
+    });
+    if (!result.ok) {
+      if (result.status === 503) asrStatusCache = false;
+      showToast(result.data.error || '语音识别失败，请手动输入');
+      return;
+    }
+    fillVoiceTarget(voiceTarget, result.data.text || '');
+    showToast('已填入：' + String(result.data.text || '').slice(0, 24));
+  } catch (error) {
+    showToast('语音识别失败，请检查网络后重试');
+  } finally {
+    voiceBusy = false;
+    resetVoiceButton();
+  }
+}
+
 if (SpeechRecognitionCtor) {
   voiceRecog = new SpeechRecognitionCtor();
   voiceRecog.lang = 'zh-CN';
@@ -11478,19 +11616,16 @@ if (SpeechRecognitionCtor) {
   voiceRecog.onend = resetVoiceButton;
 }
 
-voiceFab.addEventListener('click', function () {
-  if (!SpeechRecognitionCtor) {
-    showToast('当前浏览器不支持语音输入，请使用 Edge 或 Chrome，也可以直接打字');
-    return;
-  }
+voiceFab.addEventListener('click', async function () {
   if (!window.isSecureContext) {
     showToast('语音输入需要 HTTPS 访问；当前是普通 HTTP，请手动输入或让管理员开启 HTTPS');
     return;
   }
-  if (voiceFab.classList.contains('listening')) {
-    try { voiceRecog.stop(); } catch (error) {}
+  if (recorder) {
+    stopRecorder(false);
     return;
   }
+  if (voiceBusy) return;
 
   voiceTarget = (lastEditable && document.contains(lastEditable)) ? lastEditable : null;
   if (!voiceTarget) {
@@ -11498,6 +11633,29 @@ voiceFab.addEventListener('click', function () {
     return;
   }
 
+  // 优先用服务器语音识别（不依赖浏览器内核，微信里也能用）
+  const useServer = await fetchAsrStatus();
+  if (useServer) {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      showToast('当前浏览器无法录音，请改用 Edge 或手动输入');
+      return;
+    }
+    try {
+      await startRecorder();
+    } catch (error) {
+      showToast(error && error.name === 'NotAllowedError'
+        ? '麦克风权限被拒绝，请在浏览器设置里允许后重试'
+        : '无法启动录音，请检查麦克风');
+      resetVoiceButton();
+    }
+    return;
+  }
+
+  // 回退：浏览器自带识别
+  if (!SpeechRecognitionCtor) {
+    showToast('当前浏览器不支持语音输入，请使用 Edge 或 Chrome，也可以直接打字');
+    return;
+  }
   try {
     voiceRecog.start();
     voiceFab.classList.add('listening');
