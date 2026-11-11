@@ -12,6 +12,9 @@ import base64
 import json
 import os
 import re
+import time
+import urllib.request
+import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta
 
 from . import ai, auth, db
@@ -198,8 +201,7 @@ def api_index(_ctx):
 
 @route("POST", "/api/auth/register", auth_required=False)
 def auth_register(ctx):
-    if auth.allowed_accounts():
-        raise ApiError(403, "当前仅限指定账号登录，暂不开放注册", "registration_closed")
+    # 已开放注册：不再限制只能使用白名单账号
     if auth.user_from_token(ctx.conn, ctx.token):
         raise ApiError(409, "当前已登录，无需重复注册")
     account = ctx.body.get("account")
@@ -212,6 +214,14 @@ def auth_register(ctx):
         "cookie": auth.cookie_header(token),
         "user": auth.public_user(user),
     }
+
+
+@route("DELETE", "/api/account")
+def account_delete(ctx):
+    """注销当前账号：校验密码后删除账号，业务数据随外键级联清除。"""
+    auth.verify_password_or_raise(ctx.conn, ctx.user, ctx.body.get("password"))
+    ctx.conn.execute("DELETE FROM users WHERE id = ?", (ctx.user_id,))
+    return {"ok": True, "cookie": auth.clear_cookie_header()}
 
 
 @route("POST", "/api/auth/login", auth_required=False)
@@ -249,6 +259,102 @@ def auth_password(ctx):
         keep_token=ctx.token,
     )
     return {"ok": True}
+
+
+# ==========================================================
+# 科普资讯：聚合公开 RSS（无需密钥）
+# ==========================================================
+NEWS_FEEDS = (
+    # 中国新闻网健康频道：更新及时
+    "https://www.chinanews.com.cn/rss/health.xml",
+    # 人民网健康频道：作为补充
+    "http://www.people.com.cn/rss/health.xml",
+)
+NEWS_CACHE = {}
+NEWS_CACHE_SECONDS = 300
+TAG_RE = re.compile(r"<[^>]+>")
+
+
+def _clean_news_text(value, limit=160):
+    text = TAG_RE.sub("", str(value or ""))
+    text = text.replace("&nbsp;", " ").replace("&amp;", "&").replace("&quot;", '"')
+    text = re.sub(r"\s+", " ", text).strip()
+    return text[:limit]
+
+
+def _parse_feed(raw):
+    try:
+        root = ET.fromstring(raw)
+    except Exception:
+        return []
+    items = []
+    for node in root.iter("item"):
+        title = _clean_news_text(node.findtext("title"), 80)
+        link = (node.findtext("link") or "").strip()
+        if not title or not link.startswith("http"):
+            continue
+        items.append({
+            "title": title,
+            "summary": _clean_news_text(node.findtext("description"), 160),
+            "link": link,
+            "source": _clean_news_text(node.findtext("source"), 20) or "健康资讯",
+            "published": (node.findtext("pubDate") or "").strip(),
+        })
+    return items
+
+
+def _fetch_news(query, limit):
+    collected = []
+    seen_links = set()
+    for url in NEWS_FEEDS:
+        request = urllib.request.Request(url, headers={
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                          "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+            "Accept-Language": "zh-CN,zh;q=0.9",
+        })
+        try:
+            with urllib.request.urlopen(request, timeout=8) as response:
+                raw = response.read()
+        except Exception:
+            continue
+        for item in _parse_feed(raw):
+            if item["link"] in seen_links:
+                continue
+            seen_links.add(item["link"])
+            collected.append(item)
+        if len(collected) >= limit * 2:
+            break
+
+    # 关键词过滤：默认「健康」时返回全部，其它词按标题/摘要匹配，匹配不到再退回全部
+    if query and query != "健康":
+        matched = [item for item in collected
+                   if query in item["title"] or query in item["summary"]]
+        if matched:
+            collected = matched
+    return collected[:limit]
+
+
+@route("GET", "/api/news", auth_required=False)
+def news_list(ctx):
+    query = str(query_value(ctx, "q", "健康") or "健康").strip()[:30] or "健康"
+    limit = to_int(query_value(ctx, "limit", 12), "limit", 1, 40)
+
+    cache_key = query + "|" + str(limit)
+    cached = NEWS_CACHE.get(cache_key)
+    now = time.time()
+    if cached and now - cached["at"] < NEWS_CACHE_SECONDS:
+        return {"items": cached["items"], "source": "rss", "cached": True}
+
+    try:
+        items = _fetch_news(query, limit)
+    except Exception:
+        items = []
+
+    if items:
+        NEWS_CACHE[cache_key] = {"at": now, "items": items}
+        return {"items": items, "source": "rss", "cached": False}
+    return {"items": [], "source": "rss", "cached": False,
+            "error": "资讯服务暂时不可用，请稍后再试"}
 
 
 # ==========================================================
@@ -1493,6 +1599,35 @@ def ai_chat(ctx):
     reply, meta = ai.generate_reply(message, history=history,
                                     context=health_summary(ctx.conn, ctx.user_id))
 
+    # 识别「开始跑步」「吃了…帮我记到晚餐」这类指令，附带可执行动作
+    action = ai.detect_action(message)
+    if action and action.get("type") == "meal_add":
+        try:
+            data, _meta = ai.estimate_food(action.get("text") or message)
+        except ai.AiError:
+            data = {}
+        foods = []
+        for item in (data.get("foods") or []):
+            if not isinstance(item, dict) or not item.get("name"):
+                continue
+            foods.append({
+                "name": str(item.get("name"))[:30],
+                "portion": str(item.get("portion") or "1 份")[:30],
+                "kcal": max(0, round(float(item.get("kcal") or 0))),
+                "protein": max(0, round(float(item.get("protein") or 0), 1)),
+                "carb": max(0, round(float(item.get("carb") or 0), 1)),
+                "fat": max(0, round(float(item.get("fat") or 0), 1)),
+                "fiber": max(0, round(float(item.get("fiber") or 0), 1)),
+            })
+            if len(foods) >= 8:
+                break
+        if foods:
+            action["foods"] = foods
+            action["total"] = {
+                key: round(sum(food[key] for food in foods), 1)
+                for key in ("kcal", "protein", "carb", "fat", "fiber")
+            }
+
     now = db.now()
     ctx.conn.execute(
         "INSERT INTO ai_messages(user_id, conversation_id, role, content, created_at) "
@@ -1511,6 +1646,7 @@ def ai_chat(ctx):
     return {
         "reply": reply,
         "conversationId": cid,
+        "action": action,
         "configured": meta["configured"],
         "degraded": meta["degraded"],
         "provider": meta["provider"],

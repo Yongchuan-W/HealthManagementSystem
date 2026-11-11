@@ -4220,6 +4220,131 @@ body { color: var(--text); }
   .period-dates { flex-direction: column; align-items: stretch; }
   .period-arrow { display: none; }
 }
+
+/* ==========================================================
+   语音输入按钮（左下角，与右下角 AI 悬浮球对称）
+   ========================================================== */
+.voice-fab {
+  position: fixed;
+  left: 22px;
+  bottom: 22px;
+  z-index: 60;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 16px;
+  border: 1px solid #d9e6d2;
+  border-radius: 999px;
+  background: #fff;
+  color: #4f6b3a;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 6px 20px rgba(74, 53, 37, 0.14);
+  transition: background 0.2s, color 0.2s, transform 0.2s;
+}
+
+.voice-fab:hover { background: #f4f9ee; transform: translateY(-1px); }
+
+.voice-fab .icon { width: 17px; height: 17px; }
+
+.voice-fab.listening {
+  background: #e8465f;
+  border-color: #e8465f;
+  color: #fff;
+  animation: voicePulse 1.2s ease-in-out infinite;
+}
+
+@keyframes voicePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(232, 70, 95, 0.38); }
+  50% { box-shadow: 0 0 0 10px rgba(232, 70, 95, 0); }
+}
+
+@media (max-width: 560px) {
+  .voice-fab { left: 14px; bottom: 16px; padding: 10px 13px; font-size: 12px; }
+}
+
+/* ==========================================================
+   健康小管家快捷提问
+   ========================================================== */
+.assistant-quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 18px 10px;
+}
+
+.assistant-quick button {
+  padding: 7px 13px;
+  border: 1px solid #dce7d4;
+  border-radius: 999px;
+  background: #f6faf2;
+  color: #5d7a4a;
+  font-size: 12.5px;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.assistant-quick button:hover { background: #eaf4e1; border-color: #c8dcb8; }
+
+/* ==========================================================
+   登录页注册切换 / 注销账号
+   ========================================================== */
+.login-switch {
+  display: block;
+  width: 100%;
+  margin-top: 14px;
+  border: 0;
+  background: transparent;
+  color: #6e8a56;
+  font-size: 13px;
+  text-align: center;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.login-switch:hover { color: #4f6b3a; }
+
+.btn-delete-account {
+  margin-right: auto;
+  padding: 9px 14px;
+  border: 1px solid #f0c9cf;
+  border-radius: 9px;
+  background: #fdf2f3;
+  color: #d0445a;
+  font-size: 13px;
+}
+
+.btn-delete-account:hover { background: #fbe4e7; }
+
+/* ==========================================================
+   真实资讯卡片
+   ========================================================== */
+.news-card.live { cursor: pointer; }
+
+.news-card.live .news-desc { -webkit-line-clamp: 4; }
+
+.news-live-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 11.5px;
+  color: #9a8a7c;
+}
+
+.news-live-meta .src {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #f4f9ea;
+  color: #5d7a35;
+}
+
+.news-source-hint {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #8b7d70;
+}
+
+.news-source-hint b { color: #5d7a35; font-weight: 600; }
 </style>
 </head>
 <body>
@@ -4247,6 +4372,7 @@ body { color: var(--text); }
   <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></symbol>
   <symbol id="i-play" viewBox="0 0 24 24"><polygon points="8 5 19 12 8 19 8 5"/></symbol>
   <symbol id="i-send" viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3M9 21h6"/></symbol>
   <symbol id="i-plus" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
   <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z"/><path d="M19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8L19 16z"/></symbol>
   <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></symbol>
@@ -4289,9 +4415,15 @@ body { color: var(--text); }
           <label for="loginPassword">密码</label>
           <input id="loginPassword" type="password" autocomplete="current-password" placeholder="请输入密码">
         </div>
+        <div class="login-field" id="loginNicknameField" hidden>
+          <label for="loginNickname">昵称（可选）</label>
+          <input id="loginNickname" type="text" autocomplete="nickname" placeholder="不填则默认使用账号名">
+        </div>
         <div class="login-error" id="loginError" hidden></div>
         <button class="btn-primary login-btn" type="submit" id="loginSubmit">登录</button>
       </form>
+
+      <button class="login-switch" type="button" id="authModeSwitch">还没有账号？立即注册</button>
 
       <button class="btn-primary login-btn" type="button" id="demoEnter" hidden>进入本地演示（不校验账号）</button>
 
@@ -5163,6 +5295,7 @@ body { color: var(--text); }
         <button class="news-tag" type="button" data-tag="护眼">护眼</button>
       </div>
       <div class="news-empty" id="newsEmpty" hidden>没有找到相关内容，换个关键词试试。</div>
+      <div class="news-source-hint" id="newsSourceHint" hidden></div>
 
       <div class="news-grid">
         <article class="news-card" data-article="diet">
@@ -5227,6 +5360,12 @@ body { color: var(--text); }
           </div>
         </div>
         <p class="assistant-tip">对话记录会自动保存，换个设备登录同一账号也能接着聊。AI 内容仅供参考，不构成医疗建议。</p>
+        <div class="assistant-quick" id="assistantQuick">
+          <button type="button" data-question="这个网页怎么用？请按模块简单说明。">这个网页怎么用</button>
+          <button type="button" data-question="怎么用语音输入？">怎么用语音输入</button>
+          <button type="button" data-question="我现在要开始跑步，帮我记录一下">开始跑步并记录</button>
+          <button type="button" data-question="我今天吃了一碗米饭和一份青菜，帮我填入今日饮食的午餐部分">语音式记录饮食</button>
+        </div>
         <div class="assistant-hist" id="assistantHistPanel" hidden>
           <div class="assistant-hist-empty" id="assistantHistEmpty" hidden>还没有历史对话</div>
           <div class="assistant-hist-list" id="assistantHistList"></div>
@@ -5292,6 +5431,7 @@ body { color: var(--text); }
     </div>
 
     <div class="modal-foot">
+      <button class="btn-delete-account" id="deleteAccountBtn" hidden>注销账号</button>
       <button class="btn-logout" id="logoutBtn" hidden>退出登录</button>
       <button class="btn-save" id="saveProfile">保存修改</button>
     </div>
@@ -5713,6 +5853,11 @@ body { color: var(--text); }
 <!-- ========================================================
      悬浮客服按钮与 AI 聊天窗口
      ======================================================== -->
+<button class="voice-fab" id="voiceFab" type="button" aria-label="语音输入">
+  <svg class="icon"><use href="#i-mic"/></svg>
+  <span id="voiceFabText">语音输入</span>
+</button>
+
 <button class="fab" id="fab" aria-label="打开 AI 健康小管家">
   <span class="ai-run">
     <img src="__AI_LOGO__" alt="AI 健康小管家">
@@ -6001,6 +6146,9 @@ function applyBundle(bundle) {
     }
   });
   if (currentUser && currentUser.id) setLocalOwner(currentUser.id);
+
+  // 内存里的运动对象也要立即换成新账号的数据
+  reloadSportState();
 }
 
 // 登录 / 会话恢复后，从后端取回整包数据；账号为空而本机有旧数据时先迁移
@@ -6075,6 +6223,7 @@ async function afterAuthenticated() {
 function setServerMode(enabled) {
   serverMode = !!enabled;
   document.getElementById('logoutBtn').hidden = !serverMode;
+  document.getElementById('deleteAccountBtn').hidden = !serverMode;
 }
 
 function showLoginNotice(message, warn) {
@@ -6088,6 +6237,7 @@ function switchToLocalDemo(message, warn) {
   serverMode = false;
   const form = document.getElementById('loginForm');
   form.hidden = true;
+  document.getElementById('authModeSwitch').hidden = true;
   document.getElementById('loginError').hidden = true;
   document.getElementById('authTitle').textContent = '本地演示';
   document.getElementById('authSub').textContent = '数据只保存在本机，不会同步';
@@ -6170,6 +6320,31 @@ document.getElementById('logoutBtn').addEventListener('click', async function ()
   window.location.reload();
 });
 
+// 注销账号：永久删除服务器上的账号与全部数据
+document.getElementById('deleteAccountBtn').addEventListener('click', async function () {
+  if (!serverMode || !currentUser) {
+    showToast('当前是本地演示模式，没有可注销的账号');
+    return;
+  }
+  if (!window.confirm('注销后账号与全部健康数据将被永久删除，且无法恢复。确定继续吗？')) return;
+
+  const password = window.prompt('请输入当前账号的密码以确认注销：');
+  if (!password) return;
+
+  try {
+    const result = await api('/api/account', { method: 'DELETE', body: { password: password } });
+    if (!result.ok) {
+      showToast(result.data.error || '注销失败，请检查密码后重试');
+      return;
+    }
+    clearLocalData();
+    window.alert('账号已注销，数据已清除。');
+    window.location.reload();
+  } catch (error) {
+    showToast('网络异常，注销失败，请稍后再试');
+  }
+});
+
 // 关闭页面或切到后台时，把还没来得及提交的修改补发一次
 window.addEventListener('pagehide', function () {
   if (!serverMode || !currentUser) return;
@@ -6181,15 +6356,45 @@ window.addEventListener('pagehide', function () {
   }
 });
 
+// 登录 / 注册两种模式共用同一张卡片
+let authMode = 'login';
+
+function setAuthMode(mode) {
+  authMode = mode;
+  const isRegister = mode === 'register';
+  document.getElementById('authTitle').textContent = isRegister ? '创建账号' : '欢迎回来';
+  document.getElementById('authSub').textContent = isRegister
+    ? '注册后数据会保存在你的账号里，换设备也能同步'
+    : '登录后开始科学管理你的健康';
+  document.getElementById('loginNicknameField').hidden = !isRegister;
+  document.getElementById('loginPassword').setAttribute(
+    'autocomplete', isRegister ? 'new-password' : 'current-password');
+  document.getElementById('authModeSwitch').textContent = isRegister
+    ? '已有账号？去登录'
+    : '还没有账号？立即注册';
+  document.getElementById('loginSubmit').textContent = isRegister ? '注册并登录' : '登录';
+  document.getElementById('loginError').hidden = true;
+}
+
+document.getElementById('authModeSwitch').addEventListener('click', function () {
+  setAuthMode(authMode === 'login' ? 'register' : 'login');
+});
+
 document.getElementById('loginForm').addEventListener('submit', async function (event) {
   event.preventDefault();
 
   const account = document.getElementById('loginAccount').value.trim();
   const password = document.getElementById('loginPassword').value;
+  const nickname = document.getElementById('loginNickname').value.trim();
   const submit = document.getElementById('loginSubmit');
+  const isRegister = authMode === 'register';
 
   if (!account || !password) {
     showAuthError('loginError', '请输入账号与密码');
+    return;
+  }
+  if (isRegister && password.length < 6) {
+    showAuthError('loginError', '密码至少 6 位');
     return;
   }
 
@@ -6199,11 +6404,15 @@ document.getElementById('loginForm').addEventListener('submit', async function (
   }
 
   submit.disabled = true;
-  submit.textContent = '登录中…';
+  submit.textContent = isRegister ? '注册中…' : '登录中…';
   try {
-    const result = await api('/api/auth/login', { method: 'POST', body: { account, password } });
+    const result = await api(isRegister ? '/api/auth/register' : '/api/auth/login', {
+      method: 'POST',
+      body: isRegister ? { account, password, nickname } : { account, password }
+    });
     if (!result.ok) {
-      showAuthError('loginError', result.data.error || '账号或密码不正确');
+      showAuthError('loginError', result.data.error ||
+        (isRegister ? '注册失败，请更换账号后再试' : '账号或密码不正确'));
       return;
     }
     document.getElementById('loginError').hidden = true;
@@ -6214,7 +6423,7 @@ document.getElementById('loginForm').addEventListener('submit', async function (
     showAuthError('loginError', '无法连接服务器，请确认服务已启动');
   } finally {
     submit.disabled = false;
-    submit.textContent = '登录';
+    submit.textContent = authMode === 'register' ? '注册并登录' : '登录';
   }
 });
 
@@ -7299,10 +7508,12 @@ document.getElementById('applyReport').addEventListener('click', async function 
 /* ==========================================================
    五、运动页：目标与数据由用户填写，完成度自动计算
    ========================================================== */
-const sportState = loadData('sport', {
+const SPORT_DEFAULT = {
   goal: { kcal: 500, steps: 8000, minutes: 60 },
   history: {}
-});
+};
+
+let sportState = loadData('sport', SPORT_DEFAULT);
 
 // 运动记录只保留最近 7 天，避免旧数据长期堆积
 function pruneSportHistory() {
@@ -7312,7 +7523,26 @@ function pruneSportHistory() {
   });
 }
 
-pruneSportHistory();
+// 登录 / 切换账号后重新读取运动数据，避免继续使用脚本加载时的旧对象
+// （旧对象会导致页面显示为空，并在下次保存时把服务器记录覆盖掉）
+function reloadSportState() {
+  const saved = loadData('sport', null);
+  if (saved && saved.goal) {
+    sportState = {
+      goal: saved.goal,
+      history: saved.history || {}
+    };
+  } else {
+    sportState = {
+      goal: { kcal: SPORT_DEFAULT.goal.kcal, steps: SPORT_DEFAULT.goal.steps,
+              minutes: SPORT_DEFAULT.goal.minutes },
+      history: {}
+    };
+  }
+  pruneSportHistory();
+}
+
+reloadSportState();
 
 // 小圆环半径 18，周长 = 2πr ≈ 113.1
 const gaugeLength = 2 * Math.PI * 18;
@@ -10794,6 +11024,10 @@ function filterNews() {
   const raw = newsSearch.value.trim();
   const keyword = raw.toLowerCase();
 
+  // 切回内置科普内容时，隐藏网络资讯的来源提示
+  const hint = document.getElementById('newsSourceHint');
+  if (hint) hint.hidden = true;
+
   const list = Object.keys(newsArticles).map(function (key) {
     return { key: key, article: newsArticles[key], score: scoreArticle(newsArticles[key], keyword) };
   });
@@ -10854,15 +11088,121 @@ document.querySelectorAll('.news-tag').forEach(function (tag) {
 
 newsSearch.addEventListener('input', filterNews);
 
-// ---------- 刷新：重新排序科普内容，相当于“换一批” ----------
+// ---------- 刷新：从后端拉取真实新闻（必应资讯），失败时回退内置内容 ----------
+const NEWS_SEEN_KEY = 'newsSeen';
+const newsSourceHint = document.getElementById('newsSourceHint');
+let liveNews = [];
+
+function seenNewsLinks() {
+  const list = loadData(NEWS_SEEN_KEY, []);
+  return Array.isArray(list) ? list : [];
+}
+
+function markNewsSeen(link) {
+  if (!link) return;
+  const list = seenNewsLinks();
+  if (list.indexOf(link) !== -1) return;
+  list.unshift(link);
+  saveData(NEWS_SEEN_KEY, list.slice(0, 200));
+}
+
+function formatNewsTime(raw) {
+  const text = String(raw || '').trim();
+  if (!text) return '刚刚更新';
+  const date = new Date(text);
+  if (!isNaN(date.getTime())) {
+    const pad = function (value) { return String(value).padStart(2, '0'); };
+    return (date.getMonth() + 1) + '-' + pad(date.getDate()) + ' ' +
+      pad(date.getHours()) + ':' + pad(date.getMinutes());
+  }
+  return text.slice(0, 10);
+}
+
+function liveNewsCardHtml(item, index) {
+  const colors = ['green', 'blue', 'purple', 'orange', 'pink'];
+  const icons = ['i-book', 'i-heart', 'i-pulse', 'i-leaf', 'i-activity'];
+  const color = colors[index % colors.length];
+  const icon = icons[index % icons.length];
+  const time = formatNewsTime(item.published);
+  const summary = item.summary || '点击查看这条资讯的完整内容。';
+
+  return '<article class="news-card live" data-link="' + escapeNewsHtml(item.link) + '">' +
+    '<div class="news-img ' + color + '"><svg class="icon"><use href="#' + icon + '"/></svg></div>' +
+    '<div class="news-body">' +
+      '<div class="news-cat ' + color + '">' + escapeNewsHtml(item.source || '健康资讯') + '</div>' +
+      '<div class="news-title">' + escapeNewsHtml(item.title) + '</div>' +
+      '<p class="news-desc">' + escapeNewsHtml(summary) + '</p>' +
+      '<div class="news-live-meta"><span class="src">网络资讯</span><span>' +
+        escapeNewsHtml(time || '刚刚更新') + '</span></div>' +
+      '<span class="read-more">在浏览器中查看全文 ›</span>' +
+    '</div></article>';
+}
+
+// 拉取真实资讯：过滤已经看过的链接，保证每次刷新都是新内容
+async function refreshLiveNews(manual) {
+  if (!serverMode) {
+    if (manual) showToast('本地演示版没有后端，无法获取网络资讯');
+    return false;
+  }
+
+  const keyword = newsSearch.value.trim() || '健康';
+  const button = document.getElementById('newsRefresh');
+  button.disabled = true;
+
+  try {
+    const result = await api('/api/news?limit=30&q=' + encodeURIComponent(keyword));
+    const items = (result.ok && result.data.items) ? result.data.items : [];
+    if (!items.length) {
+      if (manual) showToast('暂时没有获取到网络资讯，已保留当前内容');
+      return false;
+    }
+
+    const seen = seenNewsLinks();
+    const fresh = items.filter(function (item) {
+      return item.link && seen.indexOf(item.link) === -1;
+    });
+    const picked = (fresh.length ? fresh : items).slice(0, 12);
+
+    liveNews = picked;
+    newsGrid.innerHTML = picked.map(liveNewsCardHtml).join('');
+    newsCount.textContent = '为你找到 ' + picked.length + ' 条最新资讯';
+    document.getElementById('newsEmpty').hidden = true;
+    newsSourceHint.hidden = false;
+    newsSourceHint.innerHTML = '来源：<b>中国新闻网 / 人民网健康</b>　关键词「' + escapeNewsHtml(keyword) +
+      '」，点击卡片可在浏览器查看原文。';
+    picked.forEach(function (item) { markNewsSeen(item.link); });
+
+    if (manual) showToast(fresh.length ? '已更新 ' + picked.length + ' 条新资讯' : '暂时没有更新的资讯，已展示最新内容');
+    return true;
+  } catch (error) {
+    if (manual) showToast('网络资讯获取失败，已保留当前内容');
+    return false;
+  } finally {
+    button.disabled = false;
+  }
+}
+
 document.getElementById('newsRefresh').addEventListener('click', function () {
-  newsOrder = newsOrder.slice().sort(function () { return Math.random() - 0.5; });
-  newsSearch.value = '';
-  filterNews();
-  showToast('已为你换一批科普内容，共 ' + newsOrder.length + ' 篇');
+  refreshLiveNews(true);
+});
+
+// 点击网络资讯卡片：直接打开原文
+newsGrid.addEventListener('click', function (event) {
+  const live = event.target.closest('.news-card.live');
+  if (!live) return;
+  const link = live.dataset.link;
+  if (link) window.open(link, '_blank', 'noopener');
 });
 
 filterNews();
+
+// 进入资讯页后自动尝试拉取一次真实资讯（失败保持内置内容）
+document.querySelectorAll('.side-nav button').forEach(function (button) {
+  if (button.dataset.page !== 'news') return;
+  button.addEventListener('click', function () {
+    if (!liveNews.length) refreshLiveNews(false);
+  });
+});
 
 document.getElementById('newsClose').addEventListener('click', function () {
   closeMask(newsMask);
@@ -10894,9 +11234,7 @@ function refreshAllViews() {
 
   const sport = loadData('sport', null);
   if (sport && sport.goal) {
-    sportState.goal = sport.goal;
-    sportState.history = sport.history || {};
-    pruneSportHistory();
+    reloadSportState();
   }
 
   const bp = loadData('bp', null);
@@ -11074,6 +11412,133 @@ fab.addEventListener('click', function (event) {
 });
 document.getElementById('chatClose').addEventListener('click', closeChat);
 
+/* ==========================================================
+   语音输入：先点输入框，再点左下角按钮说话
+   ========================================================== */
+const voiceFab = document.getElementById('voiceFab');
+const voiceFabText = document.getElementById('voiceFabText');
+const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
+let voiceRecog = null;
+let voiceTarget = null;
+let lastEditable = null;
+
+// 记住最后聚焦的可编辑输入框（密码、文件等敏感字段除外）
+document.addEventListener('focusin', function (event) {
+  const node = event.target;
+  if (!node || !node.tagName) return;
+  const tag = node.tagName.toLowerCase();
+  if (tag !== 'input' && tag !== 'textarea') return;
+  if (node.type === 'password' || node.type === 'file' || node.disabled || node.readOnly) return;
+  lastEditable = node;
+});
+
+// 把「三十」「一百二」这类口语转换成数字，供数字输入框使用
+function spokenToNumber(text) {
+  const arabic = String(text).match(/\d+(\.\d+)?/);
+  if (arabic) return arabic[0];
+
+  const digits = { '零': 0, '〇': 0, '一': 1, '二': 2, '两': 2, '三': 3, '四': 4,
+                   '五': 5, '六': 6, '七': 7, '八': 8, '九': 9 };
+  const units = { '十': 10, '百': 100, '千': 1000 };
+  let total = 0;
+  let current = 0;
+  const chars = String(text);
+  for (let i = 0; i < chars.length; i++) {
+    const ch = chars[i];
+    if (Object.prototype.hasOwnProperty.call(digits, ch)) {
+      current = digits[ch];
+    } else if (Object.prototype.hasOwnProperty.call(units, ch)) {
+      total += (current || 1) * units[ch];
+      current = 0;
+    }
+  }
+  total += current;
+  return total ? String(total) : '';
+}
+
+function fillVoiceTarget(target, text) {
+  const value = target.type === 'number' ? spokenToNumber(text) : text;
+  if (!value) {
+    showToast('没有识别到数字，请再说一次，例如「三十」');
+    return;
+  }
+  target.value = value;
+  target.dispatchEvent(new Event('input', { bubbles: true }));
+  target.dispatchEvent(new Event('change', { bubbles: true }));
+  target.focus();
+}
+
+function resetVoiceButton() {
+  voiceFab.classList.remove('listening');
+  voiceFabText.textContent = '语音输入';
+}
+
+if (SpeechRecognitionCtor) {
+  voiceRecog = new SpeechRecognitionCtor();
+  voiceRecog.lang = 'zh-CN';
+  voiceRecog.interimResults = true;
+  voiceRecog.continuous = false;
+  voiceRecog.maxAlternatives = 1;
+
+  voiceRecog.onresult = function (event) {
+    let finalText = '';
+    let interim = '';
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      const item = event.results[i];
+      if (item.isFinal) finalText += item[0].transcript;
+      else interim += item[0].transcript;
+    }
+    if (interim) voiceFabText.textContent = interim.slice(0, 8) + '…';
+    if (finalText && voiceTarget) {
+      fillVoiceTarget(voiceTarget, finalText.trim());
+      showToast('已填入：' + finalText.trim().slice(0, 24));
+    }
+  };
+
+  voiceRecog.onerror = function (event) {
+    const reasons = {
+      'not-allowed': '麦克风权限被拒绝，请在浏览器设置里允许使用麦克风',
+      'service-not-allowed': '当前浏览器无法使用语音服务，请改用 Edge 或手动输入',
+      'no-speech': '没有听到声音，请靠近麦克风再试一次',
+      'network': '语音服务网络异常，请稍后再试',
+      'audio-capture': '没有检测到麦克风，请检查设备'
+    };
+    showToast(reasons[event.error] || '语音识别失败，请手动输入');
+  };
+
+  voiceRecog.onend = resetVoiceButton;
+}
+
+voiceFab.addEventListener('click', function () {
+  if (!SpeechRecognitionCtor) {
+    showToast('当前浏览器不支持语音输入，请使用 Edge 或 Chrome，也可以直接打字');
+    return;
+  }
+  if (!window.isSecureContext) {
+    showToast('语音输入需要 HTTPS 访问；当前是普通 HTTP，请手动输入或让管理员开启 HTTPS');
+    return;
+  }
+  if (voiceFab.classList.contains('listening')) {
+    try { voiceRecog.stop(); } catch (error) {}
+    return;
+  }
+
+  voiceTarget = (lastEditable && document.contains(lastEditable)) ? lastEditable : null;
+  if (!voiceTarget) {
+    showToast('请先点一下要填写的输入框，再点语音输入');
+    return;
+  }
+
+  try {
+    voiceRecog.start();
+    voiceFab.classList.add('listening');
+    voiceFabText.textContent = '正在听…';
+  } catch (error) {
+    showToast('语音识别启动失败，请稍后再试');
+    resetVoiceButton();
+  }
+});
+
 // 生成一条聊天气泡
 function makeBubble(text, who) {
   const bubble = document.createElement('div');
@@ -11084,6 +11549,10 @@ function makeBubble(text, who) {
 
 // 简单的关键词规则库（离线演示，不依赖网络接口）
 const chatRules = [
+  {
+    keys: ['怎么用', '怎么使用', '使用教程', '教程', '怎么操作', '不会用'],
+    reply: '使用说明：\n1）左侧导航依次是健康数据、饮食、运动、家人健康、健康小管家、科普资讯。\n2）健康数据：点顶部评分或数据卡片，录入血压、血糖、体重，系统会自动算 BMI 和正常范围。\n3）饮食：在早餐/午餐/晚餐输入框写食物名并回车，查不到的食物由 AI 估算热量。\n4）运动：先设目标，再点运动类型开始计时，结束后自动统计。\n5）科普资讯：可搜索、点热门标签、点「刷新」看最新新闻。\n6）语音输入：先点要填的输入框，再点左下角「语音输入」说话。\n7）小管家还能直接执行指令，例如「我要开始跑步，帮我记录一下」。'
+  },
   {
     keys: ['饮食', '吃', '营养', '食谱', '三餐', '热量', '早餐', '午餐', '晚餐'],
     reply: '饮食建议：三餐尽量规律，主食粗细搭配，保证每餐有一掌心大小的优质蛋白（鸡蛋、鱼、瘦肉或豆制品），再搭配两拳蔬菜。今日蛋白质目标 60g，别忘记补充哦。'
@@ -11364,6 +11833,41 @@ async function loadChatHistory() {
   renderChatLog();
 }
 
+// 执行 AI 返回的动作：开始运动计时 / 写入某一餐
+function runAiAction(action) {
+  if (!action || !action.type) return;
+
+  if (action.type === 'sport_start') {
+    const name = action.sport || '跑步';
+    startSportSession(name);
+    switchPage('sport');
+    showToast('已开始记录「' + name + '」，结束后会自动统计时长和热量');
+    return;
+  }
+
+  if (action.type === 'meal_add') {
+    const meal = action.meal || '加餐';
+    if (!action.foods || !action.foods.length) {
+      showToast('已识别到饮食内容，但没有估算出热量，请到「饮食」页手动确认');
+      return;
+    }
+    const totals = action.total || action.foods.reduce(function (sum, food) {
+      return {
+        kcal: sum.kcal + (Number(food.kcal) || 0),
+        protein: sum.protein + (Number(food.protein) || 0),
+        carb: sum.carb + (Number(food.carb) || 0),
+        fat: sum.fat + (Number(food.fat) || 0),
+        fiber: sum.fiber + (Number(food.fiber) || 0)
+      };
+    }, { kcal: 0, protein: 0, carb: 0, fat: 0, fiber: 0 });
+
+    saveMealRecord(meal, action.text || 'AI 记录', totals);
+    renderMealLog();
+    switchPage('diet');
+    showToast('已记入' + meal + '：约 ' + Math.round(totals.kcal) + ' kcal');
+  }
+}
+
 // 发送消息：悬浮窗和整页共用；传入文本表示来自整页输入框
 function sendChat(rawText) {
   const fromAssistant = typeof rawText === 'string';
@@ -11399,6 +11903,7 @@ function sendChat(rawText) {
       if (result.ok && result.data.reply) {
         if (result.data.conversationId) currentConversationId = result.data.conversationId;
         pushMessage('assistant', result.data.reply);
+        runAiAction(result.data.action);
         if (!assistantHistPanel.hidden) loadConversationList();
         if (result.data.degraded) {
           showToast(result.data.configured
@@ -11428,6 +11933,16 @@ chatInput.addEventListener('keydown', function (event) {
 document.getElementById('assistantSend').addEventListener('click', function () {
   sendChat(assistantInput.value);
 });
+
+// 快捷提问：这个网页怎么用 / 怎么语音输入 / 示例指令
+const assistantQuick = document.getElementById('assistantQuick');
+if (assistantQuick) {
+  assistantQuick.addEventListener('click', function (event) {
+    const button = event.target.closest('button[data-question]');
+    if (!button) return;
+    sendChat(button.dataset.question);
+  });
+}
 
 assistantInput.addEventListener('keydown', function (event) {
   if (event.key === 'Enter') sendChat(assistantInput.value);

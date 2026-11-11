@@ -11,6 +11,7 @@ from __future__ import annotations
 import base64
 import json
 import os
+import re
 import urllib.error
 import urllib.request
 
@@ -43,6 +44,20 @@ SYSTEM_PROMPT = (
     "安全边界：不做疾病诊断，不推荐处方药或具体用药剂量；遇到胸痛、呼吸困难、晕厥、持续高热、"
     "孕产异常等紧急情况，必须建议尽快就医。"
     "用户数据仅作参考，不要编造数值；信息不足时先问一个关键问题。"
+)
+
+PAGE_GUIDE = (
+    "本网站功能说明（用户问「怎么用」时据此回答）：\n"
+    "1. 左侧导航依次是健康数据、饮食、运动、家人健康、健康小管家、科普资讯。\n"
+    "2. 健康数据：点顶部三条评分或数据卡片可录入血压、血糖、体重等，输入后自动计算 BMI 与正常范围。\n"
+    "3. 饮食：在早餐/午餐/晚餐输入框写食物名并回车，系统会查食物库；查不到时由 AI 估算热量，确认份数后保存。\n"
+    "4. 运动：先设目标，再点运动类型开始计时，结束自动累计时长和热量；也可点数据卡片手动填写。\n"
+    "5. 家人健康：添加家人、记录指标、设置提醒。\n"
+    "6. 科普资讯：可搜索关键词、点热门标签、点「刷新」获取新的新闻，点卡片跳浏览器看全文。\n"
+    "7. 语音输入：先点一下要填写的输入框，再点左下角「语音输入」按钮说话，识别结果会自动填入；需要 HTTPS 和浏览器支持。\n"
+    "8. 健康小管家：可以问健康问题，也可以直接下指令，例如「我要开始跑步，帮我记录一下」"
+    "或「我吃了螺蛳粉，帮我记到晚餐」，系统会自动执行。\n"
+    "9. 账号：登录页可注册新账号；个人信息弹窗底部可退出登录或注销账号（会删除全部数据）。\n"
 )
 
 
@@ -99,9 +114,9 @@ def provider_name(settings=None):
 
 
 def _build_messages(message, history, context):
-    system = SYSTEM_PROMPT
+    system = SYSTEM_PROMPT + "\n\n" + PAGE_GUIDE
     if context:
-        system += "\n\n用户健康数据摘要（仅供参考）：\n" + str(context).strip()
+        system += "\n用户健康数据摘要（仅供参考）：\n" + str(context).strip()
 
     messages = [{"role": "system", "content": system}]
     for item in (history or [])[-MAX_HISTORY:]:
@@ -196,6 +211,46 @@ def generate_reply(message, history=None, context=None):
         "configured": True, "degraded": False,
         "model": settings["model"], "provider": provider_name(settings), "error": None,
     }
+
+
+# ==========================================================
+# 指令识别：让用户一句话就能触发动作（不额外消耗模型额度）
+# ==========================================================
+SPORT_KEYWORDS = (
+    "跑步", "慢跑", "健走", "快走", "户外骑行", "骑行", "徒步", "游泳", "瑜伽",
+    "跳绳", "力量训练", "健身操", "篮球", "羽毛球", "足球", "乒乓球", "太极",
+    "八段锦", "拉伸", "登山", "爬楼梯", "舞蹈",
+)
+SPORT_HINTS = ("开始", "记录", "打卡", "帮我记")
+MEAL_HINTS = ("记录", "帮我", "填入", "填到", "记一下", "加进", "记入")
+
+
+def detect_action(message):
+    """从用户原话中识别可执行动作，返回 dict 或 None。
+
+    - sport_start：开始一项运动计时
+    - meal_add：把饮食描述写入某一餐
+    """
+    text = str(message or "").strip()
+    if not text or len(text) > 500:
+        return None
+
+    sport = next((name for name in SPORT_KEYWORDS if name in text), None)
+    if sport and any(hint in text for hint in SPORT_HINTS):
+        return {"type": "sport_start", "sport": sport}
+
+    if (any(word in text for word in ("吃", "喝", "早餐", "午餐", "晚餐", "加餐", "夜宵"))
+            and any(hint in text for hint in MEAL_HINTS)):
+        meal = "加餐"
+        for key in ("早餐", "午餐", "晚餐", "加餐", "夜宵"):
+            if key in text:
+                meal = "晚餐" if key == "夜宵" else key
+                break
+        cleaned = re.sub(r"^(帮我|请|麻烦)?(记录一下|记录|填入|记一下|记入)?", "", text)
+        cleaned = cleaned.strip("，,。 ")
+        return {"type": "meal_add", "meal": meal, "text": cleaned or text}
+
+    return None
 
 
 # ==========================================================

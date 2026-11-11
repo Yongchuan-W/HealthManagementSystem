@@ -158,11 +158,8 @@ def user_from_token(conn, token):
 
     user = conn.execute("SELECT * FROM users WHERE id = ?", (row["user_id"],)).fetchone()
 
-    # 启用白名单后，名单外账号的旧会话立即失效
-    allowed = allowed_accounts()
-    if user is not None and allowed and user["account"] not in allowed:
-        conn.execute("DELETE FROM sessions WHERE token = ?", (token,))
-        return None
+    # 已开放注册：白名单只用于创建账号，不再让名单外的会话失效
+    return user
     return user
 
 
@@ -236,16 +233,19 @@ def register(conn, account, password, nickname=""):
 def login(conn, account, password):
     account = str(account or "").strip()
 
-    allowed = allowed_accounts()
-    if allowed and account not in allowed:
-        raise ApiError(401, "账号或密码不正确", "invalid_credentials")
-
     row = conn.execute(
         "SELECT * FROM users WHERE account = ?", (account,)
     ).fetchone()
     if row is None or not verify_password(str(password or ""), row["password_hash"], row["salt"]):
         raise ApiError(401, "账号或密码不正确", "invalid_credentials")
     return row
+
+
+def verify_password_or_raise(conn, user, password):
+    """校验当前登录用户的密码，用于注销等敏感操作。"""
+    if not verify_password(str(password or ""), user["password_hash"], user["salt"]):
+        raise ApiError(400, "密码不正确", "invalid_password")
+    return True
 
 
 def change_password(conn, user, old_password, new_password, keep_token=None):
