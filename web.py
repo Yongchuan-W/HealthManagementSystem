@@ -10612,14 +10612,6 @@ function makeBubble(text, who) {
   return bubble;
 }
 
-// 追加一条聊天气泡到指定容器
-function addBubble(text, who) {
-  const bubble = makeBubble(text, who);
-  chatBody.appendChild(bubble);
-  chatBody.scrollTop = chatBody.scrollHeight;
-  return bubble;
-}
-
 // 简单的关键词规则库（离线演示，不依赖网络接口）
 const chatRules = [
   {
