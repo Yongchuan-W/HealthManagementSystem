@@ -567,6 +567,7 @@ a { text-decoration: none; }
   border-radius: 12px;
   padding: 16px 18px;
   transition: background 0.2s;
+  min-width: 0;
 }
 
 .vital:hover { background: #f4f6fa; }
@@ -583,6 +584,8 @@ a { text-decoration: none; }
   color: #222f3e;
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  word-break: break-all;
 }
 
 .vital .unit {
@@ -3059,6 +3062,14 @@ body { color: var(--text); }
 /* ==========================================================
    14. 响应式适配（窄屏）
    ========================================================== */
+/* 平板横屏：核心体征改为上下排列，避免右侧正常值范围被数值挤占 */
+@media (max-width: 1120px) {
+  .health-card { flex-direction: column; }
+  .vital-side { width: 100%; flex: none; }
+  .report-link { align-self: flex-end; }
+  .vitals { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
 @media (max-width: 900px) {
   .sidebar {
     position: static;
@@ -3568,6 +3579,112 @@ body { color: var(--text); }
 }
 
 .news-count { font-size: 12px; color: #8b7d70; }
+
+.news-refresh {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 42px;
+  padding: 0 16px;
+  border: 1px solid #e6dbcd;
+  border-radius: 12px;
+  background: #fff;
+  color: #6b5a4a;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.news-refresh:hover { background: #fbf6ef; }
+.news-refresh:active { transform: scale(0.97); }
+.news-refresh .icon { width: 15px; height: 15px; }
+
+.news-quick {
+  margin-left: 10px;
+  font-size: 12px;
+  color: #a08d7d;
+  text-decoration: underline;
+}
+
+/* ---------- 健康小管家整页 ---------- */
+.assistant-card { padding: 24px 28px; }
+
+.assistant-ico {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  overflow: hidden;
+  display: inline-flex;
+  flex: none;
+}
+
+.assistant-ico img { width: 100%; height: 100%; object-fit: cover; }
+
+.assistant-tip {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 14px;
+  line-height: 1.6;
+}
+
+.assistant-log {
+  height: 56vh;
+  min-height: 320px;
+  overflow-y: auto;
+  padding: 16px;
+  background: #f5f8f1;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.assistant-input {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.assistant-input input {
+  flex: 1;
+  height: 44px;
+  border: 1px solid #e6dbcd;
+  border-radius: 999px;
+  padding: 0 16px;
+  font-size: 14px;
+  color: #4a3525;
+  outline: none;
+}
+
+.assistant-input input:focus { border-color: #c8a585; }
+
+.assistant-send {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--teal);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+
+.assistant-send .icon { width: 18px; height: 18px; }
+
+.assistant-new {
+  height: 32px;
+  padding: 0 14px;
+  border: 1px solid #e6dbcd;
+  border-radius: 999px;
+  background: #fff;
+  color: #6b5a4a;
+  font-size: 12px;
+}
+
+.assistant-new:hover { background: #fbf6ef; }
 
 .news-empty {
   font-size: 13px;
@@ -4238,6 +4355,7 @@ body { color: var(--text); }
     <button data-page="sport"><svg class="icon"><use href="#i-dumbbell"/></svg>运动</button>
     <button data-page="family"><svg class="icon"><use href="#i-heart"/></svg>家人健康</button>
     <button data-page="news"><svg class="icon"><use href="#i-book"/></svg>科普资讯</button>
+    <button data-page="assistant"><svg class="icon"><use href="#i-chat"/></svg>健康小管家</button>
   </nav>
 
   <div class="side-user" id="userBtn" title="个人信息">
@@ -4903,6 +5021,9 @@ body { color: var(--text); }
           <input id="newsSearch" type="search" placeholder="搜索科普内容，例如：睡眠、血压、拉伸、蛋白质">
         </label>
         <span class="news-count" id="newsCount"></span>
+        <button class="news-refresh" id="newsRefresh" type="button">
+          <svg class="icon"><use href="#i-refresh"/></svg>刷新
+        </button>
       </div>
       <div class="news-empty" id="newsEmpty" hidden>没有找到相关内容，换个关键词试试。</div>
 
@@ -4913,7 +5034,8 @@ body { color: var(--text); }
             <div class="news-cat green">饮食营养</div>
             <div class="news-title">如何科学搭配三餐饮食？</div>
             <p class="news-desc">合理的饮食搭配不仅能提供充足的能量，还能帮助预防慢性疾病，让身体保持良好状态。</p>
-            <span class="read-more">点击查看全文 ›</span>
+            <span class="read-more">在浏览器中查看全文 ›</span>
+            <span class="news-quick" data-quick="1">速读摘要</span>
           </div>
         </article>
 
@@ -4923,7 +5045,8 @@ body { color: var(--text); }
             <div class="news-cat blue">运动指南</div>
             <div class="news-title">久坐族的5分钟拉伸指南</div>
             <p class="news-desc">长时间面对电脑工作，肩颈酸痛？这几个动作帮你缓解疲劳，恢复身体活力。</p>
-            <span class="read-more">点击查看全文 ›</span>
+            <span class="read-more">在浏览器中查看全文 ›</span>
+            <span class="news-quick" data-quick="1">速读摘要</span>
           </div>
         </article>
 
@@ -4933,7 +5056,8 @@ body { color: var(--text); }
             <div class="news-cat purple">睡眠健康</div>
             <div class="news-title">为什么你总是睡不够？</div>
             <p class="news-desc">了解深度睡眠的重要性，以及如何通过改善卧室环境提升睡眠质量，找回好状态。</p>
-            <span class="read-more">点击查看全文 ›</span>
+            <span class="read-more">在浏览器中查看全文 ›</span>
+            <span class="news-quick" data-quick="1">速读摘要</span>
           </div>
         </article>
 
@@ -4943,9 +5067,33 @@ body { color: var(--text); }
             <div class="news-cat green">慢病管理</div>
             <div class="news-title">血压血糖，家庭自测怎么做才准？</div>
             <p class="news-desc">测压姿势、测量时间、记录方式都会影响结果，掌握几个细节让数据更可信。</p>
-            <span class="read-more">点击查看全文 ›</span>
+            <span class="read-more">在浏览器中查看全文 ›</span>
+            <span class="news-quick" data-quick="1">速读摘要</span>
           </div>
         </article>
+      </div>
+    </section>
+
+    <!-- ====================================================
+         健康小管家：整页聊天，与悬浮窗共用同一份对话记录
+         ==================================================== -->
+    <section class="page" id="page-assistant">
+      <div class="card assistant-card">
+        <div class="card-head">
+          <div class="card-title">
+            <span class="assistant-ico"><img src="__AI_LOGO__" alt="AI 健康小管家"></span>
+            AI 健康小管家
+          </div>
+          <button class="assistant-new" id="assistantNew" type="button">开启新对话</button>
+        </div>
+        <p class="assistant-tip">对话记录会自动保存，换个设备登录同一账号也能接着聊。AI 内容仅供参考，不构成医疗建议。</p>
+        <div class="assistant-log" id="assistantLog"></div>
+        <div class="assistant-input">
+          <input id="assistantInput" type="text" placeholder="输入你想咨询的健康问题...">
+          <button class="assistant-send" id="assistantSend" type="button" aria-label="发送">
+            <svg class="icon"><use href="#i-send"/></svg>
+          </button>
+        </div>
       </div>
     </section>
 
@@ -10271,8 +10419,25 @@ const newsArticles = {
 
 const newsMask = document.getElementById('newsMask');
 
+// 点击资讯卡片：在新标签页打开浏览器搜索，查看该主题的完整内容
+function openArticleInBrowser(title) {
+  const url = 'https://www.baidu.com/s?wd=' + encodeURIComponent(title + ' 健康科普');
+  window.open(url, '_blank', 'noopener');
+}
+
 document.querySelectorAll('.news-card').forEach(function (card) {
   card.addEventListener('click', function () {
+    const article = newsArticles[card.dataset.article];
+    if (!article) return;
+    openArticleInBrowser(article.title);
+  });
+});
+
+// “速读摘要”：在页面内查看简短介绍
+document.querySelectorAll('.news-quick').forEach(function (btn) {
+  btn.addEventListener('click', function (event) {
+    event.stopPropagation();
+    const card = btn.closest('.news-card');
     const article = newsArticles[card.dataset.article];
     if (!article) return;
 
@@ -10311,6 +10476,20 @@ function filterNews() {
 }
 
 newsSearch.addEventListener('input', filterNews);
+
+// ---------- 刷新：重新排序科普内容，相当于“换一批” ----------
+const newsGrid = document.querySelector('.news-grid');
+
+document.getElementById('newsRefresh').addEventListener('click', function () {
+  const cards = Array.from(newsGrid.children);
+  cards.sort(function () { return Math.random() - 0.5; });
+  cards.forEach(function (card) {
+    newsGrid.appendChild(card);
+  });
+  newsSearch.value = '';
+  filterNews();
+  showToast('已为你换一批科普内容');
+});
 
 // ---------- 新功能初始化 ----------
 loadProfileView();
@@ -10397,6 +10576,12 @@ bootAuth();
 const chat = document.getElementById('chat');
 const chatBody = document.getElementById('chatBody');
 const chatInput = document.getElementById('chatInput');
+const assistantLog = document.getElementById('assistantLog');
+const assistantInput = document.getElementById('assistantInput');
+
+// 悬浮窗与整页共用这一份对话，保证两边看到的内容一致
+const CHAT_GREETING = '你好！我是你的专属 AI 健康助理。请问今天有什么我可以帮你的？关于饮食计算、运动建议或是生理期护理，都可以问我。';
+let chatMessages = [];
 
 function openChat() {
   chat.classList.add('open');
@@ -10419,11 +10604,17 @@ function toggleChat() {
 document.getElementById('fab').addEventListener('click', toggleChat);
 document.getElementById('chatClose').addEventListener('click', closeChat);
 
-// 追加一条聊天气泡
-function addBubble(text, who) {
+// 生成一条聊天气泡
+function makeBubble(text, who) {
   const bubble = document.createElement('div');
   bubble.className = 'msg ' + who;
   bubble.textContent = text;
+  return bubble;
+}
+
+// 追加一条聊天气泡到指定容器
+function addBubble(text, who) {
+  const bubble = makeBubble(text, who);
   chatBody.appendChild(bubble);
   chatBody.scrollTop = chatBody.scrollHeight;
   return bubble;
@@ -10473,19 +10664,49 @@ function getReply(text) {
   return '收到～我是健康小管家。你可以问我饮食搭配、运动计划、睡眠改善或生理期护理等问题，我会给出简单可执行的建议。';
 }
 
-// 聊天记录：连后端时由服务端保存，纯静态演示时存本机
-function renderChatLog(messages) {
-  chatBody.innerHTML = '';
-  messages.forEach(function (item) {
-    addBubble(item.content, item.role === 'user' ? 'user' : 'bot');
+// 聊天记录：悬浮窗与整页共用同一份，连后端时由服务端保存
+function renderChatLog() {
+  [chatBody, assistantLog].forEach(function (box) {
+    if (!box) return;
+    box.innerHTML = '';
+    if (!chatMessages.length) {
+      box.appendChild(makeBubble(CHAT_GREETING, 'bot'));
+      return;
+    }
+    chatMessages.forEach(function (item) {
+      box.appendChild(makeBubble(item.content, item.role === 'user' ? 'user' : 'bot'));
+    });
+    box.scrollTop = box.scrollHeight;
   });
+}
+
+// 新增一条消息并重绘两边
+function pushMessage(role, content) {
+  chatMessages.push({ role: role, content: content });
+  if (chatMessages.length > 100) chatMessages = chatMessages.slice(-100);
+  renderChatLog();
+}
+
+// 两边的“正在输入”提示，返回清除函数
+function startTyping() {
+  const nodes = [];
+  [chatBody, assistantLog].forEach(function (box) {
+    if (!box) return;
+    const el = makeBubble('正在输入...', 'bot typing');
+    box.appendChild(el);
+    box.scrollTop = box.scrollHeight;
+    nodes.push(el);
+  });
+  return function () {
+    nodes.forEach(function (el) { el.remove(); });
+  };
 }
 
 async function loadChatHistory() {
   if (!serverMode || !currentUser) {
     // 静态演示：沿用本机保存的记录
-    const local = loadData('chatLog', []);
-    if (local && local.length) renderChatLog(local);
+    chatMessages = loadData('chatLog', []) || [];
+    renderChatLog();
     return;
   }
 
@@ -10497,20 +10718,21 @@ async function loadChatHistory() {
   }
   if (!result || !result.ok) return;
 
-  const messages = result.data.messages || [];
-  if (messages.length) renderChatLog(messages);
+  chatMessages = result.data.messages || [];
+  renderChatLog();
 }
 
-// 发送消息
-function sendChat() {
-  const text = chatInput.value.trim();
+// 发送消息：悬浮窗和整页共用；传入文本表示来自整页输入框
+function sendChat(rawText) {
+  const fromAssistant = typeof rawText === 'string';
+  const text = (fromAssistant ? rawText : chatInput.value).trim();
   if (!text) return;
 
-  addBubble(text, 'user');
-  chatInput.value = '';
+  if (fromAssistant) assistantInput.value = '';
+  else chatInput.value = '';
 
-  // 模拟 AI “正在输入”
-  const typingBubble = addBubble('正在输入...', 'bot typing');
+  pushMessage('user', text);
+  const stopTyping = startTyping();
 
   // 纯静态演示：本地规则回复，并把对话留在本机
   if (!serverMode || !currentUser) {
@@ -10520,8 +10742,8 @@ function sendChat() {
     saveData('chatLog', log.slice(-100));
 
     setTimeout(function () {
-      typingBubble.remove();
-      addBubble(reply, 'bot');
+      stopTyping();
+      pushMessage('assistant', reply);
     }, 500);
     return;
   }
@@ -10529,30 +10751,61 @@ function sendChat() {
   // 连后端：消息与回复都由服务端保存
   api('/api/ai/chat', { method: 'POST', body: { message: text } })
     .then(function (result) {
-      typingBubble.remove();
+      stopTyping();
       if (result.ok && result.data.reply) {
-        addBubble(result.data.reply, 'bot');
+        pushMessage('assistant', result.data.reply);
         if (result.data.degraded) {
           showToast(result.data.configured
             ? 'AI 服务暂时不可用，已返回兜底建议'
             : '尚未配置 AI 密钥，当前为兜底回复');
         }
       } else {
-        addBubble('抱歉，暂时无法获取回复，请稍后再试。', 'bot');
+        pushMessage('assistant', '抱歉，暂时无法获取回复，请稍后再试。');
       }
     })
     .catch(function () {
-      typingBubble.remove();
-      addBubble('网络异常，请稍后再试。', 'bot');
+      stopTyping();
+      pushMessage('assistant', '网络异常，请稍后再试。');
     });
 }
 
-document.getElementById('chatSend').addEventListener('click', sendChat);
+document.getElementById('chatSend').addEventListener('click', function () {
+  sendChat();
+});
 
-// 回车发送
+// 回车发送（悬浮窗）
 chatInput.addEventListener('keydown', function (event) {
   if (event.key === 'Enter') sendChat();
 });
+
+// 整页聊天：发送、回车、开启新对话
+document.getElementById('assistantSend').addEventListener('click', function () {
+  sendChat(assistantInput.value);
+});
+
+assistantInput.addEventListener('keydown', function (event) {
+  if (event.key === 'Enter') sendChat(assistantInput.value);
+});
+
+document.getElementById('assistantNew').addEventListener('click', async function () {
+  if (!window.confirm('确定清空全部对话记录吗？')) return;
+
+  chatMessages = [];
+  renderChatLog();
+  if (serverMode && currentUser) {
+    try {
+      await api('/api/ai/history', { method: 'DELETE' });
+    } catch (error) {
+      // 清理失败不影响本地已清空的视图
+    }
+  } else {
+    saveData('chatLog', []);
+  }
+  showToast('已开启新对话');
+});
+
+// 首次进入时先把问候语画到两边
+renderChatLog();
 
 /* ==========================================================
    八、键盘 Esc：关闭弹窗与聊天窗
