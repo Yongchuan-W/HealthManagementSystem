@@ -197,12 +197,22 @@ CREATE TABLE IF NOT EXISTS uploads (
     created_at    TEXT
 );
 
-CREATE TABLE IF NOT EXISTS ai_messages (
+CREATE TABLE IF NOT EXISTS ai_conversations (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    role       TEXT    NOT NULL,          -- user / assistant
-    content    TEXT    NOT NULL,
-    created_at TEXT
+    title      TEXT    NOT NULL,
+    created_at TEXT,
+    updated_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_ai_conv_user ON ai_conversations(user_id, updated_at);
+
+CREATE TABLE IF NOT EXISTS ai_messages (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    conversation_id INTEGER,
+    role            TEXT    NOT NULL,     -- user / assistant
+    content         TEXT    NOT NULL,
+    created_at      TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_ai_user ON ai_messages(user_id, id);
 
@@ -317,6 +327,37 @@ def _migrate(conn):
         conn.execute("ALTER TABLE preferences ADD COLUMN meals TEXT")
     if preference_columns and "age" not in preference_columns:
         conn.execute("ALTER TABLE preferences ADD COLUMN age TEXT")
+
+    ai_columns = {row[1] for row in conn.execute("PRAGMA table_info(ai_messages)")}
+    if ai_columns and "conversation_id" not in ai_columns:
+        conn.execute("ALTER TABLE ai_messages ADD COLUMN conversation_id INTEGER")
+        _group_legacy_messages(conn)
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_ai_conv_msg "
+                 "ON ai_messages(conversation_id, id)")
+
+
+def _group_legacy_messages(conn):
+    """把升级前散落的旧消息按用户归入一条「历史对话」，避免记录丢失。"""
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    for (user_id,) in conn.execute("SELECT DISTINCT user_id FROM ai_messages").fetchall():
+        first = conn.execute(
+            "SELECT content FROM ai_messages WHERE user_id = ? AND role = 'user' "
+            "ORDER BY id LIMIT 1", (user_id,),
+        ).fetchone()
+        last = conn.execute(
+            "SELECT created_at FROM ai_messages WHERE user_id = ? ORDER BY id DESC LIMIT 1",
+            (user_id,),
+        ).fetchone()
+        title = (first[0].strip()[:24] if first and first[0].strip() else "历史对话")
+        cursor = conn.execute(
+            "INSERT INTO ai_conversations(user_id, title, created_at, updated_at) "
+            "VALUES (?, ?, ?, ?)",
+            (user_id, title, now, (last[0] if last and last[0] else now)),
+        )
+        conn.execute(
+            "UPDATE ai_messages SET conversation_id = ? WHERE user_id = ?",
+            (cursor.lastrowid, user_id),
+        )
 
 
 @contextmanager

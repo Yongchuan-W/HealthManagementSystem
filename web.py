@@ -3608,6 +3608,11 @@ body { color: var(--text); }
 /* ---------- 健康小管家整页 ---------- */
 .assistant-card { padding: 24px 28px; }
 
+.assistant-card .card-head {
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 .assistant-ico {
   width: 30px;
   height: 30px;
@@ -3685,6 +3690,88 @@ body { color: var(--text); }
 }
 
 .assistant-new:hover { background: #fbf6ef; }
+
+.assistant-actions {
+  display: flex;
+  gap: 8px;
+  flex: none;
+  flex-wrap: wrap;
+}
+
+/* 历史对话列表 */
+.assistant-hist {
+  margin-bottom: 14px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fbfaf6;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.assistant-hist-empty {
+  font-size: 12.5px;
+  color: var(--muted);
+  text-align: center;
+  padding: 14px 0;
+}
+
+.assistant-hist-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.assistant-hist-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: #fff;
+  text-align: left;
+}
+
+.assistant-hist-item:hover { border-color: #e6dbcd; }
+
+.assistant-hist-item.active {
+  border-color: #d9b98f;
+  background: #fdf8f1;
+}
+
+.assistant-hist-main { flex: 1; min-width: 0; }
+
+.assistant-hist-title {
+  font-size: 13px;
+  color: #4a3525;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.assistant-hist-time {
+  font-size: 11px;
+  color: #a08d7d;
+  margin-top: 2px;
+}
+
+.assistant-hist-del {
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #b3a294;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+
+.assistant-hist-del:hover { background: #fdeaec; color: #d9534f; }
+.assistant-hist-del .icon { width: 14px; height: 14px; }
 
 .news-empty {
   font-size: 13px;
@@ -4354,8 +4441,8 @@ body { color: var(--text); }
     <button data-page="diet"><svg class="icon"><use href="#i-fork"/></svg>饮食</button>
     <button data-page="sport"><svg class="icon"><use href="#i-dumbbell"/></svg>运动</button>
     <button data-page="family"><svg class="icon"><use href="#i-heart"/></svg>家人健康</button>
-    <button data-page="news"><svg class="icon"><use href="#i-book"/></svg>科普资讯</button>
     <button data-page="assistant"><svg class="icon"><use href="#i-chat"/></svg>健康小管家</button>
+    <button data-page="news"><svg class="icon"><use href="#i-book"/></svg>科普资讯</button>
   </nav>
 
   <div class="side-user" id="userBtn" title="个人信息">
@@ -5084,9 +5171,16 @@ body { color: var(--text); }
             <span class="assistant-ico"><img src="__AI_LOGO__" alt="AI 健康小管家"></span>
             AI 健康小管家
           </div>
-          <button class="assistant-new" id="assistantNew" type="button">开启新对话</button>
+          <div class="assistant-actions">
+            <button class="assistant-new" id="assistantHistory" type="button">历史对话</button>
+            <button class="assistant-new" id="assistantNew" type="button">开启新对话</button>
+          </div>
         </div>
         <p class="assistant-tip">对话记录会自动保存，换个设备登录同一账号也能接着聊。AI 内容仅供参考，不构成医疗建议。</p>
+        <div class="assistant-hist" id="assistantHistPanel" hidden>
+          <div class="assistant-hist-empty" id="assistantHistEmpty" hidden>还没有历史对话</div>
+          <div class="assistant-hist-list" id="assistantHistList"></div>
+        </div>
         <div class="assistant-log" id="assistantLog"></div>
         <div class="assistant-input">
           <input id="assistantInput" type="text" placeholder="输入你想咨询的健康问题...">
@@ -5712,6 +5806,7 @@ function clearLocalData() {
   try {
     window.localStorage.removeItem(OWNER_KEY);
     window.localStorage.removeItem('hm_chatLog');
+    window.localStorage.removeItem('hm_chatSessions');
   } catch (error) {
     // 忽略清理失败
   }
@@ -10582,6 +10677,13 @@ const assistantInput = document.getElementById('assistantInput');
 // 悬浮窗与整页共用这一份对话，保证两边看到的内容一致
 const CHAT_GREETING = '你好！我是你的专属 AI 健康助理。请问今天有什么我可以帮你的？关于饮食计算、运动建议或是生理期护理，都可以问我。';
 let chatMessages = [];
+// 当前正在聊的对话 id（null 表示还没开始，发送第一条时由服务端创建）
+let currentConversationId = null;
+
+const assistantHistoryBtn = document.getElementById('assistantHistory');
+const assistantHistPanel = document.getElementById('assistantHistPanel');
+const assistantHistList = document.getElementById('assistantHistList');
+const assistantHistEmpty = document.getElementById('assistantHistEmpty');
 
 function openChat() {
   chat.classList.add('open');
@@ -10694,22 +10796,202 @@ function startTyping() {
   };
 }
 
+// ---------- 历史对话 ----------
+function formatChatTime(value) {
+  if (!value) return '';
+  const text = String(value).replace('T', ' ').replace(/\.\d+/, '');
+  return text.slice(0, 16);
+}
+
+function renderHistoryList(items) {
+  if (!assistantHistList) return;
+  assistantHistList.innerHTML = '';
+  assistantHistEmpty.hidden = items.length > 0;
+
+  items.forEach(function (item) {
+    const row = document.createElement('div');
+    row.className = 'assistant-hist-item' + (item.id === currentConversationId ? ' active' : '');
+    row.setAttribute('role', 'button');
+    row.tabIndex = 0;
+
+    const main = document.createElement('div');
+    main.className = 'assistant-hist-main';
+    const title = document.createElement('div');
+    title.className = 'assistant-hist-title';
+    title.textContent = item.title || '新对话';
+    const time = document.createElement('div');
+    time.className = 'assistant-hist-time';
+    time.textContent = formatChatTime(item.updatedAt || item.updated_at) +
+      (typeof item.count === 'number' ? ' · ' + Math.ceil(item.count / 2) + ' 轮' : '');
+    main.appendChild(title);
+    main.appendChild(time);
+
+    const del = document.createElement('button');
+    del.className = 'assistant-hist-del';
+    del.type = 'button';
+    del.title = '删除这条对话';
+    del.innerHTML = '<svg class="icon"><use href="#i-close"/></svg>';
+
+    row.addEventListener('click', function () { openConversation(item.id); });
+    row.addEventListener('keydown', function (event) {
+      if (event.key === 'Enter') openConversation(item.id);
+    });
+    del.addEventListener('click', function (event) {
+      event.stopPropagation();
+      removeConversation(item.id);
+    });
+
+    row.appendChild(main);
+    row.appendChild(del);
+    assistantHistList.appendChild(row);
+  });
+}
+
+async function loadConversationList() {
+  if (!assistantHistList) return;
+
+  if (!serverMode || !currentUser) {
+    renderHistoryList(staticSessions().map(function (item) {
+      return { id: item.id, title: item.title, updatedAt: item.updatedAt,
+               count: item.messages.length };
+    }));
+    return;
+  }
+
+  try {
+    const result = await api('/api/ai/conversations');
+    if (result.ok && result.data.conversations) {
+      renderHistoryList(result.data.conversations);
+    }
+  } catch (error) {
+    // 拉取失败时保留当前列表
+  }
+}
+
+async function openConversation(id) {
+  if (!id) return;
+
+  if (!serverMode || !currentUser) {
+    const session = staticSessions().find(function (item) { return item.id === id; });
+    if (!session) return;
+    currentConversationId = session.id;
+    chatMessages = (session.messages || []).slice();
+    renderChatLog();
+    loadConversationList();
+    return;
+  }
+
+  try {
+    const result = await api('/api/ai/conversations/' + encodeURIComponent(id));
+    if (!result.ok) {
+      showToast('这条对话已不存在');
+      loadConversationList();
+      return;
+    }
+    currentConversationId = result.data.id;
+    chatMessages = result.data.messages || [];
+    renderChatLog();
+    loadConversationList();
+  } catch (error) {
+    showToast('网络异常，请稍后再试');
+  }
+}
+
+async function removeConversation(id) {
+  if (!window.confirm('删除这条对话记录？')) return;
+
+  if (!serverMode || !currentUser) {
+    const rest = staticSessions().filter(function (item) { return item.id !== id; });
+    saveData(STATIC_SESSIONS_KEY, rest);
+  } else {
+    try {
+      const result = await api('/api/ai/conversations/' + encodeURIComponent(id),
+                                { method: 'DELETE' });
+      if (!result.ok && result.status !== 404) {
+        showToast('删除失败，请稍后再试');
+        return;
+      }
+    } catch (error) {
+      showToast('删除失败，请稍后再试');
+      return;
+    }
+  }
+
+  if (id === currentConversationId) {
+    currentConversationId = null;
+    chatMessages = [];
+    renderChatLog();
+  }
+  loadConversationList();
+  showToast('已删除');
+}
+
+// 静态演示：本机保存的多条对话
+const STATIC_SESSIONS_KEY = 'chatSessions';
+
+function staticSessions() {
+  const list = loadData(STATIC_SESSIONS_KEY, []) || [];
+  if (list.length) return list;
+  // 兼容旧版只有一条 chatLog 的数据
+  const legacy = loadData('chatLog', []) || [];
+  if (!legacy.length) return [];
+  const session = {
+    id: 's' + Date.now(),
+    title: (legacy[0].content || '').slice(0, 24),
+    updatedAt: new Date().toISOString(),
+    messages: legacy
+  };
+  saveData(STATIC_SESSIONS_KEY, [session]);
+  return [session];
+}
+
+function staticSaveCurrent() {
+  if (!chatMessages.length) return;
+  const list = staticSessions().slice();
+  let index = -1;
+  for (let i = 0; i < list.length; i++) {
+    if (list[i].id === currentConversationId) { index = i; break; }
+  }
+  if (index === -1) {
+    currentConversationId = 's' + Date.now();
+    list.unshift({
+      id: currentConversationId,
+      title: (chatMessages[0].content || '').slice(0, 24),
+      updatedAt: new Date().toISOString(),
+      messages: chatMessages.slice()
+    });
+  } else {
+    const item = list.splice(index, 1)[0];
+    item.messages = chatMessages.slice();
+    item.updatedAt = new Date().toISOString();
+    list.unshift(item);
+  }
+  saveData(STATIC_SESSIONS_KEY, list.slice(0, 50));
+}
+
 async function loadChatHistory() {
   if (!serverMode || !currentUser) {
-    // 静态演示：沿用本机保存的记录
-    chatMessages = loadData('chatLog', []) || [];
+    // 静态演示：读取本机最近一条对话
+    const list = staticSessions();
+    if (list.length) {
+      currentConversationId = list[0].id;
+      chatMessages = (list[0].messages || []).slice();
+    } else {
+      chatMessages = [];
+    }
     renderChatLog();
     return;
   }
 
   let result = null;
   try {
-    result = await api('/api/ai/history?limit=50');
+    result = await api('/api/ai/history?limit=100');
   } catch (error) {
     return;
   }
   if (!result || !result.ok) return;
 
+  currentConversationId = result.data.conversationId || null;
   chatMessages = result.data.messages || [];
   renderChatLog();
 }
@@ -10729,23 +11011,27 @@ function sendChat(rawText) {
   // 纯静态演示：本地规则回复，并把对话留在本机
   if (!serverMode || !currentUser) {
     const reply = getReply(text);
-    const log = (loadData('chatLog', []) || []).slice();
-    log.push({ role: 'user', content: text }, { role: 'assistant', content: reply });
-    saveData('chatLog', log.slice(-100));
 
     setTimeout(function () {
       stopTyping();
       pushMessage('assistant', reply);
+      staticSaveCurrent();
+      if (!assistantHistPanel.hidden) loadConversationList();
     }, 500);
     return;
   }
 
   // 连后端：消息与回复都由服务端保存
-  api('/api/ai/chat', { method: 'POST', body: { message: text } })
+  api('/api/ai/chat', {
+    method: 'POST',
+    body: { message: text, conversationId: currentConversationId }
+  })
     .then(function (result) {
       stopTyping();
       if (result.ok && result.data.reply) {
+        if (result.data.conversationId) currentConversationId = result.data.conversationId;
         pushMessage('assistant', result.data.reply);
+        if (!assistantHistPanel.hidden) loadConversationList();
         if (result.data.degraded) {
           showToast(result.data.configured
             ? 'AI 服务暂时不可用，已返回兜底建议'
@@ -10779,21 +11065,21 @@ assistantInput.addEventListener('keydown', function (event) {
   if (event.key === 'Enter') sendChat(assistantInput.value);
 });
 
-document.getElementById('assistantNew').addEventListener('click', async function () {
-  if (!window.confirm('确定清空全部对话记录吗？')) return;
-
+// 开启新对话：不删除旧记录，旧对话保存在「历史对话」里
+document.getElementById('assistantNew').addEventListener('click', function () {
   chatMessages = [];
+  currentConversationId = null;
   renderChatLog();
-  if (serverMode && currentUser) {
-    try {
-      await api('/api/ai/history', { method: 'DELETE' });
-    } catch (error) {
-      // 清理失败不影响本地已清空的视图
-    }
-  } else {
-    saveData('chatLog', []);
-  }
-  showToast('已开启新对话');
+  if (!assistantHistPanel.hidden) loadConversationList();
+  assistantInput.focus();
+  showToast('已开启新对话，旧对话可在「历史对话」里找回');
+});
+
+// 历史对话：展开 / 收起
+assistantHistoryBtn.addEventListener('click', function () {
+  const willOpen = assistantHistPanel.hidden;
+  assistantHistPanel.hidden = !willOpen;
+  if (willOpen) loadConversationList();
 });
 
 // 首次进入时先把问候语画到两边

@@ -1376,14 +1376,85 @@ def ai_message_json(row):
             "createdAt": row["created_at"]}
 
 
+def conversation_title(text):
+    text = " ".join((text or "").split())
+    if not text:
+        return "新对话"
+    return text[:24] + ("…" if len(text) > 24 else "")
+
+
+def conversation_json(row):
+    return {"id": row["id"], "title": row["title"],
+            "updatedAt": row["updated_at"], "count": row["cnt"]}
+
+
+def latest_conversation(conn, user_id):
+    return conn.execute(
+        "SELECT id, title FROM ai_conversations WHERE user_id = ? "
+        "ORDER BY updated_at DESC, id DESC LIMIT 1", (user_id,),
+    ).fetchone()
+
+
+@route("GET", "/api/ai/conversations")
+def ai_conversation_list(ctx):
+    rows = ctx.conn.execute(
+        "SELECT c.id, c.title, c.updated_at, "
+        "(SELECT COUNT(*) FROM ai_messages m WHERE m.conversation_id = c.id) AS cnt "
+        "FROM ai_conversations c WHERE c.user_id = ? "
+        "ORDER BY c.updated_at DESC, c.id DESC LIMIT 50",
+        (ctx.user_id,),
+    ).fetchall()
+    return {"conversations": [conversation_json(row) for row in rows]}
+
+
+@route("GET", "/api/ai/conversations/<cid>")
+def ai_conversation_detail(ctx):
+    cid = to_int(ctx.params.get("cid"), "id", 1, 10 ** 9)
+    row = ctx.conn.execute(
+        "SELECT id, title FROM ai_conversations WHERE id = ? AND user_id = ?",
+        (cid, ctx.user_id),
+    ).fetchone()
+    if row is None:
+        raise ApiError(404, "对话不存在", "not_found")
+    rows = ctx.conn.execute(
+        "SELECT * FROM ai_messages WHERE conversation_id = ? AND user_id = ? ORDER BY id",
+        (cid, ctx.user_id),
+    ).fetchall()
+    return {"id": row["id"], "title": row["title"],
+            "messages": [ai_message_json(item) for item in rows]}
+
+
+@route("DELETE", "/api/ai/conversations/<cid>")
+def ai_conversation_delete(ctx):
+    cid = to_int(ctx.params.get("cid"), "id", 1, 10 ** 9)
+    row = ctx.conn.execute(
+        "SELECT id FROM ai_conversations WHERE id = ? AND user_id = ?",
+        (cid, ctx.user_id),
+    ).fetchone()
+    if row is None:
+        raise ApiError(404, "对话不存在", "not_found")
+    ctx.conn.execute("DELETE FROM ai_messages WHERE conversation_id = ? AND user_id = ?",
+                     (cid, ctx.user_id))
+    ctx.conn.execute("DELETE FROM ai_conversations WHERE id = ? AND user_id = ?",
+                     (cid, ctx.user_id))
+    return {"ok": True, "id": cid}
+
+
 @route("GET", "/api/ai/history")
 def ai_history(ctx):
+    """取最近一条对话，供悬浮窗与整页继续聊。"""
     limit = to_int(query_value(ctx, "limit", 50), "limit", 1, 200)
+    row = latest_conversation(ctx.conn, ctx.user_id)
+    if row is None:
+        return {"messages": [], "conversationId": None, "title": "",
+                "configured": ai.is_configured()}
     rows = ctx.conn.execute(
-        "SELECT * FROM ai_messages WHERE user_id = ? ORDER BY id DESC LIMIT ?",
-        (ctx.user_id, limit),
+        "SELECT * FROM ai_messages WHERE conversation_id = ? AND user_id = ? "
+        "ORDER BY id DESC LIMIT ?",
+        (row["id"], ctx.user_id, limit),
     ).fetchall()
-    return {"messages": [ai_message_json(row) for row in reversed(rows)],
+    return {"messages": [ai_message_json(item) for item in reversed(rows)],
+            "conversationId": row["id"], "title": row["title"],
             "configured": ai.is_configured()}
 
 
@@ -1391,25 +1462,55 @@ def ai_history(ctx):
 def ai_chat(ctx):
     message = clean_text(ctx.body.get("message"), "message", 2000, required=True)
 
+    cid = ctx.body.get("conversationId")
+    if cid in (None, "", 0):
+        cid = None
+    else:
+        cid = to_int(cid, "conversationId", 1, 10 ** 9)
+        row = ctx.conn.execute(
+            "SELECT id FROM ai_conversations WHERE id = ? AND user_id = ?",
+            (cid, ctx.user_id),
+        ).fetchone()
+        if row is None:
+            cid = None
+
+    if cid is None:
+        now = db.now()
+        cursor = ctx.conn.execute(
+            "INSERT INTO ai_conversations(user_id, title, created_at, updated_at) "
+            "VALUES (?, ?, ?, ?)",
+            (ctx.user_id, conversation_title(message), now, now),
+        )
+        cid = cursor.lastrowid
+
     rows = ctx.conn.execute(
-        "SELECT role, content FROM ai_messages WHERE user_id = ? ORDER BY id DESC LIMIT ?",
-        (ctx.user_id, ai.MAX_HISTORY),
+        "SELECT role, content FROM ai_messages WHERE conversation_id = ? AND user_id = ? "
+        "ORDER BY id DESC LIMIT ?",
+        (cid, ctx.user_id, ai.MAX_HISTORY),
     ).fetchall()
     history = [{"role": row["role"], "content": row["content"]} for row in reversed(rows)]
 
     reply, meta = ai.generate_reply(message, history=history,
                                     context=health_summary(ctx.conn, ctx.user_id))
 
+    now = db.now()
     ctx.conn.execute(
-        "INSERT INTO ai_messages(user_id, role, content, created_at) VALUES (?, 'user', ?, ?)",
-        (ctx.user_id, message, db.now()),
+        "INSERT INTO ai_messages(user_id, conversation_id, role, content, created_at) "
+        "VALUES (?, ?, 'user', ?, ?)",
+        (ctx.user_id, cid, message, now),
     )
     ctx.conn.execute(
-        "INSERT INTO ai_messages(user_id, role, content, created_at) VALUES (?, 'assistant', ?, ?)",
-        (ctx.user_id, reply, db.now()),
+        "INSERT INTO ai_messages(user_id, conversation_id, role, content, created_at) "
+        "VALUES (?, ?, 'assistant', ?, ?)",
+        (ctx.user_id, cid, reply, now),
+    )
+    ctx.conn.execute(
+        "UPDATE ai_conversations SET updated_at = ? WHERE id = ? AND user_id = ?",
+        (now, cid, ctx.user_id),
     )
     return {
         "reply": reply,
+        "conversationId": cid,
         "configured": meta["configured"],
         "degraded": meta["degraded"],
         "provider": meta["provider"],
