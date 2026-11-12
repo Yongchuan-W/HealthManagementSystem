@@ -201,9 +201,7 @@ def api_index(_ctx):
 
 @route("POST", "/api/auth/register", auth_required=False)
 def auth_register(ctx):
-    # 比赛期间默认关闭公开注册；需要开放时在 ai_local.env 设置 HM_REGISTER_OPEN=1
-    if os.environ.get("HM_REGISTER_OPEN", "0").strip() != "1":
-        raise ApiError(403, "比赛期间暂未开放注册，请使用评委演示账号登录")
+    # 保留公开注册：新注册用户只能访问自己的数据
     if auth.user_from_token(ctx.conn, ctx.token):
         raise ApiError(409, "当前已登录，无需重复注册")
     account = ctx.body.get("account")
