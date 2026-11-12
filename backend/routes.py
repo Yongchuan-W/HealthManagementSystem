@@ -2150,7 +2150,7 @@ def report_delete(ctx):
 # 数据迁移与备份
 # 前端此前把数据存在 localStorage，登录后可用 import 一次性迁移到数据库
 # ==========================================================
-def safe_float(value, minimum=None, maximum=None):
+def safe_float(value, minimum=None, maximum=None, precision=1):
     try:
         number = float(value)
     except (TypeError, ValueError):
@@ -2159,7 +2159,7 @@ def safe_float(value, minimum=None, maximum=None):
         return None
     if maximum is not None and number > maximum:
         return None
-    return round(number, 1)
+    return round(number, precision)
 
 
 def safe_text(value, limit=200, default=""):
@@ -2283,7 +2283,8 @@ def sync_import(ctx):
     glucose = safe_float(body.get("glucose"), 1, 40)
     if glucose is not None:
         db.state_set(conn, uid, "glucose", {"value": glucose, "date": db.now()[:16]})
-    activity = safe_float(body.get("dietActivity"), 0.9, 2.5)
+    # 活动水平需要保留 3 位小数（1.375 / 1.55 等），否则回填时无法匹配下拉选项
+    activity = safe_float(body.get("dietActivity"), 0.9, 2.5, precision=3)
     if activity is not None:
         db.state_set(conn, uid, "dietActivity", activity)
 
