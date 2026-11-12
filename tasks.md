@@ -1,27 +1,52 @@
-# 本轮任务清单
+# 本轮迭代任务清单
 
-> 依据 `spec.md` 执行；已完成项已勾选。
+> 全部改动在 `web.py`，完成后重新生成 `index.html` 并提交。
 
-## 一、数据与账号
+## T1 睡眠小时+分钟
+- [x] 修改 `#sleepForm` HTML：`#sleepHour` + `#sleepMinute`
+- [x] 新增 `.sleep-time` CSS
+- [x] 改 `renderSleepToday()` 拆分钟回填与文案
+- [x] 改提交逻辑：校验并保存 `h + m/60`
 
-- [x] T1 运动持久化：`sportState` 改 `let` + `SPORT_DEFAULT` + `reloadSportState()`，在 `applyBundle()` / `refreshAllViews()` 中调用
-- [x] T2 后端开放注册：`auth_register` 移除白名单 403；`auth.login` / `user_from_token` 移除非白名单拒绝
-- [x] T3 前端注册模式：登录卡增加「注册 / 登录」切换、昵称输入、按钮文案与提交分支
-- [x] T4 注销账号：`auth.verify_password_or_raise()` + `DELETE /api/account` + 个人档案弹窗「注销账号」按钮（二次确认 + 密码）
+## T2 活动水平持久化
+- [x] 新增 `applyDietActivity()`
+- [x] `applyBundle()` 末尾调用
+- [x] `refreshAllViews()` 调用
+- [x] 修复后端 `safe_float` 精度导致 1.55 被存成 1.6
+- [x] 服务端 import/export round-trip 验证
 
-## 二、资讯与语音
+## T3 睡眠周柱形图
+- [x] 新增 `#sleepWeek` HTML 与 `.sleep-bars` CSS
+- [x] 实现 `renderSleepWeek()`，保存后与 `refreshAllViews()` 调用
 
-- [x] T5 后端 `GET /api/news`：中国新闻网 / 人民网健康 RSS 解析 + 5 分钟缓存 + 失败可回退
-- [x] T6 前端真实资讯：`refreshLiveNews()`、已读链接去重、搜索联动、失败回退内置 12 篇
-- [x] T7 语音输入：`#voiceFab` 按钮 + CSS + `initVoice()`（Web Speech API、中文数字转换、非 HTTPS/不支持提示）
+## T4 经期预测
+- [x] 女性档案新增 3 个 `.f-item` 与 `#cycleForecast`
+- [x] 扩展 `renderCycle()`：下次经期、易孕期、倒计时、未来 3 次预测、周期阶段
 
-## 三、AI 能力
+## T5 侧边栏修改基本信息
+- [x] 新增 `#editBasicBtn` 与 `.side-edit` CSS
+- [x] 实现 `prefillOnboarding()`、`setChipValues()`、`setSelectValue()`
+- [x] 编辑态显示 onboarding、返回逻辑
+- [x] 提交保存 `preferences.age` 并在编辑后刷新视图
 
-- [x] T8 使用帮助：`ai.PAGE_GUIDE` 注入 system prompt；小管家快捷提问按钮；静态版 `getReply()` 使用说明
-- [x] T9 Agent 动作：`ai.detect_action()` + `/api/ai/chat` 返回 `action`（含饮食热量估算）+ 前端 `runAiAction()` 执行
+## T6 饮食柱形图点击 + 综合建议
+- [x] `.mini-bar` 改为可点击按钮并加样式
+- [x] 新增 `#dayMealMask` 弹窗与 `openDayMeals(date)`
+- [x] 新增「综合饮食建议」`#recentDietAdvice` 与 `renderRecentDietAdvice()`
+- [x] `refreshDietViews()` 调用新建议
 
-## 四、交付
+## T7 补记前几日数据
+- [x] 饮食 `#mealDate` + `#mealLogTitle`，`saveMealRecord`/`renderMealLog` 改为按所选日期
+- [x] 心情 `#moodDate`，`renderMoodForDate`/保存改为按所选日期
+- [x] 运动 `#sdDate`，`saveSportForDate` 写入所选日期
+- [x] `refreshAllViews()` 重置三个日期为今天
 
-- [x] T10 生成 `index.html`，本地启动 `python web.py` 冒烟检查（注册/登录/运动/资讯/语音/动作/注销）
-- [ ] T11 git 提交（排除 `ai_local.env`），输出 push 与服务器 `git pull && sudo systemctl restart health` 命令
-- [ ] T12 回复中解释 MCP / RAG / AI Agent 三个概念及本项目现状
+## T8 语音/域名问题答复
+- [x] 文字说明 HTTPS 限制、隧道方案与域名购买/备案建议（不改代码）
+
+## 验证与提交
+- [x] `python -m py_compile web.py`
+- [x] 本地接口 round-trip 验证（dietActivity、补记数据、sleepLog、female.profile）
+- [x] 浏览器实测：登录、睡眠、饮食柱形图、活动水平、基本信息回填、经期预测
+- [x] 重新生成 `index.html`
+- [x] 分条 `git commit`

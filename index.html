@@ -4314,6 +4314,36 @@ body { color: var(--text); }
 }
 
 .news-source-hint b { color: #5d7a35; font-weight: 600; }
+/* ---------- 本轮新增样式 ---------- */
+.sleep-time { display: flex; align-items: center; justify-content: center; gap: 6px; }
+.sleep-form .sleep-time input { width: 84px; padding: 0 12px; text-align: center; }
+.sleep-time span { font-size: 12px; color: #eadfce; }
+.sleep-bars { display: flex; align-items: flex-end; gap: 8px; height: 86px; margin-top: 12px; }
+.sleep-bar { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 4px; text-align: center; height: 100%; }
+.sleep-bar i { display: block; border-radius: 5px 5px 0 0; background: linear-gradient(180deg, #cbb9ff, #8a6cf0); min-height: 4px; }
+.sleep-bar .em { font-style: normal; font-size: 10px; color: #eadfce; }
+.sleep-bar span { font-size: 10px; color: #d8cbb8; }
+.cycle-forecast { margin-top: 14px; padding: 12px 14px; border-radius: 12px; background: #fff7f4; border: 1px dashed #f0d3c6; font-size: 12.5px; line-height: 1.8; color: #8b6f5e; }
+.cycle-forecast b { color: #a9653a; }
+.cycle-forecast .fc-chip { display: inline-block; margin: 2px 6px 2px 0; padding: 2px 8px; border-radius: 999px; background: #fbe3d8; color: #a9653a; font-size: 11.5px; }
+.side-edit { display: flex; align-items: center; gap: 10px; width: 100%; padding: 11px 12px; border: 0; border-radius: 10px; background: transparent; color: #6b7688; font-size: 14px; text-align: left; }
+.side-edit:hover { background: #f5f8f7; color: var(--text); }
+.side-edit .icon { opacity: .8; }
+.meal-date-row, .mood-date-row, .sport-date-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 8px 0 12px; font-size: 12.5px; color: #8b7d70; }
+.meal-date-row input[type="date"], .mood-date-row input[type="date"], .sport-date-row input[type="date"] { height: 36px; padding: 0 10px; border: 1px solid #e6dbcd; border-radius: 9px; font-size: 13px; color: #433326; background: #fff; }
+.recent-advice { margin-top: 10px; padding: 14px 16px; border-radius: 12px; background: #f6f9f2; border: 1px solid #e4edd9; font-size: 13px; line-height: 1.9; color: #5b6b4f; }
+.recent-advice ul { margin: 6px 0 0 18px; }
+.recent-advice li { margin: 2px 0; }
+.recent-advice .ra-head { font-weight: 700; color: #4a5c3c; }
+.recent-advice .ra-empty { color: #8b7d70; }
+.mini-bar { border: 0; background: none; padding: 0; font: inherit; color: inherit; cursor: pointer; border-radius: 6px; }
+.mini-bar:hover { background: rgba(139, 74, 34, .06); }
+.mini-bar.active { background: rgba(139, 74, 34, .12); }
+.day-meal-list { display: flex; flex-direction: column; gap: 8px; }
+.day-meal-item { padding: 9px 12px; border-radius: 10px; background: #faf6f0; border: 1px solid #f0e6d8; font-size: 13px; color: #5d4a3a; display: flex; justify-content: space-between; gap: 10px; }
+.day-meal-item b { color: #8b4a22; white-space: nowrap; }
+.day-meal-empty { padding: 22px 10px; text-align: center; color: #8b7d70; font-size: 13.5px; }
+.day-meal-total { margin-top: 12px; padding-top: 10px; border-top: 1px dashed #e8dccb; font-size: 13px; color: #6b5645; }
 </style>
 </head>
 <body>
@@ -4587,6 +4617,10 @@ body { color: var(--text); }
     <button data-page="news"><svg class="icon"><use href="#i-book"/></svg>科普资讯</button>
   </nav>
 
+  <button class="side-edit" id="editBasicBtn" type="button">
+    <svg class="icon"><use href="#i-user"/></svg>修改基本信息
+  </button>
+
   <div class="side-user" id="userBtn" title="个人信息">
     <div class="avatar" id="sideAvatar"><svg class="icon"><use href="#i-user"/></svg></div>
     <div class="side-user-info">
@@ -4811,7 +4845,12 @@ body { color: var(--text); }
           <h2>优质睡眠，恢复活力</h2>
           <p>记录昨晚的睡眠时长与质量，数据会保存在你的健康档案里。</p>
           <form class="sleep-form" id="sleepForm">
-            <input id="sleepHours" type="number" step="0.5" min="0" max="24" placeholder="睡眠时长（小时）">
+            <div class="sleep-time">
+              <input id="sleepHour" type="number" step="1" min="0" max="24" placeholder="7">
+              <span>小时</span>
+              <input id="sleepMinute" type="number" step="5" min="0" max="59" placeholder="30">
+              <span>分钟</span>
+            </div>
             <select id="sleepQuality" aria-label="睡眠质量">
               <option>良好</option>
               <option selected>一般</option>
@@ -4820,6 +4859,7 @@ body { color: var(--text); }
             <button class="btn-sleep" type="submit">保存睡眠记录</button>
           </form>
           <div class="sleep-today" id="sleepToday"></div>
+          <div class="sleep-week" id="sleepWeek"></div>
         </div>
       </div>
 
@@ -4852,6 +4892,19 @@ body { color: var(--text); }
                 <span class="left"><svg class="icon"><use href="#i-calendar"/></svg>最近一次经期</span>
                 <b id="lastPeriodRange">10月11日 - 10月15日</b>
               </div>
+              <div class="f-item">
+                <span class="left"><svg class="icon"><use href="#i-droplet"/></svg>易孕期</span>
+                <b id="fertileWindow">—</b>
+              </div>
+              <div class="f-item">
+                <span class="left"><svg class="icon"><use href="#i-calendar"/></svg>下次预计经期</span>
+                <b id="nextPeriodDate">—</b>
+              </div>
+              <div class="f-item">
+                <span class="left"><svg class="icon"><use href="#i-calendar"/></svg>距离下次经期</span>
+                <b id="daysToPeriod">—</b>
+              </div>
+              <div class="cycle-forecast" id="cycleForecast"></div>
             </div>
 
             <!-- 右侧：今日状态（从预设选项中多选） -->
@@ -4908,7 +4961,12 @@ body { color: var(--text); }
             </select>
           </div>
 
-          <h3 class="sub-title">今日饮食记录</h3>
+          <h3 class="sub-title" id="mealLogTitle">今日饮食记录</h3>
+          <div class="meal-date-row">
+            <label for="mealDate">记录日期</label>
+            <input id="mealDate" type="date">
+            <span>可切换到前几日补记饮食</span>
+          </div>
 
           <!-- 回车或点击「记录」即可记录一条饮食 -->
           <div class="meal">
@@ -4936,6 +4994,9 @@ body { color: var(--text); }
 
           <h3 class="sub-title">近两周饮食分析</h3>
           <div class="week-compare" id="weekCompare"></div>
+
+          <h3 class="sub-title">综合饮食建议</h3>
+          <div class="recent-advice" id="recentDietAdvice"></div>
 
           <h3 class="sub-title">餐食图片识别</h3>
 
@@ -5083,6 +5144,11 @@ body { color: var(--text); }
           <div class="mood">
             <div class="mood-title">
               <svg class="icon"><use href="#i-smile"/></svg>每日心情
+            </div>
+            <div class="mood-date-row">
+              <label for="moodDate">记录日期</label>
+              <input id="moodDate" type="date">
+              <span>可选择前几日补记心情</span>
             </div>
             <div class="mood-picker" id="moodPicker">
               <button class="mood-opt" type="button" data-mood="开心">😄 开心</button>
@@ -5781,6 +5847,11 @@ body { color: var(--text); }
     </div>
 
     <div class="modal-body">
+      <div class="sport-date-row">
+        <label for="sdDate">记录日期</label>
+        <input id="sdDate" type="date">
+        <span>可选择前几日补记运动</span>
+      </div>
       <div class="field">
         <label for="sdKcal">已消耗热量（kcal）</label>
         <input id="sdKcal" type="number" min="0" max="5000" step="10">
@@ -5798,6 +5869,27 @@ body { color: var(--text); }
     <div class="modal-foot">
       <button class="btn-cancel" id="sdCancel">取消</button>
       <button class="btn-save" id="sdSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================
+     某天饮食记录弹窗：点击热量柱形图后打开
+     ======================================================== -->
+<div class="mask" id="dayMealMask">
+  <div class="modal">
+    <div class="modal-head">
+      <svg class="icon"><use href="#i-fork"/></svg><span id="dayMealTitle">当天饮食记录</span>
+      <button class="modal-close" id="dayMealClose" aria-label="关闭">
+        <svg class="icon"><use href="#i-close"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="day-meal-list" id="dayMealBody"></div>
+      <div class="day-meal-total" id="dayMealTotal"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-cancel" id="dayMealCancel">关闭</button>
     </div>
   </div>
 </div>
@@ -6116,8 +6208,9 @@ function applyBundle(bundle) {
   });
   if (currentUser && currentUser.id) setLocalOwner(currentUser.id);
 
-  // 内存里的运动对象也要立即换成新账号的数据
+  // 内存里的运动对象、活动水平也要立即换成新账号的数据
   reloadSportState();
+  applyDietActivity();
 }
 
 // 登录 / 会话恢复后，从后端取回整包数据；账号为空而本机有旧数据时先迁移
@@ -6474,8 +6567,71 @@ function enterApp() {
   window.scrollTo(0, 0);
 }
 
-// 跳过填写，直接进入系统
+// ---------- 侧边栏：修改基本信息（复用注册问卷） ----------
+let editingBasic = false;
+
+function setSelectValue(id, value) {
+  const select = document.getElementById(id);
+  if (!select || value === undefined || value === null || value === '') return;
+  const target = String(value);
+  const exists = Array.from(select.options).some(function (option) {
+    return option.value === target || option.textContent === target;
+  });
+  if (exists) select.value = target;
+}
+
+function setChipValues(groupId, values) {
+  const group = document.getElementById(groupId);
+  if (!group) return;
+  const list = Array.isArray(values) ? values : [];
+  if (!list.length) {
+    const none = group.querySelector('.pref-chip[data-value="无"]');
+    if (none) {
+      group.querySelectorAll('.pref-chip').forEach(function (chip) {
+        chip.classList.toggle('selected', chip === none);
+      });
+    }
+    return;
+  }
+  group.querySelectorAll('.pref-chip').forEach(function (chip) {
+    chip.classList.toggle('selected', list.indexOf(chip.dataset.value) !== -1);
+  });
+}
+
+function prefillOnboarding() {
+  const profile = readProfile();
+  const preferences = loadData('preferences', {}) || {};
+
+  document.getElementById('obName').value = profile.nickname || '';
+  setSelectValue('obGender', profile.gender || '女');
+  document.getElementById('obAge').value = preferences.age || '';
+  document.getElementById('obHeight').value = profile.height || '';
+  document.getElementById('obWeight').value = profile.weight || '';
+  setSelectValue('obSleep', preferences.sleepQuality || '一般');
+  setSelectValue('obExercise', preferences.exerciseFrequency || '每周 1-2 次');
+  setSelectValue('obGoal', preferences.goal || '减脂塑形');
+  setSelectValue('obTaste', preferences.taste || '清淡');
+  setSelectValue('obDietType', preferences.dietType || '均衡饮食');
+  setSelectValue('obMeals', preferences.meals || '3 餐');
+  setChipValues('obConditions', preferences.conditions || []);
+  setChipValues('obRestrictions', preferences.restrictions || []);
+  document.querySelectorAll('.pref-custom-input').forEach(function (input) {
+    input.value = '';
+  });
+}
+
+document.getElementById('editBasicBtn').addEventListener('click', function () {
+  editingBasic = true;
+  prefillOnboarding();
+  loginView.hidden = true;
+  appShell.hidden = true;
+  onboardingView.hidden = false;
+  window.scrollTo(0, 0);
+});
+
+// 跳过填写 / 取消编辑，直接进入系统
 document.getElementById('skipOnboarding').addEventListener('click', function () {
+  editingBasic = false;
   enterApp();
 });
 
@@ -6517,8 +6673,9 @@ document.getElementById('onboardingForm').addEventListener('submit', function (e
 
   // 健康情况与饮食偏好单独存档，用于饮食建议与后续个性化
   const previousPreferences = loadData('preferences', {}) || {};
+  const ageValue = parseFloat(document.getElementById('obAge').value);
   saveData('preferences', {
-    age: previousPreferences.age || '',
+    age: ageValue > 0 ? ageValue : (previousPreferences.age || ''),
     sleepQuality: document.getElementById('obSleep').value,
     exerciseFrequency: document.getElementById('obExercise').value,
     goal: goal,
@@ -6557,8 +6714,12 @@ document.getElementById('onboardingForm').addEventListener('submit', function (e
     (restrictions.length ? '（忌口：' + restrictions.join('、') + '）' : '') +
     '，建议三餐规律、优先选择天然食材，并保证每日蛋白质摄入。';
 
+  editingBasic = false;
   enterApp();
   renderVitalRanges();
+  loadProfileView();
+  refreshDietViews();
+  applyGenderView();
   showToast('健康档案已保存');
 });
 
@@ -7585,14 +7746,20 @@ function fillSportInputs() {
 }
 
 // 保存今日实际数据到对应日期，并刷新统计与评分
-function saveTodaySport(data) {
-  sportState.history[toISODate(new Date())] = data;
+function saveSportForDate(key, data) {
+  sportState.history[key] = data;
   pruneSportHistory();
   saveData('sport', sportState);
 
   const activeTab = document.querySelector('#sportTabs button.active');
   renderExercise(activeTab ? activeTab.dataset.tab : 'today');
+  renderWeekPanel();
   refreshDietViews();
+}
+
+// 计时结束等场景仍默认写今天
+function saveTodaySport(data) {
+  saveSportForDate(toISODate(new Date()), data);
 }
 
 document.getElementById('saveSportGoal').addEventListener('click', function () {
@@ -7618,12 +7785,39 @@ document.getElementById('saveSportGoal').addEventListener('click', function () {
 // ---------- 点击数据卡片填写今日数据 ----------
 const sportDataMask = document.getElementById('sportDataMask');
 
+// 当前选择用于记录 / 补记运动的日期
+function sportDateValue() {
+  const input = document.getElementById('sdDate');
+  const today = toISODate(new Date());
+  if (!input || !input.value) return today;
+  return input.value > today ? today : input.value;
+}
+
+function fillSportDateData(key) {
+  const data = sportState.history[key] || { kcal: 0, steps: 0, minutes: 0 };
+  document.getElementById('sdKcal').value = data.kcal || 0;
+  document.getElementById('sdSteps').value = data.steps || 0;
+  document.getElementById('sdMinutes').value = data.minutes || 0;
+}
+
+const sdDateInput = document.getElementById('sdDate');
+if (sdDateInput) {
+  sdDateInput.addEventListener('change', function () {
+    const today = toISODate(new Date());
+    if (!sdDateInput.value || sdDateInput.value > today) sdDateInput.value = today;
+    fillSportDateData(sdDateInput.value);
+  });
+}
+
 document.querySelectorAll('.ex-stat[data-field]').forEach(function (card) {
   card.addEventListener('click', function () {
-    const today = todaySport();
-    document.getElementById('sdKcal').value = today.kcal;
-    document.getElementById('sdSteps').value = today.steps;
-    document.getElementById('sdMinutes').value = today.minutes;
+    const today = toISODate(new Date());
+    const key = toISODate(today);
+    if (sdDateInput) {
+      sdDateInput.max = key;
+      sdDateInput.value = key;
+    }
+    fillSportDateData(key);
     openMask(sportDataMask);
   });
 });
@@ -7652,9 +7846,10 @@ document.getElementById('sdSave').addEventListener('click', function () {
     return;
   }
 
-  saveTodaySport(data);
+  const key = sportDateValue();
+  saveSportForDate(key, data);
   closeMask(sportDataMask);
-  showToast('今日运动数据已更新');
+  showToast((key === toISODate(new Date()) ? '今日' : dayLabelText(key)) + '运动数据已更新');
 });
 
 // ---------- 运动计时：开始后自动累计时长与热量 ----------
@@ -8279,9 +8474,49 @@ function renderCycle() {
   document.getElementById('lastPeriodRange').textContent =
     formatMD(lastPeriodStart) + ' - ' + formatMD(end);
 
-  // 排卵日按“下次月经前 14 天”估算
-  document.getElementById('ovulationDate').textContent =
-    formatMD(addDays(lastPeriodStart, cycleDays - 14));
+  // 下次经期：从最近一次经期开始按周期长度往后推，直到不早于今天
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  let nextStart = addDays(lastPeriodStart, cycleDays);
+  let guard = 0;
+  while (nextStart < today && guard < 240) {
+    nextStart = addDays(nextStart, cycleDays);
+    guard += 1;
+  }
+
+  // 排卵日按“下次月经前 14 天”估算，易孕期取排卵日前 5 天到后 1 天
+  const ovulation = addDays(nextStart, -14);
+  document.getElementById('ovulationDate').textContent = formatMD(ovulation);
+  document.getElementById('nextPeriodDate').textContent = formatMD(nextStart);
+  document.getElementById('fertileWindow').textContent =
+    formatMD(addDays(ovulation, -5)) + ' - ' + formatMD(addDays(ovulation, 1));
+
+  const daysLeft = Math.round((nextStart - today) / MS_PER_DAY);
+  document.getElementById('daysToPeriod').textContent = daysLeft + ' 天';
+
+  // 当前阶段：经期中 / 经前 / 经期后
+  const periodEnd = addDays(lastPeriodStart, periodDays - 1);
+  let stage = '';
+  if (today >= lastPeriodStart && today <= periodEnd) {
+    const dayNo = Math.round((today - lastPeriodStart) / MS_PER_DAY) + 1;
+    stage = '现在处于经期第 ' + dayNo + ' 天，注意保暖与休息。';
+  } else if (daysLeft <= 7) {
+    stage = '距离下次经期还有 ' + daysLeft + ' 天，可能进入经前不适期，可适当减少高强度运动。';
+  } else {
+    stage = '目前处于经期后阶段，距下次经期约 ' + daysLeft + ' 天，是保持规律运动的好时机。';
+  }
+
+  const forecast = [];
+  for (let index = 0; index < 3; index++) {
+    forecast.push('<span class="fc-chip">' + formatYMD(addDays(nextStart, cycleDays * index)) + '</span>');
+  }
+
+  const box = document.getElementById('cycleForecast');
+  if (box) {
+    box.innerHTML = '<b>经期预测</b>　' + stage +
+      '<div style="margin-top:6px">未来 3 次预计开始：' + forecast.join('') + '</div>' +
+      '<div style="margin-top:4px;color:#a08d7d">预测仅作参考，实际日期会受作息、压力等因素影响。</div>';
+  }
 }
 
 fillSelect(periodDaysSelect, 3, 10, '天', periodDays);
@@ -8561,6 +8796,12 @@ document.addEventListener('click', function (event) {
 });
 
 // ---------- 睡眠记录 ----------
+function sleepParts(hours) {
+  const total = Number(hours) || 0;
+  const h = Math.floor(total);
+  return { h: h, m: Math.round((total - h) * 60) };
+}
+
 function renderSleepToday() {
   const log = loadData('sleepLog', []) || [];
   const today = toISODate(new Date());
@@ -8571,21 +8812,33 @@ function renderSleepToday() {
 
   if (!entry) {
     box.textContent = '还没有记录今天的睡眠。';
+    document.getElementById('sleepHour').value = '';
+    document.getElementById('sleepMinute').value = '';
     return;
   }
-  box.textContent = '今日已记录：' + entry.hours + ' 小时 · ' + entry.quality;
-  document.getElementById('sleepHours').value = entry.hours;
+  const parts = sleepParts(entry.hours);
+  box.textContent = '今日已记录：' + parts.h + ' 小时 ' + parts.m + ' 分钟 · ' + entry.quality;
+  document.getElementById('sleepHour').value = parts.h;
+  document.getElementById('sleepMinute').value = parts.m;
   document.getElementById('sleepQuality').value = entry.quality;
 }
 
 document.getElementById('sleepForm').addEventListener('submit', function (event) {
   event.preventDefault();
 
-  const hours = parseFloat(document.getElementById('sleepHours').value);
+  const hourValue = parseFloat(document.getElementById('sleepHour').value);
+  const minuteValue = parseFloat(document.getElementById('sleepMinute').value);
   const quality = document.getElementById('sleepQuality').value;
+  const h = isNaN(hourValue) ? 0 : hourValue;
+  const m = isNaN(minuteValue) ? 0 : minuteValue;
 
-  if (isNaN(hours) || hours < 0 || hours > 24) {
-    showToast('请输入 0-24 之间的睡眠时长');
+  if (h < 0 || h > 23 || m < 0 || m > 59) {
+    showToast('请输入正确的小时（0-23）和分钟（0-59）');
+    return;
+  }
+  const hours = h + m / 60;
+  if (hours <= 0 || hours > 24) {
+    showToast('睡眠时长需大于 0 且不超过 24 小时');
     return;
   }
 
@@ -8603,10 +8856,51 @@ document.getElementById('sleepForm').addEventListener('submit', function (event)
 
   saveData('sleepLog', log);
   renderSleepToday();
+  renderSleepWeek();
   showToast('睡眠记录已保存');
 });
 
 renderSleepToday();
+
+// 最近一周睡眠柱形图
+function renderSleepWeek() {
+  const box = document.getElementById('sleepWeek');
+  if (!box) return;
+
+  const log = loadData('sleepLog', []) || [];
+  const byDate = {};
+  log.forEach(function (item) {
+    byDate[item.date] = Number(item.hours) || 0;
+  });
+
+  const today = new Date();
+  const days = [];
+  for (let offset = 6; offset >= 0; offset--) {
+    const day = addDays(today, -offset);
+    const key = toISODate(day);
+    days.push({
+      key: key,
+      label: (day.getMonth() + 1) + '/' + day.getDate(),
+      hours: byDate[key] || 0
+    });
+  }
+
+  const maxHours = Math.max.apply(null, days.map(function (day) {
+    return day.hours;
+  }).concat([8, 1]));
+
+  const bars = days.map(function (day) {
+    const height = day.hours ? Math.max(4, Math.round(day.hours / maxHours * 64)) : 4;
+    return '<div class="sleep-bar" title="' + day.key + '">' +
+      '<em class="em">' + (day.hours ? day.hours.toFixed(1) + 'h' : '—') + '</em>' +
+      '<i style="height:' + height + 'px"></i><span>' + day.label + '</span></div>';
+  }).join('');
+
+  box.innerHTML = '<div class="sleep-bars">' + bars + '</div>' +
+    '<div class="sleep-today" style="margin-top:6px">最近 7 天记录，柱高按睡眠小时数显示。</div>';
+}
+
+renderSleepWeek();
 
 // ---------- 家人健康：成员、健康记录与关怀提醒 ----------
 const familyMask = document.getElementById('familyMask');
@@ -9843,9 +10137,17 @@ function estimateNutrition(text) {
 // ---------- 饮食记录（保留最近 30 天，支持两周对比） ----------
 let mealLog = loadData('mealLog', []);
 
+// 当前选择用于记录 / 补记饮食的日期
+function mealDateValue() {
+  const input = document.getElementById('mealDate');
+  const today = toISODate(new Date());
+  if (!input || !input.value) return today;
+  return input.value > today ? today : input.value;
+}
+
 function saveMealRecord(meal, text, nutrition) {
   mealLog.push({
-    date: toISODate(new Date()),
+    date: mealDateValue(),
     meal: meal,
     text: text,
     kcal: nutrition.kcal,
@@ -10033,10 +10335,17 @@ function renderMealLog() {
   box.innerHTML = '';
 
   const today = toISODate(new Date());
-  const items = mealLog.filter(function (item) { return item.date === today; });
+  const selected = mealDateValue();
+  const isToday = selected === today;
+  const title = document.getElementById('mealLogTitle');
+  if (title) {
+    title.textContent = isToday ? '今日饮食记录' : dayLabelText(selected) + ' 饮食记录（补记）';
+  }
+  const items = mealLog.filter(function (item) { return item.date === selected; });
 
   if (!items.length) {
-    box.innerHTML = '<div class="meal-log-empty">今天还没有记录，在上面的早餐 / 午餐 / 晚餐输入框输入食物后按回车即可添加。</div>';
+    box.innerHTML = '<div class="meal-log-empty">' + (isToday ? '今天' : dayLabelText(selected)) +
+      '还没有记录，在上面的早餐 / 午餐 / 晚餐输入框输入食物后按回车即可添加。</div>';
     return;
   }
 
@@ -10072,6 +10381,20 @@ function renderMealLog() {
 
     chip.appendChild(del);
     box.appendChild(chip);
+  });
+}
+
+// 饮食记录日期：默认今天，可切换到前几日补记
+const mealDateInput = document.getElementById('mealDate');
+if (mealDateInput) {
+  const mealToday = toISODate(new Date());
+  mealDateInput.max = mealToday;
+  mealDateInput.min = toISODate(addDays(new Date(), -30));
+  mealDateInput.value = mealToday;
+  mealDateInput.addEventListener('change', function () {
+    const today = toISODate(new Date());
+    if (!mealDateInput.value || mealDateInput.value > today) mealDateInput.value = today;
+    renderMealLog();
   });
 }
 
@@ -10487,6 +10810,7 @@ function renderWeekCompare() {
     const day = addDays(today, -offset);
     const key = toISODate(day);
     days.push({
+      key: key,
       label: (day.getMonth() + 1) + '/' + day.getDate(),
       kcal: dateRangeSum(key, key).total.kcal
     });
@@ -10499,12 +10823,153 @@ function renderWeekCompare() {
   html += '<div class="mini-bars">';
   days.forEach(function (day) {
     const height = day.kcal ? Math.max(4, Math.round(day.kcal / maxKcal * 64)) : 4;
-    html += '<div class="mini-bar"><em>' + (day.kcal ? Math.round(day.kcal) : '') +
-      '</em><i style="height:' + height + 'px"></i><span>' + day.label + '</span></div>';
+    html += '<button type="button" class="mini-bar" data-date="' + day.key + '">' +
+      '<em>' + (day.kcal ? Math.round(day.kcal) : '') +
+      '</em><i style="height:' + height + 'px"></i><span>' + day.label + '</span></button>';
   });
   html += '</div>';
 
   box.innerHTML = html;
+
+  box.querySelectorAll('.mini-bar[data-date]').forEach(function (bar) {
+    bar.addEventListener('click', function () {
+      box.querySelectorAll('.mini-bar.active').forEach(function (node) {
+        node.classList.remove('active');
+      });
+      bar.classList.add('active');
+      openDayMeals(bar.dataset.date);
+    });
+  });
+}
+
+// ---------- 点击柱形图查看当天饮食 ----------
+const dayMealMask = document.getElementById('dayMealMask');
+
+function dayLabelText(key) {
+  const date = parseISODate(key);
+  if (!date) return key;
+  return (date.getMonth() + 1) + ' 月 ' + date.getDate() + ' 日';
+}
+
+function openDayMeals(key) {
+  const today = toISODate(new Date());
+  document.getElementById('dayMealTitle').textContent =
+    dayLabelText(key) + (key === today ? '（今天）' : '') + ' · 饮食记录';
+
+  const items = mealLog.filter(function (item) { return item.date === key; });
+  const body = document.getElementById('dayMealBody');
+  const total = document.getElementById('dayMealTotal');
+
+  if (!items.length) {
+    body.innerHTML = '<div class="day-meal-empty">当天没有记录。<br>可在「记录日期」中选择这一天后补记饮食。</div>';
+    total.textContent = '';
+  } else {
+    body.innerHTML = items.map(function (item) {
+      return '<div class="day-meal-item"><span>' + item.meal + ' · ' + item.text + '</span><b>' +
+        Math.round(item.kcal) + ' kcal</b></div>';
+    }).join('');
+    const sum = items.reduce(function (acc, item) {
+      return acc + (Number(item.kcal) || 0);
+    }, 0);
+    const target = getNutritionTargets().kcal;
+    total.textContent = '当天共 ' + items.length + ' 条记录，合计约 ' + Math.round(sum) +
+      ' kcal（目标 ' + target + ' kcal）' +
+      (sum > target * 1.15 ? '，略高于目标。' : sum < target * 0.6 ? '，摄入偏低。' : '，接近目标。');
+  }
+  openMask(dayMealMask);
+}
+
+document.getElementById('dayMealClose').addEventListener('click', function () {
+  closeMask(dayMealMask);
+});
+
+document.getElementById('dayMealCancel').addEventListener('click', function () {
+  closeMask(dayMealMask);
+});
+
+dayMealMask.addEventListener('click', function (event) {
+  if (event.target === dayMealMask) closeMask(dayMealMask);
+});
+
+// ---------- 综合最近几天饮食的建议 ----------
+function renderRecentDietAdvice() {
+  const box = document.getElementById('recentDietAdvice');
+  if (!box) return;
+
+  const targets = getNutritionTargets();
+  const today = new Date();
+  const start = toISODate(addDays(today, -6));
+  const end = toISODate(today);
+
+  const days = {};
+  let totalKcal = 0;
+  let totalProtein = 0;
+  let totalFiber = 0;
+  let totalFat = 0;
+  let vegFruit = 0;
+
+  const vegKeys = ['蔬菜', '青菜', '西兰花', '菠菜', '沙拉', '生菜', '水果', '苹果', '香蕉', '蓝莓', '橙', '番茄'];
+
+  mealLog.forEach(function (item) {
+    if (item.date < start || item.date > end) return;
+    days[item.date] = days[item.date] || { breakfast: false };
+    totalKcal += Number(item.kcal) || 0;
+    totalProtein += Number(item.protein) || 0;
+    totalFiber += Number(item.fiber) || 0;
+    totalFat += Number(item.fat) || 0;
+    if (item.meal === '早餐') days[item.date].breakfast = true;
+    if (vegKeys.some(function (key) {
+      return String(item.text || '').indexOf(key) !== -1;
+    })) {
+      vegFruit += 1;
+    }
+  });
+
+  const dayCount = Object.keys(days).length;
+  if (!dayCount) {
+    box.innerHTML = '<div class="ra-empty">最近 7 天还没有饮食记录。连续记录 2-3 天后，这里会根据你的真实饮食给出综合建议。</div>';
+    return;
+  }
+
+  const breakfastDays = Object.keys(days).filter(function (key) {
+    return days[key].breakfast;
+  }).length;
+  const avgKcal = totalKcal / dayCount;
+  const avgProtein = totalProtein / dayCount;
+  const advice = [];
+
+  if (dayCount < 3) {
+    advice.push('目前只有 ' + dayCount + ' 天记录，建议连续记录 3 天以上，综合建议会更准确。');
+  }
+  if (avgKcal > targets.kcal * 1.12) {
+    advice.push('近 ' + dayCount + ' 天平均每日约 ' + Math.round(avgKcal) + ' kcal，高于目标约 ' +
+      Math.round(avgKcal - targets.kcal) + ' kcal，建议减少油炸、甜饮和夜宵。');
+  } else if (avgKcal < targets.kcal * 0.7) {
+    advice.push('近 ' + dayCount + ' 天平均每日仅 ' + Math.round(avgKcal) + ' kcal，摄入偏低，容易疲劳或反弹，建议三餐吃够。');
+  } else {
+    advice.push('近 ' + dayCount + ' 天平均每日约 ' + Math.round(avgKcal) + ' kcal，热量控制得比较稳。');
+  }
+  if (avgProtein < targets.protein * 0.8) {
+    advice.push('平均蛋白质约 ' + Math.round(avgProtein) + 'g，低于目标 ' + targets.protein +
+      'g，可在每餐加一个鸡蛋、一杯牛奶或一份豆制品。');
+  } else {
+    advice.push('平均蛋白质约 ' + Math.round(avgProtein) + 'g，已达到目标，注意分散到三餐吸收。');
+  }
+  if (vegFruit < dayCount) {
+    advice.push('最近 ' + dayCount + ' 天蔬果记录偏少，建议每天至少两份深色蔬菜和一份水果。');
+  }
+  if (breakfastDays < Math.ceil(dayCount / 2)) {
+    advice.push('有早餐记录的天数只有 ' + breakfastDays + ' 天，规律早餐有助于稳定上午的血糖和食欲。');
+  }
+  if (totalFat / dayCount > targets.fat * 1.2) {
+    advice.push('平均脂肪摄入偏高，烹调尽量少油，少吃酥皮点心和肥肉。');
+  }
+  if (totalFiber / dayCount < targets.fiber * 0.6) {
+    advice.push('膳食纤维不足，主食可换成一半杂粮，并增加蔬菜。');
+  }
+
+  box.innerHTML = '<div class="ra-head">根据最近 ' + dayCount + ' 天记录生成</div><ul>' +
+    advice.map(function (item) { return '<li>' + item + '</li>'; }).join('') + '</ul>';
 }
 
 // 根据今日摄入自动生成建议
@@ -10552,6 +11017,7 @@ function buildDietAdvice() {
 function refreshDietViews() {
   renderNutrition();
   renderWeekCompare();
+  renderRecentDietAdvice();
   document.getElementById('dietTipText').textContent = buildDietAdvice();
   // 营养目标变化也会影响顶部评分
   updateScores();
@@ -10648,7 +11114,8 @@ document.getElementById('saveMood').addEventListener('click', function () {
   }
 
   const log = loadData('moodLog', {});
-  log[toISODate(new Date())] = {
+  const key = moodDateValue();
+  log[key] = {
     mood: currentMood,
     note: document.getElementById('moodNote').value.trim()
   };
@@ -10656,7 +11123,8 @@ document.getElementById('saveMood').addEventListener('click', function () {
   document.getElementById('moodTip').textContent = moodTips[currentMood];
   renderMoodWeek();
   renderWeekPanel();
-  showToast('今日心情已保存：' + currentMood);
+  refreshDietViews();
+  showToast((key === toISODate(new Date()) ? '今日' : dayLabelText(key)) + '心情已保存：' + currentMood);
 });
 
 // 心情与表情包对应关系
@@ -10672,9 +11140,19 @@ function moodEmojiOf(mood) {
   return moodEmojis[mood] || '🙂';
 }
 
-// 回显今天已保存的心情（登录后数据同步完成时也会再调用一次）
-function renderMoodToday() {
-  const saved = loadData('moodLog', {})[toISODate(new Date())];
+// 当前选择用于记录 / 补记心情的日期
+function moodDateValue() {
+  const input = document.getElementById('moodDate');
+  const today = toISODate(new Date());
+  if (!input || !input.value) return today;
+  return input.value > today ? today : input.value;
+}
+
+// 回显所选日期已保存的心情
+function renderMoodForDate(date) {
+  const key = date || toISODate(new Date());
+  const isToday = key === toISODate(new Date());
+  const saved = loadData('moodLog', {})[key];
 
   document.querySelectorAll('#moodPicker .mood-opt').forEach(function (btn) {
     btn.classList.toggle('selected', !!saved && btn.dataset.mood === saved.mood);
@@ -10683,8 +11161,27 @@ function renderMoodToday() {
   currentMood = saved ? saved.mood : '';
   document.getElementById('moodNote').value = saved ? (saved.note || '') : '';
   document.getElementById('moodTip').textContent = saved
-    ? saved.mood + '｜' + (saved.note || moodTips[saved.mood] || '')
-    : '选择今天的心情后，这里会给出对应的小贴士。';
+    ? (isToday ? '' : dayLabelText(key) + '｜') + saved.mood + '｜' + (saved.note || moodTips[saved.mood] || '')
+    : (isToday ? '选择今天的心情后' : '选择' + dayLabelText(key) + '的心情后') + '，这里会给出对应的小贴士。';
+
+  const saveBtn = document.getElementById('saveMood');
+  if (saveBtn) saveBtn.textContent = isToday ? '保存今日心情' : '保存这一天的心情';
+}
+
+function renderMoodToday() {
+  renderMoodForDate(moodDateValue());
+}
+
+// 心情记录日期：默认今天，可切换到前几日补记
+const moodDateInput = document.getElementById('moodDate');
+if (moodDateInput) {
+  const moodToday = toISODate(new Date());
+  moodDateInput.max = moodToday;
+  moodDateInput.value = moodToday;
+  moodDateInput.addEventListener('change', function () {
+    if (!moodDateInput.value || moodDateInput.value > moodToday) moodDateInput.value = moodToday;
+    renderMoodForDate(moodDateInput.value);
+  });
 }
 
 renderMoodToday();
@@ -10729,8 +11226,41 @@ function renderMoodWeek() {
 
 // ---------- 饮食活动水平：选择后立即重算目标 ----------
 const dietActivity = document.getElementById('dietActivity');
-const savedActivity = loadData('dietActivity', null);
-if (savedActivity) dietActivity.value = String(savedActivity);
+
+// 把已保存的活动水平写回下拉框（登录同步完成后也会调用）
+function applyDietActivity() {
+  const select = document.getElementById('dietActivity');
+  const value = loadData('dietActivity', null);
+  if (!select || value === null || value === undefined || value === '') return;
+
+  const text = String(value);
+  const options = Array.from(select.options);
+  const exact = options.find(function (option) {
+    return option.value === text;
+  });
+  if (exact) {
+    select.value = text;
+    return;
+  }
+
+  // 兼容旧数据被四舍五入（如 1.55 存成 1.6）：按数值找最接近的选项
+  const number = parseFloat(value);
+  if (isNaN(number)) return;
+  let best = null;
+  options.forEach(function (option) {
+    const optionValue = parseFloat(option.value);
+    if (isNaN(optionValue)) return;
+    if (!best || Math.abs(optionValue - number) < Math.abs(parseFloat(best.value) - number)) {
+      best = option;
+    }
+  });
+  if (best) {
+    select.value = best.value;
+    saveData('dietActivity', parseFloat(best.value));
+  }
+}
+
+applyDietActivity();
 
 dietActivity.addEventListener('change', function () {
   saveData('dietActivity', parseFloat(dietActivity.value));
@@ -11193,7 +11723,19 @@ renderMoodWeek();
 renderWeekPanel();
 
 // 从后端取回数据后，把内存变量与页面重新同步成最新状态
+function resetSupplementDates() {
+  const today = toISODate(new Date());
+  ['mealDate', 'moodDate', 'sdDate'].forEach(function (id) {
+    const input = document.getElementById(id);
+    if (input) {
+      input.max = today;
+      input.value = today;
+    }
+  });
+}
+
 function refreshAllViews() {
+  resetSupplementDates();
   weightHistory = loadData('weightHistory', []);
   mealLog = loadData('mealLog', []);
   reminders = loadData('reminders', []);
@@ -11216,8 +11758,7 @@ function refreshAllViews() {
   if (glucoseBox && glucose) {
     glucoseBox.textContent = Number(glucose).toFixed(1);
   }
-  const activity = loadData('dietActivity', null);
-  if (activity) document.getElementById('dietActivity').value = String(activity);
+  applyDietActivity();
 
   loadProfileView();
   renderVitalRanges();
@@ -11236,6 +11777,7 @@ function refreshAllViews() {
   applyFemaleProfile(loadData('femaleProfile', null));
   renderCycle();
   renderSleepToday();
+  renderSleepWeek();
   restoreBeautyPlan();
   restoreReport();
   applyGenderView();

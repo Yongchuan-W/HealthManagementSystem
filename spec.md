@@ -1,152 +1,96 @@
-# 健康管理系统 · 本轮迭代 Spec
+# 健康管理系统 · 本轮迭代规格说明
 
-## 0. 背景与目标
+## 背景
 
-用户在阿里云服务器（39.96.73.121:8000，systemd `health`）上运行 `web.py` + `backend/`（纯标准库 + SQLite）。
-本轮要解决 7 件事：
+单文件前端 [web.py](web.py)（`PAGE_HTML` 内嵌 CSS/JS）+ `backend/`（纯标准库 + SQLite）已部署到阿里云。数据通过 `localStorage(hm_*)` + 500ms 防抖 `POST /api/sync/import` 持久化，登录后 `GET /api/sync/export` → `applyBundle()` 回填。
 
-1. 退出重进后「运动打卡」数据丢失。
-2. 科普资讯「刷新」只是重排旧内容，需要拉取真正的新资讯。
-3. 每个功能模块支持语音输入（面向老人 / 低文化水平用户）。
-4. 用户可询问智能体「这个网页怎么使用」。
-5. 回答概念问题：MCP 是什么、是否用了 RAG、是否用了 AI Agent。
-6. AI Agent 能真正执行动作：说「开始跑步，帮我记录」→ 开始计时；说「吃了螺蛳粉…帮我填入晚餐」→ 写入晚餐记录。
-7. 开放注册账号 + 注销账号。
+本轮把用户提出的 8 项需求拆成可验证的改动，全部集中在 `web.py` 前端（后端接口已支持所需字段，仅需回归验证），改完必须重新生成 `index.html`。
 
-并同步：`index.html` 重新生成、git 提交、给出服务器部署命令。
+## 需求与实现方案
 
-## 1. 已核实的现状（不再重复排查）
+### 1. 睡眠时长改为「小时 + 分钟」
 
-- 运动数据链路：`saveTodaySport()` → `saveData('sport', sportState)` → 500ms 防抖 `flushSync()` → `POST /api/sync/import`；后端 `sport` 分支（routes.py:2157-2189）正确写 `sport_goals` / `sport_records`；`GET /api/sync/export`（routes.py:2480-2484）正确返回。
-- 前端 `sportState` 是模块级 `const`（web.py:7302），`applyBundle()` 只更新 `dataCache['sport']`；虽有 `refreshAllViews()`（web.py:10887）会回填，但它依赖调用时机，且 `refreshAllViews` 中 `sport` 为 null 时静默跳过 → 存在旧对象覆盖服务器数据的窗口。**修复：改为 `let` + `reloadSportState()`，在 `applyBundle()` 末尾同步刷新。**
-- 注册：`POST /api/auth/register` 在 `allowed_accounts()` 非空时直接 403（routes.py:200-202）；同时 `auth.login()`（auth.py:239-241）也拒绝非白名单账号。**两处都要放开，否则注册后无法登录。**
-- 注销：所有业务表 `user_id` 均为 `ON DELETE CASCADE`，且连接已 `PRAGMA foreign_keys = ON`（db.py:368）→ 删除 `users` 行即可级联清理。
-- 资讯：`newsRefresh` 仅打乱 `newsOrder`（web.py:10858-10863），没有网络请求。
-- AI：`POST /api/ai/chat`（routes.py:1462-1519）只返回文本；`ai.estimate_food()` 已可用；`sportTypes`（web.py:7603）包含「跑步」等名称。
-- HTTPS：`build_ssl_context()`（web.py:11524）已支持 `HM_TLS_CERT` / `HM_TLS_KEY`，但没有证书。
-- 退出登录按钮在个人信息弹窗底部（web.py:5295）。
+- 位置：[web.py](web.py) 睡眠表单 `#sleepForm`（约 4844 行）。
+- HTML：删除单个 `#sleepHours`，改为 `#sleepHour`（0-23）与 `#sleepMinute`（0-59，step 5），中间用「小时 / 分钟」文字分隔，外层 `.sleep-time`。
+- CSS：新增 `.sleep-time { display:flex; align-items:center; gap:6px; }`，内部 input 宽度改为 80px。
+- JS：
+  - `renderSleepToday()` 把 `entry.hours` 拆成 `h = floor(hours)`、`m = round((hours-h)*60)` 回填；展示文案改为「X 小时 Y 分钟 · 质量」。
+  - 提交时 `hours = h + m/60`；校验 0 ≤ 总时长 ≤ 24、分钟 0-59；存储结构仍为 `{date, hours, quality, note}`，后端 `sleep_records` 不变。
 
-## 2. 改动清单（文件 / 函数 / 行为）
+### 2. 日常活动水平持久化修复
 
-### 2.1 运动数据持久化（web.py）
+- 现状：`#dietActivity` 在 change 时写入 `hm_dietActivity`，`buildSyncPayload()` 会提交，`applyBundle()` 会回填；但页面加载 / 登录回填分散在 `refreshAllViews()`，存在刷新时机与空值判断问题。
+- 改法：
+  - 新增 `applyDietActivity()`：读取 `loadData('dietActivity', null)`，非空时设置 `select.value`；在 `applyBundle()` 末尾、`refreshAllViews()` 内调用。
+  - `change` 监听改为同时写 `parseFloat` 并立即 `refreshDietViews()`（保留现有行为）。
+  - `applyBundle()` 对 `settings.dietActivity` 为 `undefined` 时不再写入（现有 `if (values[key] === undefined) return;` 已保证）。
+- 验证：本地起服务，注册/登录后 `POST /api/sync/import`（dietActivity=1.55）→ `GET /api/sync/export` 应返回 1.55；前端切账号后下拉框保持所选值。
 
-- `const sportState` → `let sportState`，抽出 `SPORT_DEFAULT` 常量。
-- 新增 `function reloadSportState()`：重新 `loadData('sport', null)`，有 `goal` 则整体替换，否则用默认值，再 `pruneSportHistory()`。
-- `applyBundle()` 末尾调用 `reloadSportState()`。
-- `refreshAllViews()` 中运动分支改为调用 `reloadSportState()`，避免两套逻辑。
-- 保存路径不变（`saveData('sport', sportState)` + 防抖同步）。
+### 3. 睡眠最近一周柱形图
 
-验收：记录今日运动 → 退出 → 重新登录 → 今日/本周数据仍在；服务器 `sport_records` 有当天行。
+- HTML：`#sleepToday` 后新增 `<div class="sleep-week" id="sleepWeek"></div>`。
+- CSS：新增 `.sleep-bars`、`.sleep-bar`（沿用 `.mini-bars` 视觉，浅色系以适配睡眠卡片）。
+- JS：新增 `renderSleepWeek()`：取最近 7 天（含今天）`sleepLog`，按小时画柱，柱顶显示「7.5h」，柱下标日期；无记录柱高 4px 且显示「—」。在保存成功后与 `refreshAllViews()` 调用。
 
-### 2.2 开放注册（backend/routes.py、backend/auth.py、web.py）
+### 4. 女性健康：经期预测
 
-- `auth_register`：删除 `allowed_accounts()` 的 403 拦截。
-- `auth.login`：删除 `allowed` 白名单限制（白名单只负责「创建/同步这些账号」，不再限制登录）。
-- 前端登录卡：
-  - 标题下方增加切换链接：`还没有账号？立即注册` / `已有账号？去登录`（`#authModeSwitch`）。
-  - 注册模式显示新增字段：昵称（`#regNickname`，可选，默认=账号）。
-  - 提交时按模式调用 `/api/auth/register` 或 `/api/auth/login`；注册成功后走 `afterAuthenticated()` → 进入 onboarding。
-  - 按钮文案切换：`登录` / `注册并登录`。
-- 错误提示复用 `showAuthError('loginError', ...)`。
+- HTML：女性档案左侧 `.f-item` 列表新增：易孕期 `#fertileWindow`、下次预计经期 `#nextPeriodDate`、距离下次经期 `#daysToPeriod`；`.female-grid` 下新增 `<div class="cycle-forecast" id="cycleForecast"></div>` 展示未来 3 次经期与当前周期阶段。
+- JS：扩展 `renderCycle()`：
+  - `nextStart`：从 `lastPeriodStart` 起按 `cycleDays` 递增，直到 ≥ 今天。
+  - 排卵日 = `nextStart - 14`，易孕期 = 排卵日前 5 天至后 1 天。
+  - 若今天落在 `lastPeriodStart ~ +periodDays-1`，显示「经期第 N 天」，否则显示「距下次经期 N 天」。
+  - 预测列表：未来 3 次经期开始日（`formatMD`），并提示「预测基于你填写的周期长度，仅作参考」。
+  - 所有数值仍由 `femaleProfile`（periodDays/cycleDays/lastPeriodStart）推导，无需新增后端字段。
 
-### 2.3 注销账号（backend/routes.py、backend/auth.py、web.py）
+### 5. 侧边栏「修改基本信息」
 
-- `auth.py` 新增 `verify_password_or_raise(conn, user, password)`（复用 `verify_password`）。
-- 新路由 `DELETE /api/account`（需登录，body `{password}`）：
-  1. 校验密码，错误 → 400「密码不正确」。
-  2. `DELETE FROM users WHERE id = ?`（级联删除全部数据与会话）。
-  3. 返回 `{ok: true, cookie: auth.clear_cookie_header()}`。
-- 前端个人信息弹窗底部增加 `注销账号` 按钮（`#deleteAccountBtn`，危险样式）：
-  - 两次确认：`confirm` 文案明确「永久删除，无法恢复」→ `prompt` 输入密码。
-  - 成功后 `clearLocalData()` + `location.reload()`；失败 toast 提示。
+- HTML：侧边栏 `#nav` 下方新增按钮 `#editBasicBtn`（`.side-edit`，图标 `i-user`），文案「修改基本信息」。
+- JS：
+  - `let editingBasic = false;`
+  - `prefillOnboarding()`：从 `profile` 与 `preferences` 回填 `#obName/#obGender/#obAge/#obHeight/#obWeight/#obSleep/#obExercise/#obGoal/#obTaste/#obDietType/#obMeals`，并用 `setChipValues()` 回填 `#obConditions/#obRestrictions`（保留自定义标签）。
+  - 点击后：`editingBasic = true`，隐藏 `#appShell`，显示 `#onboardingView`，滚到顶部。
+  - `#skipOnboarding`（稍后完善 / 返回）在 `editingBasic` 时直接 `enterApp()` 返回，不保存。
+  - 表单提交：新增保存 `preferences.age`（来自 `#obAge`），提交后 `editingBasic = false`、`enterApp()` 并调用 `loadProfileView()` / `refreshDietViews()` / `applyGenderView()`。
+- 复用现有问卷表单，不复制一套 HTML。
 
-### 2.4 真实科普资讯（backend/routes.py、backend/ai.py 不涉及、web.py）
+### 6. 饮食热量柱形图可点击 + 综合饮食建议
 
-- 新增 `GET /api/news`（`auth_required=False`，只读）：
-  - 查询 `q`（默认「健康」）、`limit`（默认 12，上限 24）。
-  - 拉取 Bing 新闻 RSS：`https://cn.bing.com/news/search?q=<q>&format=RSS`，失败回退 `https://www.bing.com/news/search?...`；`urllib` + `User-Agent`，超时 8s。
-  - 用 `xml.etree.ElementTree` 解析 `item` 的 `title / link / description / pubDate`，`description` 去掉 HTML 标签并截断 160 字。
-  - 模块级 10 分钟内存缓存（key = q+limit）。
-  - 返回 `{items: [...], source: "bing", fetchedAt}`；失败返回 `{items: [], error: "..."}`（HTTP 200，前端可回退）。
-- 前端：
-  - 新增 `liveNews` 状态与 `seenNews`（localStorage `hm_newsSeen`，只存 link，最多 200 条）。
-  - `newsRefresh` 改为 `async refreshLiveNews(isManual)`：请求 `/api/news?limit=24`，过滤已读链接，取前 12 条渲染为 `.news-card.live`（标题 / 摘要 / 来源 / 时间），点击 `window.open(link)`；同时把 link 记入 `seenNews`。
-  - 搜索框有内容时用关键词作为 `q` 再请求一次；无网络或失败时回退内置 12 篇并 toast「网络资讯不可用，已显示内置科普」。
-  - 保持原有内置文章、热门标签、速读摘要逻辑不变（`filterNews()` 只负责内置数据）。
+- 柱形图：`renderWeekCompare()` 中 `.mini-bar` 改为 `<button type="button" class="mini-bar" data-date="YYYY-MM-DD">`，CSS 增加按钮重置样式（`border:0;background:none;padding:0;cursor:pointer;font:inherit;color:inherit;`）与 hover 提示。
+- 新弹窗：`#dayMealMask`（复用 `.mask`/`.modal`），`#dayMealTitle`、`#dayMealBody`、关闭按钮。`openDayMeals(date)`：
+  - 过滤 `mealLog` 当天记录，按餐次列出「早餐 · 食物（约 N kcal）」，并显示合计热量与目标热量对比；
+  - 无记录时显示「当天没有记录」及引导（切换记录日期补记）。
+- 综合建议：饮食卡片 `#weekCompare` 下新增小标题「综合饮食建议」与 `#recentDietAdvice`。`renderRecentDietAdvice()` 基于最近 7 天（不足时用全部记录）计算：记录天数、平均热量/蛋白质、蛋白质达标天数、蔬果次数、早餐记录次数，按问题优先级输出 3-5 条建议；数据越多文案随之变化。`refreshDietViews()` 调用。
 
-### 2.5 语音输入（web.py）
+### 7. 心情 / 饮食 / 运动「补充前几日数据」
 
-- 新增固定按钮 `#voiceFab`（左下角，「语音输入」文字 + 麦克风图标），与右下角 AI 悬浮球对称，不遮挡内容；`≤560px` 缩小为圆形图标。
-- `initVoice()`：
-  - `const SR = window.SpeechRecognition || window.webkitSpeechRecognition`。
-  - 不支持 → toast「当前浏览器不支持语音输入，请用 Edge/Chrome，或直接打字」。
-  - `!window.isSecureContext` → toast「语音输入需要 HTTPS 访问，请让管理员开启 HTTPS」。
-  - 点击开始监听：`lang='zh-CN'`、`interimResults=true`、`continuous=false`；按钮进入 `.listening` 状态并显示「正在听…」。
-  - 记录 `lastEditable`：全局 `focusin` 时若为 `input/textarea`（非 password / file）则记录。
-  - `onresult`：拼接最终文本；若目标 `type=number`，用 `spokenToNumber()`（阿拉伯数字优先，其次中文数字 零/一/二/…/十/百/千）转换；写入 `target.value` 并 `dispatchEvent(new Event('input', {bubbles:true}))` + `change`。
-  - `onerror` / `onend`：复位按钮，失败时 toast 原因。
-- 覆盖模块：健康数据输入、饮食输入、运动目标/数据、睡眠、心情、家人、提醒、个人信息、科普搜索、AI 对话（先点输入框再点语音按钮即可）。
+- 饮食：`今日饮食记录` 标题旁新增 `#mealDate`（`type=date`，`max=今天`）+ 提示「可切换日期补记」。新增 `mealDateValue()`（默认今天）；`saveMealRecord()` 与 `renderMealLog()` 使用该日期；`#mealLogTitle` 文案随日期变化（今天/补记 M 月 D 日）。
+- 心情：心情卡片新增 `#moodDate`（`type=date`，`max=今天`）+ 提示。`moodDateValue()`；`renderMoodForDate(date)` 回填该日心情/备注（替换 `renderMoodToday`，保留今天的包装函数）；保存写入所选日期；日期变更时重绘。
+- 运动：运动数据弹窗 `#sportDataMask` 顶部新增 `#sdDate`（`type=date`，`max=今天`）；打开时默认今天并回填当天数据；`saveSportForDate(date, data)` 替代 `saveTodaySport` 的固定今天逻辑（计时结束仍写今天）；`renderExercise`/`renderWeekPanel`/评分刷新保持不变；提示文案区分「今天 / M 月 D 日」。
+- 三个日期输入统一在 `refreshAllViews()` 时重置为今天（避免跨账号残留）。
 
-### 2.6 AI 使用帮助（backend/ai.py、web.py）
+### 8. 手机语音与域名问题（仅答复，不改代码）
 
-- `ai.py` 增加 `PAGE_GUIDE` 常量（各模块入口 + 语音/小管家/资讯/注销等说明，约 350 字），在 `_build_messages()` 的 system 末尾拼接。
-- 前端「健康小管家」页增加快捷提问按钮行（`#assistantQuick`）：`这个网页怎么用`、`怎么用语音输入`、`怎么记录跑步`、`怎么记录饮食`；点击调用 `sendChat(文本)`。
-- 静态演示版 `getReply()` 增加「怎么用 / 使用 / 教程」规则，返回内置使用说明。
+- 浏览器只在「HTTPS 或 localhost」下允许麦克风（`getUserMedia`）；当前手机访问 `http://39.96.73.121:8000` 属于非安全源，必然无法录音。
+- 不买域名也可用：现有 cloudflared `trycloudflare` 隧道（每次重启地址会变）；或 Cloudflare 免费账号 + 免费 `*.workers.dev`/自有域名隧道。
+- 买域名：阿里云 / 腾讯云注册（`.top/.xyz` 首年约 30 元，`.com` 约 60-80 元）；大陆服务器绑定域名需 ICP 备案；香港/海外服务器无需备案。买后可用云厂商免费 DV 证书或 Caddy/Nginx 自动 HTTPS。
+- 建议：短期继续用隧道验证语音；长期稳定使用再买域名 + 备案 + HTTPS 反代。
 
-### 2.7 AI Agent 动作（backend/ai.py、backend/routes.py、web.py）
+## 涉及文件
 
-- `ai.py` 新增 `detect_action(message)`（纯规则，零额外模型调用、零延迟）：
-  - 运动：命中运动词（跑步/慢跑/健走/快走/骑行/游泳/瑜伽/跳绳/力量训练/健身操/篮球/羽毛球/足球/乒乓球/太极/八段锦/拉伸/登山/爬楼梯/舞蹈）+ 意图词（开始/记录/打卡/帮我记）→
-    `{"type":"sport_start","sport":"跑步"}`。
-  - 饮食：命中吃/喝/早餐/午餐/晚餐/加餐 + 记录类意图 → `{"type":"meal_add","meal":"晚餐|午餐|早餐|加餐","text":"原始描述"}`。
-- `/api/ai/chat` 在生成回复后调用 `detect_action(message)`：
-  - `meal_add` 时尝试 `ai.estimate_food(text)`，成功则附 `action.foods`（name/kcal/protein/carb/fat/fiber/portion）与 `action.total`；失败只返回 `action` 不含 `foods`。
-  - 响应新增 `action` 字段（无动作时为 `null`）。
-- 前端 `runAiAction(action)`（`sendChat` 成功回调中调用）：
-  - `sport_start`：调用已有 `startSportSession(name)`，`switchPage('sport')`，toast「已开始记录跑步，结束后自动统计」。
-  - `meal_add` 且带 `foods`：合并营养素 → `saveMealRecord(meal, text, totals)` → `renderMealLog()`，toast「已把 … 记入晚餐」；无 `foods` 时提示「已识别到饮食描述，请到饮食页确认」。
-- 系统提示补充：执行动作后用一句话确认已记录，不要重复询问。
+- `web.py`：HTML、CSS、JS（全部改动）。
+- `index.html`：改完后由 `PAGE_HTML` 重新生成（必须）。
+- `backend/`：不改业务代码，仅接口回归验证。
 
-### 2.8 HTTPS（部署说明，不改代码）
+## 验证步骤
 
-- 服务器用 openssl 生成带 IP SAN 的自签证书（`/opt/health/certs/`），在 `ai_local.env` 配置 `HM_TLS_CERT` / `HM_TLS_KEY`，`HM_PORT=443` 重启。
-- 说明：自签证书浏览器会提示「不安全」，需手动继续；国内 Chrome 的语音识别依赖 Google 服务，可能仍不可用，建议用 Edge 或手动输入；彻底解决需域名 + Let's Encrypt 或 Cloudflare Tunnel。
+1. `python -m py_compile web.py`。
+2. 本地 `python web.py`，`curl` 完成注册 → `POST /api/sync/import`（含 dietActivity、前几日 mealLog/moodLog/sport、sleepLog）→ `GET /api/sync/export` 字段回读一致。
+3. 浏览器验证：睡眠小时+分钟保存、周柱图；活动水平切换后重新登录仍保留；经期预测数值随周期设置变化；侧边栏修改基本信息回填与保存；饮食柱形图点击弹出当天记录/空态；综合建议随补记数据变化；心情/饮食/运动补记日期生效。
+4. 重新生成 `index.html`，确认长度正常且包含新增 id。
+5. 清理测试数据，`git commit`（分条、不含密钥）。
 
-### 2.9 生成与提交
+## 决策待确认
 
-- 用 importlib 重新生成 `index.html`。
-- `git add` 相关文件并 commit（不提交 `ai_local.env`）。
-- 给出服务器命令：`cd /opt/health && git pull && sudo systemctl restart health`。
-
-## 3. 接口汇总
-
-| 方法 | 路径 | 说明 |
-| --- | --- | --- |
-| POST | `/api/auth/register` | 开放注册（移除白名单 403） |
-| DELETE | `/api/account` | 注销账号（body: password，级联删除） |
-| GET | `/api/news?q=&limit=` | 必应新闻 RSS 代理，10 分钟缓存 |
-| POST | `/api/ai/chat` | 响应新增 `action` 字段 |
-
-## 4. 验收标准
-
-1. 记录运动 → 退出 → 重新登录：今日运动卡片、本周统计、`sport_records` 均保留。
-2. 新账号可自行注册并登录；旧白名单账号仍可登录。
-3. 个人信息弹窗可注销账号；注销后该账号无法登录、数据被清除。
-4. 点「刷新」能出现与上次不同的真实新闻标题，点击跳转原文；断网时回退内置 12 篇并有提示。
-5. 点左下角语音按钮，说出「失眠」能填入科普搜索框并触发搜索；不支持的浏览器/非 HTTPS 有明确提示。
-6. 对小管家说「我现在要开始跑步，帮我记录一下」→ 自动进入运动页并开始计时。
-7. 说「我今天吃了一份螺蛳粉，里面有酸笋、花生、粉、青菜、炸蛋，帮我填入今日饮食的晚餐部分」→ 晚餐记录出现该条目及热量。
-8. 问「这个网页怎么用」→ 返回分模块使用说明。
-9. 页面无 JS 报错；`python web.py` 可正常启动。
-
-## 5. 非目标
-
-- 不做真正的语音转写后端（不接入讯飞/阿里云 ASR）。
-- 不做新闻全文抓取与站内渲染（只跳转原文）。
-- 不改动现有数据表结构与同步协议。
-
-## 6. 风险与回退
-
-- 必应 RSS 在境内可能被限流/改版 → 已设计回退内置内容，不影响主流程。
-- 自签 HTTPS 有浏览器警告且语音能力依赖浏览器 → 保留手动输入路径。
-- 开放注册后服务器可能被恶意注册 → 密码长度校验、账号唯一、每用户独立数据；如需要可在后续加频率限制（本轮不做）。
+- 睡眠时长仍以「小时（浮点）」入库，只改录入与展示方式（不改后端表结构）。
+- 「修改基本信息」复用现有 onboarding 表单，而非新建弹窗。
+- 经期预测只做基于周期长度的估算，不引入医学判断。
