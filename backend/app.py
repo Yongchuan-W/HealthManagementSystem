@@ -141,9 +141,10 @@ class HealthAppHandler(BaseHTTPRequestHandler):
             self._send_json(409, {"ok": False, "error": "数据冲突，请检查输入", "code": "conflict"})
         except (ValueError, UnicodeDecodeError) as error:
             self._send_json(400, {"ok": False, "error": "请求格式有误：%s" % error, "code": "bad_request"})
-        except Exception as error:  # noqa: BLE001 - 兜底，避免服务被单个请求打断
+        except Exception:  # noqa: BLE001 - 兜底，避免服务被单个请求打断
+            # 详细堆栈只写服务端日志，返回给前端的内容不暴露异常与路径
             traceback.print_exc()
-            self._send_json(500, {"ok": False, "error": "服务器内部错误：%s" % error,
+            self._send_json(500, {"ok": False, "error": "服务器开小差了，请稍后再试",
                                   "code": "internal_error"})
 
     # ---------- 请求体 ----------
@@ -198,6 +199,4 @@ def prepare():
     with db.session() as conn:
         if auth.allowed_accounts():
             auth.ensure_allowed_users(conn)
-        else:
-            auth.ensure_demo_user(conn)
     return True

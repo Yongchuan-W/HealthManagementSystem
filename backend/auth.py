@@ -283,9 +283,3 @@ def ensure_allowed_users(conn):
                 (password_hash, salt, row["id"]),
             )
 
-
-def ensure_demo_user(conn):
-    """未配置白名单时，首次启动创建演示账号 AAA / 123456。"""
-    if conn.execute("SELECT id FROM users WHERE account = 'AAA'").fetchone():
-        return
-    register(conn, "AAA", "123456", "张三")

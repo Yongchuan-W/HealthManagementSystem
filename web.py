@@ -12759,7 +12759,12 @@ def main():
     mobile_url = ("%s://%s:%d/" % (scheme, lan_ip, port)
                   if lan_ip != "127.0.0.1" else local_url)
 
-    # 初始化数据库，并按白名单创建指定账号（未配置时创建演示账号）
+    # 对外访问地址：配置了域名（如 https://health.example.xyz）时优先展示它
+    public_url = os.environ.get("HM_PUBLIC_URL", "").strip()
+    if public_url:
+        mobile_url = public_url if public_url.endswith("/") else public_url + "/"
+
+    # 初始化数据库，并按白名单同步指定账号
     prepare()
 
     # 把页面与手机访问地址注入后端处理器
