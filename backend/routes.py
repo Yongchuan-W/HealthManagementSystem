@@ -2039,7 +2039,8 @@ def female_profile_update(ctx):
 
 
 def female_status_json(row):
-    return {"date": row["date"], "tags": load_list(row["tags"]), "note": row["note"] or ""}
+    return {"date": row["date"], "tags": load_list(row["tags"]), "note": row["note"] or "",
+            "flow": row["flow"] or "", "color": row["color"] or "", "pain": row["pain"] or ""}
 
 
 @route("GET", "/api/female/status")
@@ -2057,13 +2058,19 @@ def female_status_save(ctx):
     date = clean_date(ctx.body.get("date"), "date", default=db.today())
     tags = clean_list(ctx.body.get("tags"), "tags", 20, 20)
     note = clean_text(ctx.body.get("note"), "note", 200)
+    flow = clean_text(ctx.body.get("flow"), "flow", 20)
+    color = clean_text(ctx.body.get("color"), "color", 20)
+    pain = clean_text(ctx.body.get("pain"), "pain", 20)
 
     ctx.conn.execute(
-        "INSERT INTO female_status(user_id, date, tags, note, created_at) VALUES (?, ?, ?, ?, ?) "
-        "ON CONFLICT(user_id, date) DO UPDATE SET tags = excluded.tags, note = excluded.note",
-        (ctx.user_id, date, json.dumps(tags, ensure_ascii=False), note, db.now()),
+        "INSERT INTO female_status(user_id, date, tags, note, flow, color, pain, created_at) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?) "
+        "ON CONFLICT(user_id, date) DO UPDATE SET tags = excluded.tags, note = excluded.note, "
+        "flow = excluded.flow, color = excluded.color, pain = excluded.pain",
+        (ctx.user_id, date, json.dumps(tags, ensure_ascii=False), note, flow, color, pain, db.now()),
     )
-    return {"record": {"date": date, "tags": tags, "note": note}}
+    return {"record": {"date": date, "tags": tags, "note": note,
+                       "flow": flow, "color": color, "pain": pain}}
 
 
 @route("DELETE", "/api/female/status/<date>")
@@ -2444,12 +2451,14 @@ def sync_import(ctx):
             if day is None or not isinstance(tags, list):
                 continue
             conn.execute(
-                "INSERT INTO female_status(user_id, date, tags, note, created_at) "
-                "VALUES (?, ?, ?, ?, ?) "
+                "INSERT INTO female_status(user_id, date, tags, note, flow, color, pain, "
+                "created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?) "
                 "ON CONFLICT(user_id, date) DO UPDATE SET tags = excluded.tags, "
-                "note = excluded.note",
+                "note = excluded.note, flow = excluded.flow, color = excluded.color, "
+                "pain = excluded.pain",
                 (uid, day[:10], json.dumps([str(tag)[:20] for tag in tags], ensure_ascii=False),
-                 safe_text(item.get("note"), 200), db.now()),
+                 safe_text(item.get("note"), 200), safe_text(item.get("flow"), 20),
+                 safe_text(item.get("color"), 20), safe_text(item.get("pain"), 20), db.now()),
             )
             imported += 1
         counts["femaleStatus"] = imported

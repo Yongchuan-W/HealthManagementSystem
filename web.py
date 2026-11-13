@@ -4354,7 +4354,34 @@ body { color: var(--text); }
 .day-meal-total { margin-top: 12px; padding-top: 10px; border-top: 1px dashed #e8dccb; font-size: 13px; color: #6b5645; }
 
 /* ==========================================================
-   15. 窄屏顶部导航（手机）
+   15. 经期感受记录（流量 / 颜色 / 痛经）
+   ========================================================== */
+.period-feel { margin-top: 20px; padding-top: 16px; border-top: 1px dashed var(--line); }
+.pf-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.pf-head input[type="date"] {
+  height: 34px; padding: 0 10px; border: 1px solid #e6dbcd; border-radius: 9px;
+  background: #fff; font-size: 13px; color: var(--text);
+}
+.pf-group { margin-top: 14px; }
+.pf-group h4 { font-size: 13.5px; font-weight: 700; color: #5d4a3a; margin-bottom: 10px; }
+.pf-options { display: flex; gap: 10px; overflow-x: auto; padding: 2px 2px 6px; scrollbar-width: none; }
+.pf-options::-webkit-scrollbar { display: none; }
+.pf-opt {
+  flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 2px; border: 0; background: none; color: #8b7d70; font-size: 12px; line-height: 1.2;
+}
+.pf-dot {
+  width: 42px; height: 42px; border-radius: 50%; background: #fde8ef;
+  border: 2px solid transparent; overflow: hidden;
+  display: flex; align-items: flex-end; justify-content: center;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.pf-dot i { display: block; width: 100%; background: linear-gradient(180deg, #f9a8c1, #ef6d97); }
+.pf-opt[aria-pressed="true"] .pf-dot { border-color: #2ec27e; box-shadow: 0 0 0 3px rgba(46, 194, 126, 0.16); }
+.pf-opt[aria-pressed="true"] .pf-label { color: #2f8a63; font-weight: 700; }
+
+/* ==========================================================
+   16. 窄屏顶部导航（手机）
    第一行：品牌 + 修改基本信息 + 头像
    第二行：可横向滑动的功能导航（6 个入口，保证在手机上一定可见）
    ========================================================== */
@@ -4501,8 +4528,6 @@ body { color: var(--text); }
       <button class="login-switch" type="button" id="authModeSwitch">还没有账号？立即注册</button>
 
       <button class="btn-primary login-btn" type="button" id="demoEnter" hidden>进入本地演示（不校验账号）</button>
-
-      <div class="mobile-hint">手机与电脑连接同一 Wi-Fi 后访问：<br><a href="__MOBILE_URL__">__MOBILE_URL__</a></div>
     </div>
   </div>
 </div>
@@ -5000,6 +5025,18 @@ body { color: var(--text); }
               </div>
               <div class="tip-pink" id="statusTip">科学建议：记录今日状态后，这里会给出对应的护理建议。</div>
             </div>
+          </div>
+
+          <!-- 经期感受：流量 / 颜色 / 痛经，按日期记录 -->
+          <div class="period-feel" id="periodFeel">
+            <div class="pf-head">
+              <div class="status-title">
+                <svg class="icon"><use href="#i-droplet"/></svg>经期感受记录
+              </div>
+              <input type="date" id="feelDate" aria-label="记录日期">
+            </div>
+            <div id="periodFeelOptions"></div>
+            <div class="tip-pink" id="feelTip">选择后会按日期自动保存，可左右滑动查看全部选项。</div>
           </div>
         </div>
       </div>
@@ -6159,7 +6196,15 @@ function hasAnyRecord() {
 function femaleStatusList() {
   const status = loadData('femaleStatus', {}) || {};
   return Object.keys(status).map(function (date) {
-    return { date: date, tags: status[date].tags || [], note: status[date].note || '' };
+    const entry = status[date] || {};
+    return {
+      date: date,
+      tags: entry.tags || [],
+      note: entry.note || '',
+      flow: entry.flow || '',
+      color: entry.color || '',
+      pain: entry.pain || ''
+    };
   });
 }
 
@@ -6246,7 +6291,13 @@ function applyBundle(bundle) {
   const femaleStatus = {};
   ((bundle.female || {}).status || []).forEach(function (item) {
     if (!item || !item.date) return;
-    femaleStatus[item.date] = { tags: item.tags || [], note: item.note || '' };
+    femaleStatus[item.date] = {
+      tags: item.tags || [],
+      note: item.note || '',
+      flow: item.flow || '',
+      color: item.color || '',
+      pain: item.pain || ''
+    };
   });
 
   const values = {
@@ -8837,13 +8888,18 @@ function createTagEditor(config) {
 }
 
 // 今日状态标签按日期保存，便于跨设备查看当天记录
+// 同一天的「流量/颜色/痛经」也存放在这条记录里，更新标签时不能把它们覆盖掉
 function saveFemaleStatus(tags) {
   const map = loadData('femaleStatus', {}) || {};
   const today = toISODate(new Date());
-  if (tags.length) {
-    map[today] = { tags: tags, note: ((map[today] || {}).note) || '' };
-  } else {
+  const entry = map[today] || {};
+  entry.tags = tags;
+  entry.note = entry.note || '';
+  const empty = !tags.length && !entry.flow && !entry.color && !entry.pain && !entry.note;
+  if (empty) {
     delete map[today];
+  } else {
+    map[today] = entry;
   }
   saveData('femaleStatus', map);
 }
@@ -8870,6 +8926,92 @@ document.addEventListener('click', function (event) {
     closeTagMenus();
   }
 });
+
+// ---------- 经期感受：流量 / 颜色 / 痛经（按日期记录） ----------
+const FEEL_GROUPS = [
+  { key: 'flow', label: '流量', options: [
+    { value: '非常少量', fill: 18 }, { value: '少量', fill: 36 },
+    { value: '中量', fill: 55 }, { value: '大量', fill: 74 },
+    { value: '非常大量', fill: 92 }
+  ] },
+  { key: 'color', label: '颜色', options: [
+    { value: '浅红色', dot: '#f7b6c8' }, { value: '鲜红色', dot: '#ea4a63' },
+    { value: '深红色', dot: '#b21830' }, { value: '褐色', dot: '#96543a' },
+    { value: '黑色', dot: '#3b2b26' }
+  ] },
+  { key: 'pain', label: '痛经', options: [
+    { value: '完全不痛', dot: '#fde7ee' }, { value: '轻微痛', dot: '#f9c3d5' },
+    { value: '比较痛', dot: '#f08fae' }, { value: '非常痛', dot: '#e05c88' },
+    { value: '痛到极致', dot: '#c72a63' }
+  ] }
+];
+
+const feelDateInput = document.getElementById('feelDate');
+const feelOptionsBox = document.getElementById('periodFeelOptions');
+
+function feelMap() {
+  return loadData('femaleStatus', {}) || {};
+}
+
+function renderPeriodFeel() {
+  if (!feelDateInput || !feelOptionsBox) return;
+  const date = feelDateInput.value || toISODate(new Date());
+  const entry = feelMap()[date] || {};
+
+  feelOptionsBox.innerHTML = FEEL_GROUPS.map(function (group) {
+    const options = group.options.map(function (option) {
+      const dot = group.key === 'flow'
+        ? '<span class="pf-dot"><i style="height:' + option.fill + '%"></i></span>'
+        : '<span class="pf-dot" style="background:' + option.dot + '"></span>';
+      const active = entry[group.key] === option.value;
+      return '<button type="button" class="pf-opt" data-key="' + group.key +
+        '" data-value="' + option.value + '" aria-pressed="' + (active ? 'true' : 'false') + '">' +
+        dot + '<span class="pf-label">' + option.value + '</span></button>';
+    }).join('');
+    return '<div class="pf-group"><h4>' + group.label + '</h4>' +
+      '<div class="pf-options">' + options + '</div></div>';
+  }).join('');
+
+  const parts = [];
+  if (entry.flow) parts.push('流量：' + entry.flow);
+  if (entry.color) parts.push('颜色：' + entry.color);
+  if (entry.pain) parts.push('痛经：' + entry.pain);
+  const tip = document.getElementById('feelTip');
+  tip.textContent = parts.length
+    ? formatMD(parseISODate(date)) + ' 已记录 · ' + parts.join(' · ') + '（再点一次可取消）'
+    : '选择后会按日期自动保存，可左右滑动查看全部选项。';
+}
+
+function saveFeel(key, value) {
+  const date = feelDateInput.value || toISODate(new Date());
+  const map = feelMap();
+  const entry = map[date] || { tags: [], note: '' };
+  if (entry[key] === value) {
+    delete entry[key];
+  } else {
+    entry[key] = value;
+  }
+  const empty = !(entry.tags || []).length && !entry.flow && !entry.color && !entry.pain && !entry.note;
+  if (empty) {
+    delete map[date];
+  } else {
+    map[date] = entry;
+  }
+  saveData('femaleStatus', map);
+  renderPeriodFeel();
+}
+
+if (feelDateInput && feelOptionsBox) {
+  const feelToday = toISODate(new Date());
+  feelDateInput.max = feelToday;
+  feelDateInput.value = feelToday;
+  feelDateInput.addEventListener('change', renderPeriodFeel);
+  feelOptionsBox.addEventListener('click', function (event) {
+    const btn = event.target.closest('.pf-opt');
+    if (btn) saveFeel(btn.dataset.key, btn.dataset.value);
+  });
+  renderPeriodFeel();
+}
 
 // ---------- 睡眠记录 ----------
 function sleepParts(hours) {
@@ -11801,7 +11943,7 @@ renderWeekPanel();
 // 从后端取回数据后，把内存变量与页面重新同步成最新状态
 function resetSupplementDates() {
   const today = toISODate(new Date());
-  ['mealDate', 'moodDate', 'sdDate'].forEach(function (id) {
+  ['mealDate', 'moodDate', 'sdDate', 'feelDate'].forEach(function (id) {
     const input = document.getElementById(id);
     if (input) {
       input.max = today;
@@ -11857,6 +11999,7 @@ function refreshAllViews() {
   restoreBeautyPlan();
   restoreReport();
   applyGenderView();
+  renderPeriodFeel();
 }
 
 // 恢复最近一份体检报告的指标

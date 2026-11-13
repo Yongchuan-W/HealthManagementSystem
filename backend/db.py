@@ -254,6 +254,9 @@ CREATE TABLE IF NOT EXISTS female_status (
     date       TEXT    NOT NULL,
     tags       TEXT,                      -- JSON 数组
     note       TEXT,
+    flow       TEXT,                      -- 流量：非常少量/少量/中量/大量/非常大量
+    color      TEXT,                      -- 颜色：浅红色/鲜红色/深红色/褐色/黑色
+    pain       TEXT,                      -- 痛经：完全不痛…痛到极致
     created_at TEXT,
     UNIQUE(user_id, date)
 );
@@ -327,6 +330,11 @@ def _migrate(conn):
         conn.execute("ALTER TABLE preferences ADD COLUMN meals TEXT")
     if preference_columns and "age" not in preference_columns:
         conn.execute("ALTER TABLE preferences ADD COLUMN age TEXT")
+
+    female_columns = {row[1] for row in conn.execute("PRAGMA table_info(female_status)")}
+    for column in ("flow", "color", "pain"):
+        if female_columns and column not in female_columns:
+            conn.execute("ALTER TABLE female_status ADD COLUMN %s TEXT" % column)
 
     ai_columns = {row[1] for row in conn.execute("PRAGMA table_info(ai_messages)")}
     if ai_columns and "conversation_id" not in ai_columns:
