@@ -2002,11 +2002,13 @@ def female_profile_get(ctx):
         "SELECT * FROM female_profiles WHERE user_id = ?", (ctx.user_id,)
     ).fetchone()
     if row is None:
-        return {"profile": {"periodDays": 5, "cycleDays": 28, "lastPeriodStart": ""}}
+        return {"profile": {"periodDays": 5, "cycleDays": 28, "lastPeriodStart": "",
+                            "periodEnd": ""}}
     return {"profile": {
         "periodDays": row["period_days"],
         "cycleDays": row["cycle_days"],
         "lastPeriodStart": row["last_period_start"] or "",
+        "periodEnd": row["period_end"] or "",
     }}
 
 
@@ -2020,6 +2022,9 @@ def female_profile_update(ctx):
     if "lastPeriodStart" in ctx.body:
         updates["last_period_start"] = clean_date(
             ctx.body["lastPeriodStart"], "lastPeriodStart", default="")
+    if "periodEnd" in ctx.body:
+        updates["period_end"] = clean_date(
+            ctx.body["periodEnd"], "periodEnd", default="")
 
     row = ctx.conn.execute(
         "SELECT user_id FROM female_profiles WHERE user_id = ?", (ctx.user_id,)
@@ -2435,13 +2440,14 @@ def sync_import(ctx):
         female_profile = female.get("profile") or {}
         conn.execute(
             "INSERT INTO female_profiles(user_id, period_days, cycle_days, last_period_start, "
-            "updated_at) VALUES (?, ?, ?, ?, ?) "
+            "period_end, updated_at) VALUES (?, ?, ?, ?, ?, ?) "
             "ON CONFLICT(user_id) DO UPDATE SET period_days = excluded.period_days, "
             "cycle_days = excluded.cycle_days, last_period_start = excluded.last_period_start, "
-            "updated_at = excluded.updated_at",
+            "period_end = excluded.period_end, updated_at = excluded.updated_at",
             (uid, safe_int(female_profile.get("periodDays"), 1, 15, 5),
              safe_int(female_profile.get("cycleDays"), 15, 60, 28),
-             safe_text(female_profile.get("lastPeriodStart"), 10), db.now()),
+             safe_text(female_profile.get("lastPeriodStart"), 10),
+             safe_text(female_profile.get("periodEnd"), 10), db.now()),
         )
 
         imported = 0
@@ -2672,6 +2678,7 @@ def sync_export(ctx):
                 "periodDays": female_row["period_days"] if female_row else 5,
                 "cycleDays": female_row["cycle_days"] if female_row else 28,
                 "lastPeriodStart": (female_row["last_period_start"] or "") if female_row else "",
+                "periodEnd": (female_row["period_end"] or "") if female_row else "",
             },
             "status": [female_status_json(row) for row in female_rows],
         },

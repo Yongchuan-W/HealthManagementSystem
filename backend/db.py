@@ -245,6 +245,7 @@ CREATE TABLE IF NOT EXISTS female_profiles (
     period_days       INTEGER DEFAULT 5,
     cycle_days        INTEGER DEFAULT 28,
     last_period_start TEXT,
+    period_end        TEXT,                -- 结束日期；NULL/空 表示经期还没结束
     updated_at        TEXT
 );
 
@@ -335,6 +336,16 @@ def _migrate(conn):
     for column in ("flow", "color", "pain"):
         if female_columns and column not in female_columns:
             conn.execute("ALTER TABLE female_status ADD COLUMN %s TEXT" % column)
+
+    profile_columns = {row[1] for row in conn.execute("PRAGMA table_info(female_profiles)")}
+    if profile_columns and "period_end" not in profile_columns:
+        conn.execute("ALTER TABLE female_profiles ADD COLUMN period_end TEXT")
+        # 旧数据没有结束日期，按原经期长度补算，避免全部显示成「进行中」
+        conn.execute(
+            "UPDATE female_profiles SET period_end = date(last_period_start, "
+            "'+' || (COALESCE(period_days, 5) - 1) || ' days') "
+            "WHERE last_period_start IS NOT NULL AND last_period_start <> ''"
+        )
 
     ai_columns = {row[1] for row in conn.execute("PRAGMA table_info(ai_messages)")}
     if ai_columns and "conversation_id" not in ai_columns:

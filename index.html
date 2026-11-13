@@ -3983,6 +3983,10 @@ body { color: var(--text); }
 .period-arrow { padding-bottom: 12px; color: #c0a895; }
 .period-arrow .icon { width: 18px; height: 18px; }
 
+.period-act { width: 100%; height: 36px; border-radius: 10px; font-size: 13px; }
+
+.period-hint { margin-top: 10px; font-size: 12px; line-height: 1.6; color: #a08d7d; }
+
 .period-preview { display: flex; gap: 10px; margin-top: 14px; }
 
 .period-preview .pp-item {
@@ -5623,22 +5627,26 @@ body { color: var(--text); }
     <div class="modal-body">
       <div class="period-tip">
         <svg class="icon"><use href="#i-droplet"/></svg>
-        <span>记录本次经期的开始与结束日期，系统会自动计算经期长度与下次排卵日。</span>
+        <span>经期还没结束？先只记录开始日期，等结束后再回来补记结束日期。</span>
       </div>
 
       <div class="period-dates">
         <div class="period-date-field">
           <label for="periodStart">开始日期</label>
-          <input id="periodStart" type="date" value="2026-10-11">
+          <input id="periodStart" type="date">
+          <button type="button" class="btn-soft period-act" id="savePeriodStart">记录开始日期</button>
         </div>
         <div class="period-arrow">
           <svg class="icon"><use href="#i-refresh"/></svg>
         </div>
         <div class="period-date-field">
-          <label for="periodEnd">结束日期</label>
-          <input id="periodEnd" type="date" value="2026-10-15">
+          <label for="periodEnd">结束日期（可稍后再填）</label>
+          <input id="periodEnd" type="date">
+          <button type="button" class="btn-soft period-act" id="savePeriodEnd">记录结束日期</button>
         </div>
       </div>
+
+      <div class="period-hint">只记录开始日期时，经期长度会显示「进行中」，下次经期预测仍按周期长度估算。</div>
 
       <div class="field">
         <label for="cycleDaysInput">周期长度</label>
@@ -5658,8 +5666,7 @@ body { color: var(--text); }
     </div>
 
     <div class="modal-foot">
-      <button class="btn-cancel" id="periodCancel">取消</button>
-      <button class="btn-save" id="periodSave">保存记录</button>
+      <button class="btn-cancel" id="periodCancel">关闭</button>
     </div>
   </div>
 </div>
@@ -8549,9 +8556,10 @@ function applyGenderView() {
 }
 
 // ---------- 生理周期：长度与日期都可自由选择 ----------
-let lastPeriodStart = new Date(2026, 9, 11); // 最近一次经期开始日
 let periodDays = 5;                          // 经期长度（天）
 let cycleDays = 28;                          // 周期长度（天）
+let lastPeriodStart = new Date(2026, 9, 11); // 最近一次经期开始日
+let lastPeriodEnd = addDays(lastPeriodStart, periodDays - 1); // 结束日，null 表示经期还没结束
 
 const periodDaysSelect = document.getElementById('periodDays');
 const cycleDaysMainSelect = document.getElementById('cycleDaysMain');
@@ -8591,9 +8599,8 @@ function renderCycle() {
   cycleDaysMainSelect.value = String(cycleDays);
   cycleDaysInput.value = String(cycleDays);
 
-  const end = addDays(lastPeriodStart, periodDays - 1);
   document.getElementById('lastPeriodRange').textContent =
-    formatMD(lastPeriodStart) + ' - ' + formatMD(end);
+    formatMD(lastPeriodStart) + ' - ' + (lastPeriodEnd ? formatMD(lastPeriodEnd) : '进行中');
 
   // 下次经期：从最近一次经期开始按周期长度往后推，直到不早于今天
   const today = new Date();
@@ -8616,11 +8623,12 @@ function renderCycle() {
   document.getElementById('daysToPeriod').textContent = daysLeft + ' 天';
 
   // 当前阶段：经期中 / 经前 / 经期后
-  const periodEnd = addDays(lastPeriodStart, periodDays - 1);
+  const periodEnd = lastPeriodEnd || addDays(lastPeriodStart, periodDays - 1);
   let stage = '';
   if (today >= lastPeriodStart && today <= periodEnd) {
     const dayNo = Math.round((today - lastPeriodStart) / MS_PER_DAY) + 1;
-    stage = '现在处于经期第 ' + dayNo + ' 天，注意保暖与休息。';
+    stage = '现在处于经期第 ' + dayNo + ' 天' +
+      (lastPeriodEnd ? '，注意保暖与休息。' : '（结束后记得补记结束日期），注意保暖与休息。');
   } else if (daysLeft <= 7) {
     stage = '距离下次经期还有 ' + daysLeft + ' 天，可能进入经前不适期，可适当减少高强度运动。';
   } else {
@@ -8649,7 +8657,8 @@ function saveFemaleProfile() {
   saveData('femaleProfile', {
     periodDays: periodDays,
     cycleDays: cycleDays,
-    lastPeriodStart: toISODate(lastPeriodStart)
+    lastPeriodStart: toISODate(lastPeriodStart),
+    periodEnd: lastPeriodEnd ? toISODate(lastPeriodEnd) : ''
   });
 }
 
@@ -8662,6 +8671,13 @@ function applyFemaleProfile(profile) {
   if (days >= 1 && days <= 15) periodDays = days;
   if (cycle >= 15 && cycle <= 60) cycleDays = cycle;
   if (start) lastPeriodStart = start;
+  if (Object.prototype.hasOwnProperty.call(profile, 'periodEnd')) {
+    // 空字符串表示「经期还没结束」，保持进行中
+    lastPeriodEnd = parseISODate(profile.periodEnd) || null;
+  } else if (start) {
+    // 旧数据没有结束日期字段，按原经期长度推算
+    lastPeriodEnd = addDays(start, periodDays - 1);
+  }
   renderCycle();
 }
 
@@ -8690,37 +8706,56 @@ function closeMask(mask) {
 
 // ---------- 生理期记录弹窗 ----------
 const periodMask = document.getElementById('periodMask');
+const periodStartInput = document.getElementById('periodStart');
+const periodEndInput = document.getElementById('periodEnd');
 
 // 弹窗内实时预览经期长度与排卵日
 function updatePeriodPreview() {
-  const start = parseISODate(document.getElementById('periodStart').value);
-  const end = parseISODate(document.getElementById('periodEnd').value);
+  const start = parseISODate(periodStartInput.value);
+  const end = parseISODate(periodEndInput.value);
   const cycle = parseInt(cycleDaysInput.value, 10) || cycleDays;
   const daysEl = document.getElementById('periodPreviewDays');
   const ovulationEl = document.getElementById('periodPreviewOvulation');
 
-  if (!start || !end || end < start) {
+  if (!start) {
     daysEl.textContent = '—';
     ovulationEl.textContent = '—';
     return;
   }
 
-  daysEl.textContent = (Math.round((end - start) / MS_PER_DAY) + 1) + ' 天';
+  daysEl.textContent = (end && end >= start)
+    ? (Math.round((end - start) / MS_PER_DAY) + 1) + ' 天'
+    : '进行中';
   ovulationEl.textContent = formatMD(addDays(start, cycle - 14));
 }
 
+function todayStart() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return today;
+}
+
 document.getElementById('openPeriod').addEventListener('click', function () {
-  document.getElementById('periodStart').value = toISODate(lastPeriodStart);
-  document.getElementById('periodEnd').value = toISODate(addDays(lastPeriodStart, periodDays - 1));
+  periodStartInput.value = toISODate(lastPeriodStart);
+  periodEndInput.value = lastPeriodEnd ? toISODate(lastPeriodEnd) : '';
   cycleDaysInput.value = String(cycleDays);
   updatePeriodPreview();
   openMask(periodMask);
 });
 
-['periodStart', 'periodEnd'].forEach(function (id) {
-  document.getElementById(id).addEventListener('change', updatePeriodPreview);
+[periodStartInput, periodEndInput].forEach(function (input) {
+  input.addEventListener('change', updatePeriodPreview);
 });
-cycleDaysInput.addEventListener('change', updatePeriodPreview);
+
+cycleDaysInput.addEventListener('change', function () {
+  const value = parseInt(cycleDaysInput.value, 10);
+  if (value >= 21 && value <= 40) {
+    cycleDays = value;
+    renderCycle();
+    saveFemaleProfile();
+  }
+  updatePeriodPreview();
+});
 
 document.getElementById('periodClose').addEventListener('click', function () {
   closeMask(periodMask);
@@ -8734,13 +8769,46 @@ periodMask.addEventListener('click', function (event) {
   if (event.target === periodMask) closeMask(periodMask);
 });
 
-document.getElementById('periodSave').addEventListener('click', function () {
-  const start = parseISODate(document.getElementById('periodStart').value);
-  const end = parseISODate(document.getElementById('periodEnd').value);
+// 只记录开始日期：结束日期等经期过去后再补
+document.getElementById('savePeriodStart').addEventListener('click', function () {
+  const start = parseISODate(periodStartInput.value);
+  if (!start) {
+    showToast('请先选择开始日期');
+    return;
+  }
+  if (start > todayStart()) {
+    showToast('开始日期不能晚于今天');
+    return;
+  }
+
+  lastPeriodStart = start;
+  lastPeriodEnd = null;
+  renderCycle();
+  saveFemaleProfile();
+  closeMask(periodMask);
+  showToast('已记录开始日期，经期结束后再来记录结束日期');
+});
+
+// 记录结束日期：完成后自动算出经期长度
+document.getElementById('savePeriodEnd').addEventListener('click', function () {
+  const start = parseISODate(periodStartInput.value);
+  const end = parseISODate(periodEndInput.value);
   const nextCycle = parseInt(cycleDaysInput.value, 10);
 
-  if (!start || !end) {
-    showToast('请选择开始和结束日期');
+  if (!start) {
+    showToast('请先选择开始日期');
+    return;
+  }
+  if (!end) {
+    showToast('请选择结束日期');
+    return;
+  }
+  if (start > todayStart()) {
+    showToast('开始日期不能晚于今天');
+    return;
+  }
+  if (end > todayStart()) {
+    showToast('结束日期不能晚于今天');
     return;
   }
   if (end < start) {
@@ -8759,13 +8827,14 @@ document.getElementById('periodSave').addEventListener('click', function () {
   }
 
   lastPeriodStart = start;
+  lastPeriodEnd = end;
   periodDays = days;
   cycleDays = nextCycle;
 
   renderCycle();
   saveFemaleProfile();
   closeMask(periodMask);
-  showToast('生理期记录已保存');
+  showToast('已记录结束日期，本次经期 ' + days + ' 天');
 });
 
 // ---------- 状态标签：从预设选项中多选 ----------
