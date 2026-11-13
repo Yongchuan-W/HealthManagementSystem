@@ -4266,6 +4266,95 @@ body { color: var(--text); }
   .voice-fab { left: 14px; bottom: 16px; padding: 10px 13px; font-size: 12px; }
 }
 
+/* 语音输入面板 */
+.voice-panel {
+  position: fixed;
+  left: 50%;
+  bottom: 88px;
+  z-index: 90;
+  width: min(520px, calc(100vw - 32px));
+  transform: translateX(-50%);
+  padding: 14px 16px 12px;
+  border-radius: 16px;
+  background: #fff;
+  border: 1px solid #e8ded2;
+  box-shadow: 0 16px 40px rgba(58, 44, 32, 0.18);
+}
+
+.vp-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.vp-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #433326;
+}
+
+.vp-title .icon { width: 16px; height: 16px; }
+
+.vp-status {
+  font-size: 12px;
+  color: #8b7d70;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.voice-panel textarea {
+  width: 100%;
+  min-height: 74px;
+  max-height: 160px;
+  padding: 10px 12px;
+  border: 1px solid #e6dccf;
+  border-radius: 10px;
+  background: #fbf8f3;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.voice-panel textarea:focus { outline: none; border-color: #9fd3b8; background: #fff; }
+
+.vp-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.vp-cancel,
+.vp-ok {
+  height: 36px;
+  padding: 0 18px;
+  border-radius: 10px;
+  border: 1px solid #e6dccf;
+  background: #fff;
+  color: #6b5a4a;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.vp-ok {
+  border-color: #2ec27e;
+  background: #2ec27e;
+  color: #fff;
+}
+
+.vp-ok:hover { background: #27ad70; }
+
+@media (max-width: 560px) {
+  .voice-panel { bottom: 76px; padding: 12px; }
+}
+
 /* ==========================================================
    健康小管家快捷提问
    ========================================================== */
@@ -6060,6 +6149,19 @@ body { color: var(--text); }
   <svg class="icon"><use href="#i-mic"/></svg>
   <span id="voiceFabText">语音输入</span>
 </button>
+
+<!-- 语音输入面板：实时显示识别内容，确认后再填入 -->
+<div class="voice-panel" id="voicePanel" hidden>
+  <div class="vp-head">
+    <span class="vp-title"><svg class="icon"><use href="#i-mic"/></svg>语音输入</span>
+    <span class="vp-status" id="voiceStatus">正在听，请说话…</span>
+  </div>
+  <textarea id="voiceText" rows="3" placeholder="说的话会实时显示在这里，也可以直接修改"></textarea>
+  <div class="vp-actions">
+    <button type="button" class="vp-cancel" id="voiceCancel">取消</button>
+    <button type="button" class="vp-ok" id="voiceOk">✓ 填入</button>
+  </div>
+</div>
 
 <button class="fab" id="fab" aria-label="打开 AI 健康小管家">
   <span class="ai-run">
@@ -12266,8 +12368,15 @@ const voiceFab = document.getElementById('voiceFab');
 const voiceFabText = document.getElementById('voiceFabText');
 const chatVoiceBtn = document.getElementById('chatVoice');
 const chatInputBox = document.getElementById('chatInput');
-let pendingVoiceAutoSend = false;   // 小管家麦克风触发时，识别完自动发送
+const voicePanel = document.getElementById('voicePanel');
+const voiceText = document.getElementById('voiceText');
+const voiceStatus = document.getElementById('voiceStatus');
+const voiceOkBtn = document.getElementById('voiceOk');
+let pendingVoiceAutoSend = false;   // 小管家麦克风触发时，确认后自动发送
 let voiceAutoSend = false;
+let voicePanelOpen = false;
+let voiceErrorShown = false;
+let voiceHasResult = false;         // 浏览器识别是否已经给出过文字
 const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
 let voiceRecog = null;
 let voiceTarget = null;
@@ -12278,6 +12387,63 @@ function setVoiceRecording(on) {
   voiceFab.classList.toggle('listening', on);
   if (chatVoiceBtn) chatVoiceBtn.classList.toggle('listening', on);
 }
+
+function setVoiceStatus(text) {
+  voiceStatus.textContent = text || '';
+}
+
+// 打开面板：先看着识别结果，再决定是否填入
+function openVoicePanel(statusText) {
+  voicePanel.hidden = false;
+  voicePanelOpen = true;
+  voiceText.value = '';
+  voiceHasResult = false;
+  voiceErrorShown = false;
+  voiceOkBtn.textContent = '✓ 填入';
+  setVoiceStatus(statusText || '正在听，请说话…');
+}
+
+function closeVoicePanel() {
+  voicePanel.hidden = true;
+  voicePanelOpen = false;
+}
+
+// 取消：停止录音/识别，不填任何内容
+function cancelVoice() {
+  voiceAutoSend = false;
+  if (voiceRecog) {
+    try { voiceRecog.abort(); } catch (error) {}
+  }
+  if (recorder) releaseRecorder();
+  closeVoicePanel();
+  resetVoiceButton();
+}
+
+// 确认：把面板里的文字填入目标输入框（或发送到小管家）
+function fillFromVoicePanel() {
+  const text = voiceText.value.trim();
+  if (!text) {
+    showToast('没有听到内容，请再说一次');
+    return;
+  }
+  const target = voiceTarget;
+  closeVoicePanel();
+  fillVoiceTarget(target, text);
+  showToast('已填入：' + text.slice(0, 24));
+  maybeAutoSendVoice(target);
+  resetVoiceButton();
+}
+
+document.getElementById('voiceCancel').addEventListener('click', cancelVoice);
+
+voiceOkBtn.addEventListener('click', function () {
+  // 服务器识别还在录音：先结束录音，识别结果会回到面板
+  if (recorder) {
+    stopRecorder(true);
+    return;
+  }
+  fillFromVoicePanel();
+});
 
 // 小管家语音：识别完成后直接发送
 function maybeAutoSendVoice(target) {
@@ -12291,8 +12457,8 @@ function maybeAutoSendVoice(target) {
 
 if (chatVoiceBtn && chatInputBox) {
   chatVoiceBtn.addEventListener('click', function () {
-    if (recorder) {
-      stopRecorder(false);
+    if (voicePanelOpen) {
+      voiceOkBtn.click();
       return;
     }
     chatInputBox.focus();
@@ -12308,6 +12474,8 @@ document.addEventListener('focusin', function (event) {
   const tag = node.tagName.toLowerCase();
   if (tag !== 'input' && tag !== 'textarea') return;
   if (node.type === 'password' || node.type === 'file' || node.disabled || node.readOnly) return;
+  // 语音面板里的输入框不作为填入目标
+  if (node.closest && node.closest('#voicePanel')) return;
   lastEditable = node;
 });
 
@@ -12349,7 +12517,6 @@ function fillVoiceTarget(target, text) {
 
 function resetVoiceButton() {
   setVoiceRecording(false);
-  voiceAutoSend = false;
   voiceFabText.textContent = '语音输入';
 }
 
@@ -12431,6 +12598,10 @@ async function startRecorder() {
   });
   const Ctx = window.AudioContext || window.webkitAudioContext;
   const ctx = new Ctx();
+  // iOS 上 AudioContext 默认是挂起状态，不 resume 会一直录不到声音
+  if (ctx.state === 'suspended') {
+    try { await ctx.resume(); } catch (error) {}
+  }
   const source = ctx.createMediaStreamSource(stream);
   const processor = ctx.createScriptProcessor(4096, 1, 1);
   const chunks = [];
@@ -12444,7 +12615,7 @@ async function startRecorder() {
     timer: setTimeout(function () { stopRecorder(true); }, 20000)
   };
   setVoiceRecording(true);
-  voiceFabText.textContent = '录音中，再点结束';
+  voiceFabText.textContent = '录音中…';
 }
 
 function releaseRecorder() {
@@ -12464,11 +12635,13 @@ async function stopRecorder(auto) {
   voiceBusy = true;
   const audio = releaseRecorder();
   setVoiceRecording(false);
+  setVoiceStatus('识别中…');
   voiceFabText.textContent = '识别中…';
 
   try {
     const wav = encodeWav(audio.chunks, audio.rate);
     if (wav.length < 3200) {
+      setVoiceStatus('录音太短，请再说几个字后重试');
       showToast('录音太短，请多说几个字');
       return;
     }
@@ -12478,16 +12651,59 @@ async function stopRecorder(auto) {
     });
     if (!result.ok) {
       if (result.status === 503) asrStatusCache = false;
+      setVoiceStatus(result.data.error || '语音识别失败，可直接在框里手写');
       showToast(result.data.error || '语音识别失败，请手动输入');
       return;
     }
-    fillVoiceTarget(voiceTarget, result.data.text || '');
-    showToast('已填入：' + String(result.data.text || '').slice(0, 24));
-    maybeAutoSendVoice(voiceTarget);
+    const text = String(result.data.text || '').trim();
+    if (!text) {
+      setVoiceStatus('没有识别到内容，请再说一次');
+      showToast('没有识别到内容，请再说一次');
+      return;
+    }
+    voiceText.value = text;
+    voiceHasResult = true;
+    voiceOkBtn.textContent = '✓ 填入';
+    setVoiceStatus('识别完成，确认无误后点 ✓ 填入');
   } catch (error) {
+    setVoiceStatus('识别失败，可直接在框里手写后点 ✓');
     showToast('语音识别失败，请检查网络后重试');
   } finally {
     voiceBusy = false;
+    resetVoiceButton();
+  }
+}
+
+let voiceFinalText = '';
+
+function startBrowserRecognition() {
+  if (!SpeechRecognitionCtor) return;
+  voiceFinalText = '';
+  try {
+    voiceRecog.start();
+    setVoiceRecording(true);
+    setVoiceStatus('正在听，请说话…');
+  } catch (error) {
+    setVoiceStatus('浏览器识别启动失败，改用服务器识别…');
+    startServerVoice();
+  }
+}
+
+async function startServerVoice() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    setVoiceStatus('当前浏览器无法录音，请直接输入文字');
+    showToast('当前浏览器无法录音，请改用 Edge 或手动输入');
+    return;
+  }
+  try {
+    await startRecorder();
+    setVoiceStatus('正在录音，说完点 ✓ 结束');
+  } catch (error) {
+    const message = error && error.name === 'NotAllowedError'
+      ? '麦克风权限被拒绝，请在浏览器设置里允许后重试'
+      : '无法启动录音，请检查麦克风';
+    setVoiceStatus(message);
+    showToast(message);
     resetVoiceButton();
   }
 }
@@ -12500,33 +12716,47 @@ if (SpeechRecognitionCtor) {
   voiceRecog.maxAlternatives = 1;
 
   voiceRecog.onresult = function (event) {
-    let finalText = '';
     let interim = '';
     for (let i = event.resultIndex; i < event.results.length; i++) {
       const item = event.results[i];
-      if (item.isFinal) finalText += item[0].transcript;
+      if (item.isFinal) voiceFinalText += item[0].transcript;
       else interim += item[0].transcript;
     }
-    if (interim) voiceFabText.textContent = interim.slice(0, 8) + '…';
-    if (finalText && voiceTarget) {
-      fillVoiceTarget(voiceTarget, finalText.trim());
-      showToast('已填入：' + finalText.trim().slice(0, 24));
-      maybeAutoSendVoice(voiceTarget);
-    }
+    const combined = (voiceFinalText + interim).trim();
+    if (!combined) return;
+    voiceText.value = combined;
+    voiceHasResult = true;
+    setVoiceStatus(interim ? '正在识别…' : '识别完成，确认无误后点 ✓ 填入');
   };
 
   voiceRecog.onerror = function (event) {
     const reasons = {
       'not-allowed': '麦克风权限被拒绝，请在浏览器设置里允许使用麦克风',
-      'service-not-allowed': '当前浏览器无法使用语音服务，请改用 Edge 或手动输入',
+      'service-not-allowed': '当前浏览器无法使用语音服务，可改用服务器识别或手动输入',
       'no-speech': '没有听到声音，请靠近麦克风再试一次',
-      'network': '语音服务网络异常，请稍后再试',
+      'network': '浏览器语音服务网络不通（国内安卓 Chrome 常见），可换 iPhone Safari 使用，或配置服务器语音识别',
       'audio-capture': '没有检测到麦克风，请检查设备'
     };
+    voiceErrorShown = true;
+    // 浏览器识别依赖境外服务，国内网络常报 network；能切服务器识别就自动切
+    if ((event.error === 'network' || event.error === 'service-not-allowed') && asrStatusCache) {
+      setVoiceStatus('浏览器识别不可用，改用服务器识别…');
+      startServerVoice();
+      return;
+    }
+    setVoiceStatus(reasons[event.error] || '语音识别失败，可直接在框里手写');
     showToast(reasons[event.error] || '语音识别失败，请手动输入');
   };
 
-  voiceRecog.onend = resetVoiceButton;
+  voiceRecog.onend = function () {
+    setVoiceRecording(false);
+    if (!voicePanelOpen || recorder) return;
+    if (voiceHasResult) {
+      setVoiceStatus('识别完成，确认无误后点 ✓ 填入');
+    } else if (!voiceErrorShown) {
+      setVoiceStatus('没有听到内容，可点左下角麦克风重试');
+    }
+  };
 }
 
 voiceFab.addEventListener('click', async function () {
@@ -12536,51 +12766,33 @@ voiceFab.addEventListener('click', async function () {
     showToast('语音输入需要 HTTPS 访问；当前是普通 HTTP，请手动输入或让管理员开启 HTTPS');
     return;
   }
-  if (recorder) {
-    stopRecorder(false);
-    return;
-  }
+  if (recorder) return;        // 录音中由面板的 ✓ 结束
   if (voiceBusy) return;
-  voiceAutoSend = wantsAutoSend;
+
+  if (voicePanelOpen) cancelVoice();
 
   voiceTarget = (lastEditable && document.contains(lastEditable)) ? lastEditable : null;
   if (!voiceTarget) {
-    voiceAutoSend = false;
     showToast('请先点一下要填写的输入框，再点语音输入');
     return;
   }
+  voiceAutoSend = wantsAutoSend;
 
-  // 优先用服务器语音识别（不依赖浏览器内核，微信里也能用）
+  openVoicePanel('正在准备麦克风…');
   const useServer = await fetchAsrStatus();
-  if (useServer) {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      showToast('当前浏览器无法录音，请改用 Edge 或手动输入');
-      return;
-    }
-    try {
-      await startRecorder();
-    } catch (error) {
-      showToast(error && error.name === 'NotAllowedError'
-        ? '麦克风权限被拒绝，请在浏览器设置里允许后重试'
-        : '无法启动录音，请检查麦克风');
-      resetVoiceButton();
-    }
-    return;
-  }
 
-  // 回退：浏览器自带识别
-  if (!SpeechRecognitionCtor) {
-    showToast('当前浏览器不支持语音输入，请使用 Edge 或 Chrome，也可以直接打字');
+  // 有浏览器识别就优先用它（能实时出字）；失败时自动切到服务器识别
+  if (SpeechRecognitionCtor) {
+    startBrowserRecognition();
     return;
   }
-  try {
-    voiceRecog.start();
-    setVoiceRecording(true);
-    voiceFabText.textContent = '正在听…';
-  } catch (error) {
-    showToast('语音识别启动失败，请稍后再试');
-    resetVoiceButton();
+  if (useServer) {
+    await startServerVoice();
+    return;
   }
+  closeVoicePanel();
+  showToast('当前浏览器不支持语音输入，请使用 Edge 或 Chrome，也可以直接打字');
+  resetVoiceButton();
 });
 
 // 生成一条聊天气泡
