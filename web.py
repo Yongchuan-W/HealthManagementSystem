@@ -2800,6 +2800,28 @@ a { text-decoration: none; }
 .chat-input input::placeholder { color: #aab2c0; }
 .chat-input input:focus { border-color: #9fe3d5; }
 
+.chat-mic {
+  width: 34px;
+  height: 34px;
+  border: 1px solid #e6e9f0;
+  border-radius: 50%;
+  background: #fff;
+  color: #7b8798;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.chat-mic:hover { background: #f5f8f7; color: #4a9d8f; }
+.chat-mic.listening {
+  background: #fdecec;
+  border-color: #f5b5b5;
+  color: #e05656;
+  animation: voicePulse 1.2s ease-in-out infinite;
+}
+
 .chat-note {
   padding: 7px 12px 0;
   font-size: 11px;
@@ -6059,6 +6081,9 @@ body { color: var(--text); }
   <div class="chat-note">AI 生成内容仅供参考，不构成医疗建议</div>
 
   <div class="chat-input">
+    <button class="chat-mic" id="chatVoice" type="button" aria-label="语音输入">
+      <svg class="icon"><use href="#i-mic"/></svg>
+    </button>
     <input id="chatInput" type="text" placeholder="输入你想咨询的健康问题...">
     <button class="chat-send" id="chatSend" aria-label="发送">
       <svg class="icon"><use href="#i-send"/></svg>
@@ -10409,6 +10434,24 @@ function matchFoods(text) {
   });
 }
 
+// 把「茄子，汤圆，虾」这类输入拆成单个食物
+function splitFoodTokens(text) {
+  return String(text || '').split(/[\s,，、;；\/+＋&]+/).filter(function (item) {
+    return item.length > 0;
+  });
+}
+
+// 每种食物都能在本地库里找到，才直接用本地数据；否则交给 AI 拆分估算
+function allFoodsKnown(text) {
+  const tokens = splitFoodTokens(text);
+  if (!tokens.length) return false;
+  return tokens.every(function (token) {
+    return nutritionTable.some(function (food) {
+      return food.keys.some(function (key) { return token.indexOf(key) !== -1; });
+    });
+  });
+}
+
 function sumFoodNutrition(foods) {
   return foods.reduce(function (total, food) {
     return {
@@ -10469,7 +10512,7 @@ function requestMealRecord(meal, rawText, input) {
   }
 
   const matches = matchFoods(text);
-  if (matches.length) {
+  if (matches.length && allFoodsKnown(text)) {
     showFoodModal(meal, text, matches, input, 'local');
     return;
   }
@@ -10488,6 +10531,11 @@ function requestMealRecord(meal, rawText, input) {
   api('/api/ai/food', { method: 'POST', body: { text: text } })
     .then(function (result) {
       if (!result.ok || !result.data.foods) {
+        // AI 不可用时，至少把本地识别到的食物用上，避免这一餐完全记不上
+        if (matches.length) {
+          showFoodModal(meal, text, matches, input, 'local');
+          return;
+        }
         showToast((result.data && result.data.error) || '估算失败，请稍后再试');
         return;
       }
@@ -12147,10 +12195,42 @@ document.getElementById('chatClose').addEventListener('click', closeChat);
    ========================================================== */
 const voiceFab = document.getElementById('voiceFab');
 const voiceFabText = document.getElementById('voiceFabText');
+const chatVoiceBtn = document.getElementById('chatVoice');
+const chatInputBox = document.getElementById('chatInput');
+let pendingVoiceAutoSend = false;   // 小管家麦克风触发时，识别完自动发送
+let voiceAutoSend = false;
 const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
 let voiceRecog = null;
 let voiceTarget = null;
 let lastEditable = null;
+
+// 录音状态同时点亮左下角按钮和小管家麦克风
+function setVoiceRecording(on) {
+  voiceFab.classList.toggle('listening', on);
+  if (chatVoiceBtn) chatVoiceBtn.classList.toggle('listening', on);
+}
+
+// 小管家语音：识别完成后直接发送
+function maybeAutoSendVoice(target) {
+  if (!voiceAutoSend) return;
+  voiceAutoSend = false;
+  if (chatInputBox && target === chatInputBox) {
+    const send = document.getElementById('chatSend');
+    if (send) send.click();
+  }
+}
+
+if (chatVoiceBtn && chatInputBox) {
+  chatVoiceBtn.addEventListener('click', function () {
+    if (recorder) {
+      stopRecorder(false);
+      return;
+    }
+    chatInputBox.focus();
+    pendingVoiceAutoSend = true;
+    voiceFab.click();
+  });
+}
 
 // 记住最后聚焦的可编辑输入框（密码、文件等敏感字段除外）
 document.addEventListener('focusin', function (event) {
@@ -12199,7 +12279,8 @@ function fillVoiceTarget(target, text) {
 }
 
 function resetVoiceButton() {
-  voiceFab.classList.remove('listening');
+  setVoiceRecording(false);
+  voiceAutoSend = false;
   voiceFabText.textContent = '语音输入';
 }
 
@@ -12293,7 +12374,7 @@ async function startRecorder() {
     stream: stream, ctx: ctx, source: source, processor: processor, chunks: chunks,
     timer: setTimeout(function () { stopRecorder(true); }, 20000)
   };
-  voiceFab.classList.add('listening');
+  setVoiceRecording(true);
   voiceFabText.textContent = '录音中，再点结束';
 }
 
@@ -12313,7 +12394,7 @@ async function stopRecorder(auto) {
   if (!recorder || voiceBusy) return;
   voiceBusy = true;
   const audio = releaseRecorder();
-  voiceFab.classList.remove('listening');
+  setVoiceRecording(false);
   voiceFabText.textContent = '识别中…';
 
   try {
@@ -12333,6 +12414,7 @@ async function stopRecorder(auto) {
     }
     fillVoiceTarget(voiceTarget, result.data.text || '');
     showToast('已填入：' + String(result.data.text || '').slice(0, 24));
+    maybeAutoSendVoice(voiceTarget);
   } catch (error) {
     showToast('语音识别失败，请检查网络后重试');
   } finally {
@@ -12360,6 +12442,7 @@ if (SpeechRecognitionCtor) {
     if (finalText && voiceTarget) {
       fillVoiceTarget(voiceTarget, finalText.trim());
       showToast('已填入：' + finalText.trim().slice(0, 24));
+      maybeAutoSendVoice(voiceTarget);
     }
   };
 
@@ -12378,6 +12461,8 @@ if (SpeechRecognitionCtor) {
 }
 
 voiceFab.addEventListener('click', async function () {
+  const wantsAutoSend = pendingVoiceAutoSend;
+  pendingVoiceAutoSend = false;
   if (!window.isSecureContext) {
     showToast('语音输入需要 HTTPS 访问；当前是普通 HTTP，请手动输入或让管理员开启 HTTPS');
     return;
@@ -12387,9 +12472,11 @@ voiceFab.addEventListener('click', async function () {
     return;
   }
   if (voiceBusy) return;
+  voiceAutoSend = wantsAutoSend;
 
   voiceTarget = (lastEditable && document.contains(lastEditable)) ? lastEditable : null;
   if (!voiceTarget) {
+    voiceAutoSend = false;
     showToast('请先点一下要填写的输入框，再点语音输入');
     return;
   }
@@ -12419,7 +12506,7 @@ voiceFab.addEventListener('click', async function () {
   }
   try {
     voiceRecog.start();
-    voiceFab.classList.add('listening');
+    setVoiceRecording(true);
     voiceFabText.textContent = '正在听…';
   } catch (error) {
     showToast('语音识别启动失败，请稍后再试');

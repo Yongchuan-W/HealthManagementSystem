@@ -1858,12 +1858,14 @@ def ai_food(ctx):
         raise ApiError(502, "热量估算失败：%s" % error, "food_failed")
 
     foods = []
+    seen = set()
     for item in (raw.get("foods") or [])[:8]:
         if not isinstance(item, dict):
             continue
         name = str(item.get("name") or "").strip()[:24]
-        if not name:
+        if not name or name in seen:
             continue
+        seen.add(name)
         foods.append({
             "name": name,
             "portion": str(item.get("portion") or "").strip()[:40] or "1 份",
