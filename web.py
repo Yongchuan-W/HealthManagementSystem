@@ -3087,30 +3087,7 @@ body { color: var(--text); }
 }
 
 @media (max-width: 900px) {
-  .sidebar {
-    position: static;
-    width: auto;
-    height: auto;
-    padding: 10px 14px;
-    border-right: 0;
-    border-bottom: 1px solid var(--line);
-    flex-direction: row;
-    align-items: center;
-    gap: 12px;
-    overflow-x: auto;
-  }
-  .side-brand { padding: 0; }
-  .side-brand span { display: none; }
-  .side-nav {
-    flex-direction: row;
-    gap: 4px;
-    flex: 1;
-    overflow-x: auto;
-  }
-  .side-nav button { width: auto; padding: 8px 10px; white-space: nowrap; }
-  .side-nav button.active::before { display: none; }
-  .side-user { padding: 4px; margin-left: auto; }
-  .side-user-info { display: none; }
+  /* 侧边栏在窄屏改为顶部两行导航，具体规则见样式表末尾「窄屏顶部导航」 */
   .main-area { margin-left: 0; }
 
   .health-card { flex-direction: column; }
@@ -4375,6 +4352,74 @@ body { color: var(--text); }
 .day-meal-item b { color: #8b4a22; white-space: nowrap; }
 .day-meal-empty { padding: 22px 10px; text-align: center; color: #8b7d70; font-size: 13.5px; }
 .day-meal-total { margin-top: 12px; padding-top: 10px; border-top: 1px dashed #e8dccb; font-size: 13px; color: #6b5645; }
+
+/* ==========================================================
+   15. 窄屏顶部导航（手机）
+   第一行：品牌 + 修改基本信息 + 头像
+   第二行：可横向滑动的功能导航（6 个入口，保证在手机上一定可见）
+   ========================================================== */
+@media (max-width: 900px) {
+  .sidebar {
+    position: sticky;
+    top: 0;
+    left: auto;
+    bottom: auto;
+    z-index: 60;
+    width: auto;
+    height: auto;
+    padding: 8px 12px 10px;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+    overflow: visible;
+  }
+  .side-brand { order: 1; padding: 0; flex: none; }
+  .side-brand span { display: none; }
+  .side-edit {
+    order: 2;
+    width: auto;
+    flex: none;
+    margin-left: auto;
+    padding: 7px 11px;
+    font-size: 12.5px;
+    gap: 6px;
+    border-radius: 999px;
+    background: #f3f7f3;
+    white-space: nowrap;
+  }
+  .side-edit .icon { width: 15px; height: 15px; }
+  .side-user { order: 3; padding: 2px; margin-left: 0; flex: none; }
+  .side-user-info { display: none; }
+  .side-nav {
+    order: 4;
+    flex: 0 0 100%;
+    width: 100%;
+    min-width: 0;
+    flex-direction: row;
+    gap: 6px;
+    padding: 2px 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .side-nav::-webkit-scrollbar { display: none; }
+  .side-nav button {
+    flex: none;
+    width: auto;
+    padding: 8px 12px;
+    font-size: 13px;
+    white-space: nowrap;
+    border-radius: 999px;
+    background: #f3f7f3;
+  }
+  .side-nav button .icon { width: 15px; height: 15px; }
+  .side-nav button.active { background: #eefaf6; }
+  .side-nav button.active::before { display: none; }
+}
 </style>
 </head>
 <body>
@@ -12775,8 +12820,11 @@ def main():
     if os.name == "nt" and os.environ.get("HM_NO_BROWSER", "") != "1":
         threading.Timer(0.8, lambda: webbrowser.open(local_url)).start()
 
-    # 监听 0.0.0.0，手机与电脑在同一 Wi-Fi 下即可访问
-    server = ThreadingHTTPServer(("0.0.0.0", port), HealthAppHandler)
+    # 监听地址：默认 0.0.0.0，手机与电脑在同一 Wi-Fi 下即可访问；
+    # 服务器部署可设 HM_BIND=127.0.0.1，只允许本机（Cloudflare 隧道）访问，
+    # 公网 IP:端口 将不再对外开放
+    bind_host = os.environ.get("HM_BIND", "").strip() or "0.0.0.0"
+    server = ThreadingHTTPServer((bind_host, port), HealthAppHandler)
     if tls:
         server.socket = tls.wrap_socket(server.socket, server_side=True)
     print("=" * 58)
