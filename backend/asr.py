@@ -145,7 +145,8 @@ def recognize(audio_bytes, sample_rate=16000):
         raise AsrError("语音识别请求失败：%s" % error)
 
     status = data.get("status")
-    if status != 200:
+    # 阿里云一句话识别成功时返回 20000000，部分老接口返回 200，两者都算成功
+    if status not in (200, 20000000):
         raise AsrError(data.get("message") or "语音识别失败")
     text = (data.get("result") or "").strip()
     if not text:

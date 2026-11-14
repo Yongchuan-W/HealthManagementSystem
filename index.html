@@ -12672,7 +12672,7 @@ async function startRecorder() {
   const source = ctx.createMediaStreamSource(stream);
   const processor = ctx.createScriptProcessor(4096, 1, 1);
   const chunks = [];
-  const meter = { level: 0 };
+  const meter = { level: 0, lastVoice: Date.now(), start: Date.now() };
   processor.onaudioprocess = function (event) {
     const data = event.inputBuffer.getChannelData(0);
     chunks.push(new Float32Array(data));
@@ -12681,6 +12681,7 @@ async function startRecorder() {
     for (let i = 0; i < data.length; i += 4) { sum += data[i] * data[i]; count++; }
     const rms = count ? Math.sqrt(sum / count) : 0;
     meter.level = Math.max(meter.level * 0.6, Math.min(1, rms * 12));
+    if (rms > 0.012) meter.lastVoice = Date.now();
   };
   source.connect(processor);
   processor.connect(ctx.destination);
@@ -12691,7 +12692,14 @@ async function startRecorder() {
       if (!recorder) return;
       const level = recorder.meter.level;
       const bars = level > 0.45 ? '■■■' : level > 0.15 ? '■■□' : level > 0.04 ? '■□□' : '□□□';
-      setVoiceStatus('正在录音 ' + bars + ' ｜ 说完点 ✓ 结束并识别');
+      const now = Date.now();
+      // 说完停顿 1.5 秒自动结束，减少等待时间
+      if (now - recorder.meter.lastVoice > 1500 && now - recorder.meter.start > 1200) {
+        setVoiceStatus('检测到停顿，正在结束录音…');
+        stopRecorder(true);
+        return;
+      }
+      setVoiceStatus('正在录音 ' + bars + ' ｜ 说完可点 ✓，停顿 1.5 秒自动结束');
     }, 400),
     timer: setTimeout(function () { stopRecorder(true); }, 20000)
   };
