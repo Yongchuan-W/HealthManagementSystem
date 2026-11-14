@@ -12666,7 +12666,7 @@ async function startServerVoice() {
   }
   try {
     await startRecorder();
-    setVoiceStatus('正在录音，说完点 ✓ 结束');
+    setVoiceStatus('正在录音，说完点 ✓ 结束并识别');
   } catch (error) {
     const message = error && error.name === 'NotAllowedError'
       ? '麦克风权限被拒绝，请在浏览器设置里允许后重试'
@@ -12707,14 +12707,15 @@ if (SpeechRecognitionCtor) {
       'audio-capture': '没有检测到麦克风，请检查设备'
     };
     voiceErrorShown = true;
-    // 浏览器识别依赖境外服务，国内网络常报 network；能切服务器识别就自动切
-    if ((event.error === 'network' || event.error === 'service-not-allowed') && asrStatusCache) {
+    // 浏览器识别在国内基本不可用：只要服务器识别已配置，任何失败都自动切过去
+    if (asrStatusCache && event.error !== 'not-allowed' && event.error !== 'audio-capture') {
       setVoiceStatus('浏览器识别不可用，改用服务器识别…');
       startServerVoice();
       return;
     }
-    setVoiceStatus(reasons[event.error] || '语音识别失败，可直接在框里手写');
-    showToast(reasons[event.error] || '语音识别失败，请手动输入');
+    const message = reasons[event.error] || ('语音识别失败（' + event.error + '），可直接在框里手写');
+    setVoiceStatus(message);
+    showToast(message);
   };
 
   voiceRecog.onend = function () {
@@ -12750,7 +12751,14 @@ voiceFab.addEventListener('click', async function () {
   openVoicePanel('正在准备麦克风…');
   const useServer = await fetchAsrStatus();
 
-  // 有浏览器识别就优先用它（能实时出字）；失败时自动切到服务器识别
+  // iOS 的浏览器识别能实时出字，优先用；安卓（尤其国内）浏览器识别基本不可用，
+  // 只要服务器识别已配置就直接走服务器（阿里云），保证一定能识别
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+    || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  if (useServer && !isIOS) {
+    await startServerVoice();
+    return;
+  }
   if (SpeechRecognitionCtor) {
     startBrowserRecognition();
     return;
