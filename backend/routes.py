@@ -1846,8 +1846,23 @@ def ai_vision(ctx):
 
 @route("POST", "/api/ai/food")
 def ai_food(ctx):
-    """按用户输入的食物名称估算热量，覆盖食物库以外的家常菜。"""
+    """按用户输入的食物名称估算热量，覆盖食物库以外的家常菜。
+
+    同一份输入只估算一次并缓存，保证「同样的食物每次热量一样」。
+    """
     text = clean_text(ctx.body.get("text"), "text", 200, required=True)
+    cache_key = re.sub(r"[\s，,、;；/]+", "", text)
+    cache = db.state_get(ctx.conn, ctx.user_id, "foodEstimateCache", None)
+    cache = cache if isinstance(cache, dict) else {}
+    cached = cache.get(cache_key)
+    if isinstance(cached, dict) and cached.get("foods"):
+        return {
+            "foods": cached["foods"],
+            "total": cached["total"],
+            "provider": cached.get("provider") or "cache",
+            "model": cached.get("model") or "",
+            "cached": True,
+        }
 
     if not ai.is_configured():
         raise ApiError(503, "尚未配置 AI 密钥，暂时无法自动估算热量", "ai_not_configured")
@@ -1881,6 +1896,20 @@ def ai_food(ctx):
 
     total = {key: round(sum(food[key] for food in foods), 1)
              for key in ("kcal", "protein", "carb", "fat", "fiber")}
+
+    # 缓存本次结果：同一输入再次查询直接返回同样数值
+    cache[cache_key] = {
+        "foods": foods,
+        "total": total,
+        "provider": meta["provider"],
+        "model": meta["model"],
+        "at": db.now(),
+    }
+    if len(cache) > 300:
+        newest = sorted(cache.items(), key=lambda pair: str(pair[1].get("at") or ""), reverse=True)[:300]
+        cache = dict(newest)
+    db.state_set(ctx.conn, ctx.user_id, "foodEstimateCache", cache)
+
     return {
         "foods": foods,
         "total": total,

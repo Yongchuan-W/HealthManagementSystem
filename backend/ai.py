@@ -265,6 +265,8 @@ FOOD_PROMPT = (
     "食物：%s\n"
     "用户可能一次输入多种食物（用逗号、顿号、空格分隔），必须逐个拆开分别估算，"
     "不能合并成一种、不能漏掉任何一项，输出顺序与输入一致；没写分量按常见一人份估算。\n"
+    "数值必须参照《中国食物成分表（第6版）》与 USDA FoodData Central 的标准值，"
+    "份量固定按常见一人份（如一碗米饭 150g、一个鸡蛋 50g），不要自由发挥。\n"
     "只输出 JSON，不要解释："
     '{"foods":[{"name":"白菜","portion":"半碗约75g","kcal":10,'
     '"protein":1,"carb":2,"fat":0,"fiber":1},'
@@ -289,7 +291,7 @@ def estimate_food(text):
             {"role": "system", "content": FOOD_SYSTEM},
             {"role": "user", "content": FOOD_PROMPT % text},
         ],
-        "temperature": 0.2,
+        "temperature": 0,
         # 推理类模型会先输出思考过程，额度给小了正文会为空
         "max_tokens": 2000,
         "stream": False,
