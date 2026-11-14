@@ -992,6 +992,19 @@ a { text-decoration: none; }
 
 .ex-stat .value { font-size: 18px; font-weight: 700; color: #222f3e; }
 
+/* 点「点击填写」后就地变成输入框 */
+.ex-inline-input {
+  width: 88px;
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid #cbb9a4;
+  border-radius: 8px;
+  background: #fff;
+  color: #222f3e;
+  font-size: 16px;
+  font-weight: 700;
+}
+
 .ex-stat .label {
   font-size: 12px;
   color: var(--muted);
@@ -7992,6 +8005,65 @@ function saveTodaySport(data) {
   saveSportForDate(toISODate(new Date()), data);
 }
 
+// 点「点击填写」：卡片里的数字就地变成输入框，回车或点别处保存
+const sportFieldMeta = {
+  kcal: { max: 9999, name: '热量' },
+  steps: { max: 100000, name: '步数' },
+  minutes: { max: 1440, name: '时长' }
+};
+document.querySelectorAll('#todayStats .ex-stat[data-field]').forEach(function (card) {
+  card.addEventListener('click', function () {
+    if (card.querySelector('.ex-inline-input')) return;
+    const field = card.dataset.field;
+    const meta = sportFieldMeta[field];
+    const valueEl = card.querySelector('.value');
+    const numberEl = valueEl ? valueEl.querySelector('span') : null;
+    if (!meta || !numberEl) return;
+
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.min = '0';
+    input.step = '1';
+    input.className = 'ex-inline-input';
+    input.value = String(todaySport()[field] || 0);
+    numberEl.hidden = true;
+    numberEl.after(input);
+    input.focus();
+    input.select();
+
+    let finished = false;
+    function finish(save) {
+      if (finished) return;
+      finished = true;
+      if (save) {
+        const value = parseInt(input.value, 10);
+        if (!isFinite(value) || value < 0) {
+          showToast('请输入 0 或正整数');
+        } else {
+          const data = Object.assign({}, todaySport());
+          data[field] = Math.min(value, meta.max);
+          saveTodaySport(data);
+          showToast('已更新' + meta.name + '：' + data[field]);
+        }
+      }
+      input.remove();
+      numberEl.hidden = false;
+      const activeTab = document.querySelector('#sportTabs button.active');
+      renderExercise(activeTab ? activeTab.dataset.tab : 'today');
+    }
+
+    input.addEventListener('blur', function () { finish(true); });
+    input.addEventListener('keydown', function (event) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        finish(true);
+      } else if (event.key === 'Escape') {
+        finish(false);
+      }
+    });
+  });
+});
+
 document.getElementById('saveSportGoal').addEventListener('click', function () {
   const goal = {
     kcal: parseInt(document.getElementById('goalKcal').value, 10),
@@ -8428,6 +8500,15 @@ function updateBeautyProgress() {
     isWeightType ? Math.round(percent) + '%' : '进行中';
 }
 
+// 本周一到周日对应的日期，用于按日期记住每天的计划完成状态
+function currentWeekDates() {
+  const today = new Date();
+  const monday = addDays(today, -((today.getDay() + 6) % 7));
+  const dates = [];
+  for (let i = 0; i < 7; i++) dates.push(toISODate(addDays(monday, i)));
+  return dates;
+}
+
 // 生成计划：点击按钮与登录后恢复共用同一套逻辑，silent 时跳过校验与提示
 function generateBeautyPlan(type, target, weeks, times, silent) {
   const current = parseFloat(document.getElementById('weightValue').textContent) || 60.0;
@@ -8514,22 +8595,32 @@ function generateBeautyPlan(type, target, weeks, times, silent) {
   // 生成一周计划
   const activeDays = beautyDayIndexes[times] || [0, 2, 4, 6];
   const pool = beautyActivityPools[type] || beautyActivityPools['健身减脂'];
+  // 已勾选过的日期，重新生成计划时保留
+  const savedPlan = loadData('beautyPlan', {}) || {};
+  const doneMap = savedPlan.done || {};
+  const weekDates = currentWeekDates();
   const weekEl = document.getElementById('beautyWeek');
   weekEl.innerHTML = '';
 
   beautyDays.forEach(function (day, index) {
     const slot = activeDays.indexOf(index);
+    const dateKey = weekDates[index];
     const row = document.createElement('div');
     row.className = 'plan-day';
+    if (doneMap[dateKey]) row.classList.add('done');
 
-    // 每天计划前的勾选框：完成后划线标记
+    // 每天计划前的勾选框：完成后划线标记，并按日期保存，重新进页面仍保留
     const check = document.createElement('button');
     check.type = 'button';
     check.className = 'plan-check';
     check.textContent = '✓';
     check.title = '标记今天是否完成';
     check.addEventListener('click', function () {
-      row.classList.toggle('done');
+      if (doneMap[dateKey]) delete doneMap[dateKey];
+      else doneMap[dateKey] = true;
+      row.classList.toggle('done', !!doneMap[dateKey]);
+      saveData('beautyPlan', Object.assign({}, loadData('beautyPlan', {}), { done: doneMap }));
+      showToast(doneMap[dateKey] ? '已标记完成' : '已取消完成');
     });
 
     const dayEl = document.createElement('span');
@@ -8560,7 +8651,8 @@ function generateBeautyPlan(type, target, weeks, times, silent) {
     targetWeight: target,
     weeks: weeks,
     times: times,
-    startWeight: startWeight
+    startWeight: startWeight,
+    done: doneMap
   });
   if (!silent) showToast('已生成' + type + '计划');
   return true;

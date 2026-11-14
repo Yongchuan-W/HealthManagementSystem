@@ -2307,11 +2307,20 @@ def sync_import(ctx):
     if isinstance(beauty, dict) and beauty:
         target_weight = safe_float(beauty.get("targetWeight"), 20, 300)
         if target_weight is not None:
+            done_map = {}
+            done = beauty.get("done")
+            if isinstance(done, dict):
+                for key, value in list(done.items())[:400]:
+                    day = safe_day(key)
+                    if day:
+                        done_map[day] = bool(value)
             db.state_set(conn, uid, "beautyPlan", {
                 "type": safe_text(beauty.get("type"), 20, "健身减脂"),
                 "targetWeight": target_weight,
                 "weeks": safe_int(beauty.get("weeks"), 2, 52, 12),
                 "times": safe_int(beauty.get("times"), 2, 7, 4),
+                "startWeight": safe_float(beauty.get("startWeight"), 20, 300),
+                "done": done_map,
             })
 
     # ---- 饮食记录 ----
