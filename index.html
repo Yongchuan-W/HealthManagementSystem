@@ -4207,45 +4207,37 @@ body { color: var(--text); }
 }
 
 /* ==========================================================
-   语音输入按钮（左下角，与右下角 AI 悬浮球对称）
+   语音输入入口（侧边栏，位于「修改基本信息」上方）
    ========================================================== */
 .voice-fab {
-  position: fixed;
-  left: 22px;
-  bottom: 22px;
-  z-index: 60;
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 11px 16px;
-  border: 1px solid #d9e6d2;
-  border-radius: 999px;
-  background: #fff;
-  color: #4f6b3a;
-  font-size: 13px;
-  font-weight: 600;
-  box-shadow: 0 6px 20px rgba(74, 53, 37, 0.14);
-  transition: background 0.2s, color 0.2s, transform 0.2s;
+  gap: 10px;
+  width: 100%;
+  padding: 11px 12px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #6b7688;
+  font-size: 14px;
+  text-align: left;
+  transition: background 0.2s, color 0.2s;
 }
 
-.voice-fab:hover { background: #f4f9ee; transform: translateY(-1px); }
+.voice-fab:hover { background: #f5f8f7; color: var(--text); }
 
-.voice-fab .icon { width: 17px; height: 17px; }
+.voice-fab .icon { width: 18px; height: 18px; opacity: 0.8; }
 
 .voice-fab.listening {
-  background: #e8465f;
-  border-color: #e8465f;
-  color: #fff;
+  background: #fdecef;
+  color: #c72a63;
+  font-weight: 600;
   animation: voicePulse 1.2s ease-in-out infinite;
 }
 
 @keyframes voicePulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(232, 70, 95, 0.38); }
-  50% { box-shadow: 0 0 0 10px rgba(232, 70, 95, 0); }
-}
-
-@media (max-width: 560px) {
-  .voice-fab { left: 14px; bottom: 16px; padding: 10px 13px; font-size: 12px; }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(232, 70, 95, 0.28); }
+  50% { box-shadow: 0 0 0 8px rgba(232, 70, 95, 0); }
 }
 
 /* 语音输入面板 */
@@ -4502,7 +4494,7 @@ body { color: var(--text); }
   }
   .side-brand { order: 1; padding: 0; flex: none; }
   .side-brand span { display: none; }
-  .side-edit {
+  .voice-fab {
     order: 2;
     width: auto;
     flex: none;
@@ -4514,11 +4506,24 @@ body { color: var(--text); }
     background: #f3f7f3;
     white-space: nowrap;
   }
+  .voice-fab .icon { width: 15px; height: 15px; }
+  .side-edit {
+    order: 3;
+    width: auto;
+    flex: none;
+    margin-left: 6px;
+    padding: 7px 11px;
+    font-size: 12.5px;
+    gap: 6px;
+    border-radius: 999px;
+    background: #f3f7f3;
+    white-space: nowrap;
+  }
   .side-edit .icon { width: 15px; height: 15px; }
-  .side-user { order: 3; padding: 2px; margin-left: 0; flex: none; }
+  .side-user { order: 4; padding: 2px; margin-left: 0; flex: none; }
   .side-user-info { display: none; }
   .side-nav {
-    order: 4;
+    order: 5;
     flex: 0 0 100%;
     width: 100%;
     min-width: 0;
@@ -4814,6 +4819,11 @@ body { color: var(--text); }
     <button data-page="assistant"><svg class="icon"><use href="#i-chat"/></svg>健康小管家</button>
     <button data-page="news"><svg class="icon"><use href="#i-book"/></svg>科普资讯</button>
   </nav>
+
+  <button class="voice-fab" id="voiceFab" type="button" aria-label="语音输入">
+    <svg class="icon"><use href="#i-mic"/></svg>
+    <span id="voiceFabText">语音输入</span>
+  </button>
 
   <button class="side-edit" id="editBasicBtn" type="button">
     <svg class="icon"><use href="#i-user"/></svg>修改基本信息
@@ -6128,11 +6138,6 @@ body { color: var(--text); }
 <!-- ========================================================
      悬浮客服按钮与 AI 聊天窗口
      ======================================================== -->
-<button class="voice-fab" id="voiceFab" type="button" aria-label="语音输入">
-  <svg class="icon"><use href="#i-mic"/></svg>
-  <span id="voiceFabText">语音输入</span>
-</button>
-
 <!-- 语音输入面板：实时显示识别内容，确认后再填入 -->
 <div class="voice-panel" id="voicePanel" hidden>
   <div class="vp-head">
@@ -12667,13 +12672,27 @@ async function startRecorder() {
   const source = ctx.createMediaStreamSource(stream);
   const processor = ctx.createScriptProcessor(4096, 1, 1);
   const chunks = [];
+  const meter = { level: 0 };
   processor.onaudioprocess = function (event) {
-    chunks.push(new Float32Array(event.inputBuffer.getChannelData(0)));
+    const data = event.inputBuffer.getChannelData(0);
+    chunks.push(new Float32Array(data));
+    let sum = 0;
+    let count = 0;
+    for (let i = 0; i < data.length; i += 4) { sum += data[i] * data[i]; count++; }
+    const rms = count ? Math.sqrt(sum / count) : 0;
+    meter.level = Math.max(meter.level * 0.6, Math.min(1, rms * 12));
   };
   source.connect(processor);
   processor.connect(ctx.destination);
   recorder = {
     stream: stream, ctx: ctx, source: source, processor: processor, chunks: chunks,
+    meter: meter,
+    ticker: setInterval(function () {
+      if (!recorder) return;
+      const level = recorder.meter.level;
+      const bars = level > 0.45 ? '■■■' : level > 0.15 ? '■■□' : level > 0.04 ? '■□□' : '□□□';
+      setVoiceStatus('正在录音 ' + bars + ' ｜ 说完点 ✓ 结束并识别');
+    }, 400),
     timer: setTimeout(function () { stopRecorder(true); }, 20000)
   };
   setVoiceRecording(true);
@@ -12683,6 +12702,7 @@ async function startRecorder() {
 function releaseRecorder() {
   if (!recorder) return null;
   clearTimeout(recorder.timer);
+  clearInterval(recorder.ticker);
   try { recorder.processor.disconnect(); } catch (error) {}
   try { recorder.source.disconnect(); } catch (error) {}
   recorder.stream.getTracks().forEach(function (track) { track.stop(); });
@@ -12713,8 +12733,9 @@ async function stopRecorder(auto) {
     });
     if (!result.ok) {
       if (result.status === 503) asrStatusCache = false;
-      setVoiceStatus(result.data.error || '语音识别失败，可直接在框里手写');
-      showToast(result.data.error || '语音识别失败，请手动输入');
+      const detail = (result.data && result.data.error) || ('HTTP ' + result.status);
+      setVoiceStatus('语音识别失败：' + detail + '（可直接在框里手写）');
+      showToast('语音识别失败：' + detail);
       return;
     }
     const text = String(result.data.text || '').trim();

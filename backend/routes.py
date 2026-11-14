@@ -386,6 +386,11 @@ def asr_recognize(ctx):
         text = asr.recognize(audio)
     except asr.AsrError as error:
         raise ApiError(502, str(error), "asr_failed")
+    except Exception as error:  # noqa: BLE001 - 网络/解析等未预期异常也要给出可读原因
+        import traceback
+
+        traceback.print_exc()
+        raise ApiError(502, "语音识别服务暂时不可用：%s" % str(error)[:120], "asr_failed")
     return {"text": text}
 
 
