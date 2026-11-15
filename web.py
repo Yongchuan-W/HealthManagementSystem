@@ -6903,7 +6903,7 @@ document.getElementById('deleteAccountBtn').addEventListener('click', async func
     showToast('当前是本地演示模式，没有可注销的账号');
     return;
   }
-  if (!window.confirm('注销后账号与全部健康数据将被永久删除，且无法恢复。确定继续吗？')) return;
+  if (!window.confirm('注销账号会删除所有历史数据，请确认是否注销')) return;
 
   const password = window.prompt('请输入当前账号的密码以确认注销：');
   if (!password) return;
