@@ -56,9 +56,9 @@ def send_code(to_email, code, minutes=10):
     message["From"] = formataddr(("健康管理系统", settings["from"]))
     message["To"] = to_email
     message.set_content(
-        "你的验证码是：%s\n\n%d 分钟内有效。\n"
+        "你的验证码是：%s　　10 分钟内有效\n\n"
         "如果不是你本人操作，请忽略这封邮件，你的密码不会被修改。\n\n"
-        "—— 健康管理系统" % (code, minutes)
+        "—— 健康管理系统" % code
     )
 
     if settings["port"] == 465:
