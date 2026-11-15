@@ -1992,10 +1992,15 @@ a { text-decoration: none; }
   border: 0;
   background: transparent;
   color: #8b4a22;
-  font-size: 12px;
-  padding: 2px 0;
+  font-size: 13px;
+  padding: 8px 8px;
+  margin: -6px -8px -6px 0;
+  min-height: 34px;
+  border-radius: 8px;
   text-decoration: underline;
 }
+
+.login-forgot:active { background: #f7efe8; }
 
 .reset-layer {
   position: fixed;
@@ -2667,6 +2672,13 @@ a { text-decoration: none; }
   background: #fff;
   border-color: #7fdccd;
   box-shadow: 0 0 0 2px #e6faf5;
+}
+
+/* 只读字段（如账号）：视觉上弱化，提示不可编辑 */
+.field input[readonly] {
+  background: #f1f3f6;
+  color: #7b8798;
+  cursor: not-allowed;
 }
 
 .field-row {
@@ -4774,10 +4786,10 @@ body { color: var(--text); }
 <div class="reset-layer" id="resetLayer" hidden>
   <div class="reset-card">
     <h2>重置密码</h2>
-    <p class="reset-sub">输入账号，验证码会发送到该账号绑定的邮箱。没收到请检查垃圾邮件。</p>
+    <p class="reset-sub">输入登录账号（不是昵称），验证码会发送到该账号绑定的 QQ 邮箱。没收到请检查垃圾邮件。</p>
     <div class="reset-field">
-      <label for="resetAccount">账号</label>
-      <input id="resetAccount" type="text" autocomplete="username" placeholder="请输入账号">
+      <label for="resetAccount">账号（登录用的账号，不是昵称）</label>
+      <input id="resetAccount" type="text" autocomplete="username" placeholder="请输入登录账号">
     </div>
     <div class="reset-field">
       <label for="resetCode">验证码</label>
@@ -4821,8 +4833,8 @@ body { color: var(--text); }
             <input id="obName" type="text" value="张三">
           </div>
           <div class="ob-field">
-            <label for="obEmail">邮箱（找回密码用）</label>
-            <input id="obEmail" type="email" placeholder="选填，忘记密码时接收验证码">
+            <label for="obEmail">QQ 邮箱（忘记密码时接收验证码）</label>
+            <input id="obEmail" type="email" placeholder="例如 12345678@qq.com">
           </div>
           <div class="ob-row">
             <div class="ob-field">
@@ -5827,12 +5839,20 @@ body { color: var(--text); }
         <input type="file" id="avatarUploadInput" accept="image/*" hidden>
       </div>
       <div class="field">
-        <label for="pNickname">昵称</label>
-        <input id="pNickname" type="text" value="张三" placeholder="给自己取个昵称">
+        <label for="pAccount">账号（登录用，找回密码时要填的就是它）</label>
+        <input id="pAccount" type="text" readonly placeholder="登录账号">
+      </div>
+      <div class="field">
+        <label for="pNickname">昵称（显示名称，不是账号）</label>
+        <input id="pNickname" type="text" value="张三" placeholder="给自己取个昵称，仅用于展示">
       </div>
       <div class="field">
         <label for="pName">姓名（选填）</label>
         <input id="pName" type="text" placeholder="可不填，仅用于档案归档">
+      </div>
+      <div class="field">
+        <label for="pEmail">QQ 邮箱（用于找回密码）</label>
+        <input id="pEmail" type="email" placeholder="例如 12345678@qq.com">
       </div>
       <div class="field">
         <label for="pGender">性别</label>
@@ -6958,6 +6978,14 @@ document.getElementById('forgotBtn').addEventListener('click', function () {
   openResetLayer();
 });
 
+// 整行也可点击：手机上文字按钮较小，扩大可点区域
+const forgotRow = document.querySelector('.login-forgot-row');
+if (forgotRow) {
+  forgotRow.addEventListener('click', function () {
+    openResetLayer();
+  });
+}
+
 document.getElementById('resetCancel').addEventListener('click', closeResetLayer);
 
 document.getElementById('resetSendCode').addEventListener('click', async function () {
@@ -7442,6 +7470,8 @@ function loadProfileView() {
 function openProfile() {
   const profile = readProfile();
   // 打开弹窗时回显当前资料
+  document.getElementById('pAccount').value = (currentUser && currentUser.account) || '';
+  document.getElementById('pEmail').value = profile.email || '';
   document.getElementById('pNickname').value = profile.nickname || '张三';
   document.getElementById('pName').value = profile.name || '';
   document.getElementById('pGender').value = currentGender;
@@ -7473,12 +7503,18 @@ profileMask.addEventListener('click', function (event) {
 document.getElementById('saveProfile').addEventListener('click', function () {
   const nickname = document.getElementById('pNickname').value.trim() || '健康用户';
   const name = document.getElementById('pName').value.trim(); // 姓名选填，允许为空
+  const email = document.getElementById('pEmail').value.trim(); // QQ 邮箱，用于找回密码
   const gender = document.getElementById('pGender').value;
   const height = parseFloat(document.getElementById('pHeight').value);
   const weight = parseFloat(document.getElementById('pWeight').value);
 
   if (!height || !weight || height <= 0 || weight <= 0) {
     showToast('请填写正确身高和体重');
+    return;
+  }
+
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+    showToast('QQ 邮箱格式不对，例如 12345678@qq.com');
     return;
   }
 
@@ -7503,8 +7539,18 @@ document.getElementById('saveProfile').addEventListener('click', function () {
     avatarImage: customAvatarImage,
     gender: gender,
     height: height,
-    weight: weight
+    weight: weight,
+    email: email
   });
+
+  // 邮箱同步到服务器，忘记密码时用它接收验证码
+  if (serverMode) {
+    api('/api/profile', { method: 'PUT', body: { email: email } }).then(function (result) {
+      if (!result.ok) showToast(result.data.error || '邮箱保存失败');
+    }).catch(function () {
+      showToast('邮箱保存失败，请检查网络');
+    });
+  }
 
   // 根据性别显示/隐藏「健康数据」页中的女性健康档案
   currentGender = gender;
