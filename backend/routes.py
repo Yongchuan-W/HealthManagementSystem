@@ -12,12 +12,13 @@ import base64
 import json
 import os
 import re
+import secrets
 import time
 import urllib.request
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta
 
-from . import ai, asr, auth, db
+from . import ai, asr, auth, db, mailer
 from .errors import ApiError
 
 # ==========================================================
@@ -155,6 +156,21 @@ def clean_date(value, name="date", default=None):
     raise ApiError(400, "参数 %s 的日期格式应为 YYYY-MM-DD 或 YYYY-MM-DD HH:MM" % name)
 
 
+EMAIL_RE = re.compile(r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$")
+
+
+def clean_email(value, required=False):
+    """校验并规范化邮箱；未填写且非必填时返回空字符串。"""
+    text = str(value or "").strip().lower()
+    if not text:
+        if required:
+            raise ApiError(400, "请先填写邮箱")
+        return ""
+    if len(text) > 120 or not EMAIL_RE.match(text):
+        raise ApiError(400, "邮箱格式不正确")
+    return text
+
+
 def day_cutoff(days):
     """近 N 天（含今天）的起始日期。"""
     days = to_int(days, "days", 1, 3650, default=30)
@@ -259,6 +275,112 @@ def auth_password(ctx):
         keep_token=ctx.token,
     )
     return {"ok": True}
+
+
+# ==========================================================
+# 忘记密码：邮箱验证码
+# ==========================================================
+RESET_CODE_MINUTES = 10
+RESET_CODE_COOLDOWN = 60
+RESET_CODE_DAILY_LIMIT = 5
+RESET_CODE_MAX_TRIES = 5
+
+
+def mask_email(email):
+    name, _, domain = str(email or "").partition("@")
+    if not domain:
+        return email or ""
+    keep = name[:2] if len(name) > 2 else name[:1]
+    return keep + "***@" + domain
+
+
+@route("GET", "/api/auth/reset/status", auth_required=False)
+def auth_reset_status(_ctx):
+    return {"mailConfigured": mailer.is_configured(), "codeMinutes": RESET_CODE_MINUTES}
+
+
+@route("POST", "/api/auth/forgot", auth_required=False)
+def auth_forgot(ctx):
+    account = clean_text(ctx.body.get("account"), "account", 40, required=True)
+    if not mailer.is_configured():
+        raise ApiError(503, "邮件服务还未配置，请联系管理员重置密码", "mail_not_configured")
+
+    row = ctx.conn.execute(
+        "SELECT u.id AS uid, p.email AS email FROM users u "
+        "LEFT JOIN profiles p ON p.user_id = u.id WHERE u.account = ?",
+        (account,),
+    ).fetchone()
+    if row is None:
+        raise ApiError(404, "账号不存在，请检查后重试")
+    email = clean_email(row["email"])
+    if not email:
+        raise ApiError(400, "该账号还未绑定邮箱，请登录后在「修改基本信息」里填写")
+
+    now = datetime.now()
+    recent = ctx.conn.execute(
+        "SELECT created_at FROM reset_codes WHERE user_id = ? "
+        "AND created_at >= ? ORDER BY id DESC",
+        (row["uid"], (now - timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")),
+    ).fetchall()
+    if recent and len(recent) >= RESET_CODE_DAILY_LIMIT:
+        raise ApiError(429, "今天获取验证码次数过多，请明天再试")
+    if recent:
+        last_time = datetime.strptime(recent[0]["created_at"], "%Y-%m-%d %H:%M:%S")
+        if (now - last_time).total_seconds() < RESET_CODE_COOLDOWN:
+            raise ApiError(429, "验证码已发送，请 %d 秒后再试" % RESET_CODE_COOLDOWN)
+
+    code = "%06d" % secrets.randbelow(1000000)
+    code_hash, salt = auth.hash_password(code)
+    ctx.conn.execute(
+        "INSERT INTO reset_codes(user_id, email, code_hash, salt, expires_at, created_at) "
+        "VALUES (?, ?, ?, ?, ?, ?)",
+        (
+            row["uid"], email, code_hash, salt,
+            (now + timedelta(minutes=RESET_CODE_MINUTES)).strftime("%Y-%m-%d %H:%M:%S"),
+            now.strftime("%Y-%m-%d %H:%M:%S"),
+        ),
+    )
+    try:
+        mailer.send_code(email, code, RESET_CODE_MINUTES)
+    except Exception as error:
+        raise ApiError(503, "验证码邮件发送失败：%s" % error, "mail_send_failed")
+    return {
+        "ok": True,
+        "email": mask_email(email),
+        "expiresIn": RESET_CODE_MINUTES * 60,
+    }
+
+
+@route("POST", "/api/auth/reset", auth_required=False)
+def auth_reset(ctx):
+    account = clean_text(ctx.body.get("account"), "account", 40, required=True)
+    code = re.sub(r"\D", "", str(ctx.body.get("code") or ""))[:6]
+    if len(code) != 6:
+        raise ApiError(400, "请输入 6 位数字验证码")
+
+    row = ctx.conn.execute("SELECT * FROM users WHERE account = ?", (account,)).fetchone()
+    if row is None:
+        raise ApiError(404, "账号不存在，请检查后重试")
+
+    record = ctx.conn.execute(
+        "SELECT * FROM reset_codes WHERE user_id = ? ORDER BY id DESC LIMIT 1", (row["id"],)
+    ).fetchone()
+    if record is None:
+        raise ApiError(400, "请先获取验证码")
+    if record["tries"] >= RESET_CODE_MAX_TRIES:
+        raise ApiError(429, "验证码错误次数过多，请重新获取")
+    if datetime.now() > datetime.strptime(record["expires_at"], "%Y-%m-%d %H:%M:%S"):
+        raise ApiError(400, "验证码已过期，请重新获取")
+
+    if not auth.verify_password(code, record["code_hash"], record["salt"]):
+        ctx.conn.execute(
+            "UPDATE reset_codes SET tries = tries + 1 WHERE id = ?", (record["id"],)
+        )
+        raise ApiError(400, "验证码不正确")
+
+    auth.reset_password(ctx.conn, row["id"], ctx.body.get("newPassword"))
+    ctx.conn.execute("DELETE FROM reset_codes WHERE user_id = ?", (row["id"],))
+    return {"ok": True, "message": "密码已重置，请用新密码登录"}
 
 
 # ==========================================================
@@ -407,6 +529,7 @@ PROFILE_COLUMNS = {
     "weight": "weight",
     "birthday": "birthday",
     "phone": "phone",
+    "email": "email",
 }
 
 
@@ -422,6 +545,7 @@ def profile_json(row):
             "weight": 0,
             "birthday": "",
             "phone": "",
+            "email": "",
         }
     return {
         "nickname": row["nickname"] or "",
@@ -433,6 +557,7 @@ def profile_json(row):
         "weight": row["weight"] or 0,
         "birthday": row["birthday"] or "",
         "phone": row["phone"] or "",
+        "email": (row["email"] or "") if "email" in row.keys() else "",
     }
 
 
@@ -452,6 +577,9 @@ def profile_update(ctx):
     for key in ("nickname", "name", "birthday", "phone"):
         if key in ctx.body:
             values[key] = clean_text(ctx.body[key], key, 50)
+
+    if "email" in ctx.body:
+        values["email"] = clean_email(ctx.body["email"])
 
     if "avatar" in ctx.body:
         values["avatar"] = to_int(ctx.body["avatar"], "avatar", 0, 99, default=0)

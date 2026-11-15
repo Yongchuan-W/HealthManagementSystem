@@ -2012,14 +2012,145 @@ a { text-decoration: none; }
   margin: 2px 0 10px;
 }
 
+/* 忘记密码：文字入口 + 重置弹窗 */
+.login-forgot-row {
+  display: flex;
+  justify-content: flex-end;
+  margin: -4px 0 10px;
+}
+
+.login-forgot {
+  border: 0;
+  background: transparent;
+  color: #8b4a22;
+  font-size: 12px;
+  padding: 2px 0;
+  text-decoration: underline;
+}
+
+.reset-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(38, 28, 20, 0.42);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+}
+
+.reset-card {
+  width: 100%;
+  max-width: 380px;
+  background: #fff;
+  border-radius: 16px;
+  padding: 22px 20px 18px;
+  box-shadow: 0 18px 44px rgba(60, 40, 24, 0.24);
+}
+
+.reset-card h2 {
+  font-size: 18px;
+  color: #6e3a18;
+  margin-bottom: 6px;
+}
+
+.reset-sub {
+  font-size: 12px;
+  color: #8b7d70;
+  line-height: 1.6;
+  margin-bottom: 14px;
+}
+
+.reset-field {
+  margin-bottom: 12px;
+}
+
+.reset-field label {
+  display: block;
+  font-size: 12px;
+  color: #8b7d70;
+  margin-bottom: 5px;
+}
+
+.reset-field input {
+  width: 100%;
+  height: 40px;
+  border: 1px solid #e4ece4;
+  border-radius: 9px;
+  padding: 0 12px;
+  font-size: 14px;
+  background: #fbfdfa;
+  color: var(--text);
+}
+
+.reset-field input:focus {
+  outline: none;
+  border-color: #c8a585;
+  background: #fff;
+}
+
+.reset-code-row {
+  display: flex;
+  gap: 8px;
+}
+
+.reset-code-row input { flex: 1; }
+
+.reset-code-row button {
+  flex: none;
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 9px;
+  border: 1px solid #e0d3c6;
+  background: #fdf7f1;
+  color: #8b4a22;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.reset-code-row button:disabled {
+  color: #b3a89c;
+  background: #f6f2ee;
+}
+
+.reset-error {
+  font-size: 12px;
+  line-height: 1.6;
+  color: #b3482f;
+  margin-bottom: 10px;
+}
+
+.reset-error.is-ok { color: #3f7a4f; }
+
+.reset-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.reset-actions .btn-cancel {
+  flex: 0 0 34%;
+  height: 42px;
+  border-radius: 10px;
+  border: 1px solid #e4ece4;
+  background: #fff;
+  color: #6f6154;
+  font-size: 14px;
+}
+
+.reset-actions .btn-primary {
+  flex: 1;
+  height: 42px;
+  border-radius: 10px;
+}
+
 .login-notice {
   font-size: 12px;
   line-height: 1.7;
   padding: 8px 10px;
   margin: 2px 0 10px;
   border-radius: 8px;
-  background: #eefaf6;
-  color: #2b7f6b;
+  background: #eefaf6;  color: #2b7f6b;
 }
 
 .login-notice.is-warn { background: #fdf2f3; color: #a94442; }
@@ -4650,6 +4781,9 @@ body { color: var(--text); }
           <label for="loginPassword">密码</label>
           <input id="loginPassword" type="password" autocomplete="current-password" placeholder="请输入密码">
         </div>
+        <div class="login-forgot-row">
+          <button class="login-forgot" type="button" id="forgotBtn">忘记密码？</button>
+        </div>
         <div class="login-field" id="loginNicknameField" hidden>
           <label for="loginNickname">昵称（可选）</label>
           <input id="loginNickname" type="text" autocomplete="nickname" placeholder="不填则默认使用账号名">
@@ -4661,6 +4795,36 @@ body { color: var(--text); }
       <button class="login-switch" type="button" id="authModeSwitch">还没有账号？立即注册</button>
 
       <button class="btn-primary login-btn" type="button" id="demoEnter" hidden>进入本地演示（不校验账号）</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================
+     忘记密码弹窗（邮箱验证码）
+     ======================================================== -->
+<div class="reset-layer" id="resetLayer" hidden>
+  <div class="reset-card">
+    <h2>重置密码</h2>
+    <p class="reset-sub">输入账号，验证码会发送到该账号绑定的邮箱。没收到请检查垃圾邮件。</p>
+    <div class="reset-field">
+      <label for="resetAccount">账号</label>
+      <input id="resetAccount" type="text" autocomplete="username" placeholder="请输入账号">
+    </div>
+    <div class="reset-field">
+      <label for="resetCode">验证码</label>
+      <div class="reset-code-row">
+        <input id="resetCode" type="text" inputmode="numeric" maxlength="6" placeholder="6 位数字">
+        <button type="button" id="resetSendCode">发送验证码</button>
+      </div>
+    </div>
+    <div class="reset-field">
+      <label for="resetPassword">新密码</label>
+      <input id="resetPassword" type="password" autocomplete="new-password" placeholder="至少 6 位">
+    </div>
+    <div class="reset-error" id="resetError" hidden></div>
+    <div class="reset-actions">
+      <button class="btn-cancel" type="button" id="resetCancel">取消</button>
+      <button class="btn-primary" type="button" id="resetSubmit">重置密码</button>
     </div>
   </div>
 </div>
@@ -4686,6 +4850,10 @@ body { color: var(--text); }
           <div class="ob-field">
             <label for="obName">昵称</label>
             <input id="obName" type="text" value="张三">
+          </div>
+          <div class="ob-field">
+            <label for="obEmail">邮箱（找回密码用）</label>
+            <input id="obEmail" type="email" placeholder="选填，忘记密码时接收验证码">
           </div>
           <div class="ob-row">
             <div class="ob-field">
@@ -6769,6 +6937,122 @@ document.getElementById('loginForm').addEventListener('submit', async function (
   }
 });
 
+// ---------- 忘记密码：邮箱验证码 ----------
+const resetLayer = document.getElementById('resetLayer');
+const resetError = document.getElementById('resetError');
+let resetTimer = null;
+
+function setResetError(text, ok) {
+  resetError.textContent = text || '';
+  resetError.hidden = !text;
+  resetError.classList.toggle('is-ok', !!ok);
+}
+
+function openResetLayer() {
+  resetLayer.hidden = false;
+  setResetError('');
+  const account = document.getElementById('loginAccount').value.trim();
+  if (account) document.getElementById('resetAccount').value = account;
+  document.getElementById('resetCode').value = '';
+  document.getElementById('resetPassword').value = '';
+  if (!account) document.getElementById('resetAccount').focus();
+}
+
+function closeResetLayer() {
+  resetLayer.hidden = true;
+  if (resetTimer) { clearInterval(resetTimer); resetTimer = null; }
+  const send = document.getElementById('resetSendCode');
+  send.disabled = false;
+  send.textContent = '发送验证码';
+}
+
+function startResetCountdown(seconds) {
+  const send = document.getElementById('resetSendCode');
+  let left = seconds;
+  send.disabled = true;
+  send.textContent = left + 's 后重发';
+  if (resetTimer) clearInterval(resetTimer);
+  resetTimer = setInterval(function () {
+    left -= 1;
+    if (left <= 0) {
+      clearInterval(resetTimer);
+      resetTimer = null;
+      send.disabled = false;
+      send.textContent = '重新发送';
+      return;
+    }
+    send.textContent = left + 's 后重发';
+  }, 1000);
+}
+
+document.getElementById('forgotBtn').addEventListener('click', function () {
+  openResetLayer();
+});
+
+document.getElementById('resetCancel').addEventListener('click', closeResetLayer);
+
+document.getElementById('resetSendCode').addEventListener('click', async function () {
+  const account = document.getElementById('resetAccount').value.trim();
+  if (!account) { setResetError('请先输入账号'); return; }
+  const send = document.getElementById('resetSendCode');
+  send.disabled = true;
+  send.textContent = '发送中…';
+  setResetError('');
+  try {
+    const result = await api('/api/auth/forgot', { method: 'POST', body: { account } });
+    if (!result.ok) {
+      send.disabled = false;
+      send.textContent = '发送验证码';
+      setResetError(result.data.error || '验证码发送失败，请稍后再试');
+      return;
+    }
+    setResetError('验证码已发送至 ' + (result.data.email || '绑定邮箱') +
+      '，10 分钟内有效', true);
+    startResetCountdown(60);
+    document.getElementById('resetCode').focus();
+  } catch (error) {
+    send.disabled = false;
+    send.textContent = '发送验证码';
+    setResetError('无法连接服务器，请检查网络');
+  }
+});
+
+document.getElementById('resetSubmit').addEventListener('click', async function () {
+  const account = document.getElementById('resetAccount').value.trim();
+  const code = document.getElementById('resetCode').value.replace(/\D/g, '');
+  const password = document.getElementById('resetPassword').value;
+  if (!account) { setResetError('请先输入账号'); return; }
+  if (code.length !== 6) { setResetError('请输入 6 位数字验证码'); return; }
+  if (password.length < 6) { setResetError('新密码至少 6 位'); return; }
+
+  const submit = document.getElementById('resetSubmit');
+  submit.disabled = true;
+  submit.textContent = '提交中…';
+  setResetError('');
+  try {
+    const result = await api('/api/auth/reset', {
+      method: 'POST',
+      body: { account, code, newPassword: password }
+    });
+    if (!result.ok) {
+      setResetError(result.data.error || '重置失败，请稍后再试');
+      return;
+    }
+    closeResetLayer();
+    document.getElementById('loginAccount').value = account;
+    document.getElementById('loginPassword').value = '';
+    const notice = document.getElementById('loginNotice');
+    notice.textContent = '密码已重置，请用新密码登录';
+    notice.hidden = false;
+    document.getElementById('loginPassword').focus();
+  } catch (error) {
+    setResetError('无法连接服务器，请检查网络');
+  } finally {
+    submit.disabled = false;
+    submit.textContent = '重置密码';
+  }
+});
+
 // 页面打开时聚焦账号输入框
 window.addEventListener('load', function () {
   document.getElementById('loginAccount').focus();
@@ -6883,6 +7167,7 @@ function prefillOnboarding() {
   const preferences = loadData('preferences', {}) || {};
 
   document.getElementById('obName').value = profile.nickname || '';
+  document.getElementById('obEmail').value = profile.email || '';
   setSelectValue('obGender', profile.gender || '女');
   document.getElementById('obAge').value = preferences.age || '';
   document.getElementById('obHeight').value = profile.height || '';
@@ -6920,6 +7205,7 @@ document.getElementById('onboardingForm').addEventListener('submit', function (e
   event.preventDefault();
 
   const name = document.getElementById('obName').value.trim() || '张三';
+  const email = document.getElementById('obEmail').value.trim();
   const gender = document.getElementById('obGender').value;
   const height = parseFloat(document.getElementById('obHeight').value);
   const weight = parseFloat(document.getElementById('obWeight').value);
@@ -6948,8 +7234,18 @@ document.getElementById('onboardingForm').addEventListener('submit', function (e
     avatarImage: customAvatarImage,
     gender: gender,
     height: height > 0 ? height : 0,
-    weight: weight > 0 ? weight : 0
+    weight: weight > 0 ? weight : 0,
+    email: email
   });
+
+  // 邮箱同步到服务器，忘记密码时用来接收验证码
+  if (serverMode && email) {
+    api('/api/profile', { method: 'PUT', body: { email: email } }).then(function (result) {
+      if (!result.ok) showToast(result.data.error || '邮箱保存失败');
+    }).catch(function () {
+      showToast('邮箱保存失败，请检查网络');
+    });
+  }
 
   // 健康情况与饮食偏好单独存档，用于饮食建议与后续个性化
   const previousPreferences = loadData('preferences', {}) || {};

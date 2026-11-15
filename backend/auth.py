@@ -264,6 +264,17 @@ def change_password(conn, user, old_password, new_password, keep_token=None):
         )
 
 
+def reset_password(conn, user_id, new_password):
+    """忘记密码场景：直接设置新密码，并让该用户所有登录态失效。"""
+    new_password = clean_password(new_password)
+    password_hash, salt = hash_password(new_password)
+    conn.execute(
+        "UPDATE users SET password_hash = ?, salt = ? WHERE id = ?",
+        (password_hash, salt, user_id),
+    )
+    conn.execute("DELETE FROM sessions WHERE user_id = ?", (user_id,))
+
+
 def ensure_allowed_users(conn):
     """按 HM_ALLOWED_USERS 创建或同步指定账号；密码以配置为准。"""
     for account, password in allowed_accounts().items():

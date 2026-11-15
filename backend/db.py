@@ -61,8 +61,21 @@ CREATE TABLE IF NOT EXISTS profiles (
     weight       REAL,
     birthday     TEXT,
     phone        TEXT,
+    email        TEXT,
     updated_at   TEXT
 );
+
+CREATE TABLE IF NOT EXISTS reset_codes (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    email      TEXT    NOT NULL,
+    code_hash  TEXT    NOT NULL,
+    salt       TEXT    NOT NULL,
+    expires_at TEXT    NOT NULL,
+    tries      INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT    NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_reset_user ON reset_codes(user_id, id);
 
 CREATE TABLE IF NOT EXISTS weight_records (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -331,6 +344,10 @@ def _migrate(conn):
         conn.execute("ALTER TABLE preferences ADD COLUMN meals TEXT")
     if preference_columns and "age" not in preference_columns:
         conn.execute("ALTER TABLE preferences ADD COLUMN age TEXT")
+
+    profile_columns = {row[1] for row in conn.execute("PRAGMA table_info(profiles)")}
+    if profile_columns and "email" not in profile_columns:
+        conn.execute("ALTER TABLE profiles ADD COLUMN email TEXT")
 
     female_columns = {row[1] for row in conn.execute("PRAGMA table_info(female_status)")}
     for column in ("flow", "color", "pain"):
