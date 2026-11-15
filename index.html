@@ -12486,7 +12486,18 @@ function cancelVoice() {
   resetVoiceButton();
 }
 
-// 确认：把面板里的文字填入目标输入框（或发送到小管家）
+// 判断这句话是不是「让小管家去记录」的指令
+function looksLikeVoiceCommand(text) {
+  return /(帮我|请|给).{0,6}(记|添加)|记录|记一下|记上|新增|吃了|喝了|早餐|午餐|晚餐|加餐|运动|跑步|体重|血压|血糖|睡眠|心情/.test(text);
+}
+
+// 交给小管家：走服务端意图识别，真正写入对应记录
+function sendVoiceToAssistant(text) {
+  openChat();
+  sendChat(text);
+}
+
+// 确认：把面板里的文字填入目标输入框（或交给小管家处理）
 function fillFromVoicePanel() {
   const text = voiceText.value.trim();
   if (!text) {
@@ -12495,9 +12506,16 @@ function fillFromVoicePanel() {
   }
   const target = voiceTarget;
   closeVoicePanel();
-  fillVoiceTarget(target, text);
-  showToast('已填入：' + text.slice(0, 24));
-  maybeAutoSendVoice(target);
+  const isNumber = target && target.type === 'number';
+  const asCommand = !isNumber && (!target || looksLikeVoiceCommand(text));
+  if (asCommand) {
+    sendVoiceToAssistant(text);
+    showToast('已交给小管家处理');
+  } else {
+    fillVoiceTarget(target, text);
+    showToast('已填入：' + text.slice(0, 24));
+    maybeAutoSendVoice(target);
+  }
   resetVoiceButton();
 }
 
