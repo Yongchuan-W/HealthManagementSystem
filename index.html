@@ -6420,13 +6420,33 @@ const SYNC_KEYS = [
 const dataCache = Object.create(null);
 const OWNER_KEY = 'hm_owner';
 let syncTimer = null;
+// 当前登录账号的存储目录：不同账号各用一套 hm_<账号>_<key>，互不影响
+let dataScope = '';
+
+function scopeSlug(account) {
+  return String(account || '').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '_');
+}
+
+function storageKey(key) {
+  return dataScope ? 'hm_' + dataScope + '_' + key : 'hm_' + key;
+}
+
+// 切换账号时换一整套本地存储目录，并丢掉上一个账号的内存缓存
+function useAccountScope(user) {
+  const next = scopeSlug(user && user.account);
+  if (next === dataScope) return;
+  dataScope = next;
+  Object.keys(dataCache).forEach(function (key) {
+    delete dataCache[key];
+  });
+}
 
 function loadData(key, fallback) {
   if (Object.prototype.hasOwnProperty.call(dataCache, key)) {
     return dataCache[key];
   }
   try {
-    const raw = window.localStorage.getItem('hm_' + key);
+    const raw = window.localStorage.getItem(storageKey(key));
     if (raw !== null) {
       const parsed = JSON.parse(raw);
       dataCache[key] = parsed;
@@ -6441,7 +6461,7 @@ function loadData(key, fallback) {
 function saveData(key, value) {
   dataCache[key] = value;
   try {
-    window.localStorage.setItem('hm_' + key, JSON.stringify(value));
+    window.localStorage.setItem(storageKey(key), JSON.stringify(value));
   } catch (error) {
     // 无痕模式等场景下写入失败，忽略即可
   }
@@ -6450,7 +6470,7 @@ function saveData(key, value) {
 
 function hasLocalData() {
   try {
-    return window.localStorage.getItem('hm_profile') !== null;
+    return window.localStorage.getItem(storageKey('profile')) !== null;
   } catch (error) {
     return false;
   }
@@ -6477,18 +6497,41 @@ function clearLocalData() {
   SYNC_KEYS.forEach(function (key) {
     delete dataCache[key];
     try {
-      window.localStorage.removeItem('hm_' + key);
+      window.localStorage.removeItem(storageKey(key));
+      window.localStorage.removeItem('hm_' + key);   // 旧版未分账号的残留
     } catch (error) {
       // 忽略清理失败
     }
   });
   try {
     window.localStorage.removeItem(OWNER_KEY);
+    window.localStorage.removeItem(storageKey('chatLog'));
+    window.localStorage.removeItem(storageKey('chatSessions'));
     window.localStorage.removeItem('hm_chatLog');
     window.localStorage.removeItem('hm_chatSessions');
   } catch (error) {
     // 忽略清理失败
   }
+}
+
+// 旧版本把所有账号都存在同一套 hm_<key> 里：确认属于当前账号时迁到当前账号目录，
+// 迁移后删除旧键，避免以后被别的账号再次读走
+function adoptLegacyLocalData() {
+  if (!dataScope || !currentUser) return;
+  const owner = localOwner();
+  if (!owner || owner !== String(currentUser.id)) return;
+  if (hasLocalData()) return;
+  SYNC_KEYS.forEach(function (key) {
+    try {
+      const raw = window.localStorage.getItem('hm_' + key);
+      if (raw === null) return;
+      dataCache[key] = JSON.parse(raw);
+      window.localStorage.setItem(storageKey(key), raw);
+      window.localStorage.removeItem('hm_' + key);
+    } catch (error) {
+      // 单条损坏就跳过
+    }
+  });
 }
 
 // 账号里是否已经有业务数据（有记录就不再重复引导填写）
@@ -6638,7 +6681,7 @@ function applyBundle(bundle) {
     if (values[key] === undefined) return;
     dataCache[key] = values[key];
     try {
-      window.localStorage.setItem('hm_' + key, JSON.stringify(values[key]));
+      window.localStorage.setItem(storageKey(key), JSON.stringify(values[key]));
     } catch (error) {
       // 忽略写入失败
     }
@@ -6653,6 +6696,8 @@ function applyBundle(bundle) {
 // 登录 / 会话恢复后，从后端取回整包数据；账号为空而本机有旧数据时先迁移
 async function hydrateFromServer() {
   if (!serverMode || !currentUser) return;
+
+  adoptLegacyLocalData();
 
   let bundle = null;
   try {
@@ -6714,6 +6759,7 @@ async function afterAuthenticated() {
     return false;
   }
   currentUser = result.data.user || currentUser;
+  useAccountScope(currentUser);
   await restoreSession(result.data.profile);
   return true;
 }
@@ -6785,6 +6831,7 @@ async function bootAuth() {
 
   if (result.ok) {
     currentUser = result.data.user || null;
+    useAccountScope(currentUser);
     await restoreSession(result.data.profile);
   }
 }
