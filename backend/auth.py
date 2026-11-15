@@ -315,6 +315,6 @@ def ensure_allowed_users(conn):
                 "UPDATE users SET password_hash = ?, salt = ? WHERE id = ?",
                 (password_hash, salt, row["id"]),
             )
-        if account.lower() == "admin":
-            conn.execute("UPDATE users SET role = 'admin' WHERE account = ?", (account,))
+        # HM_ALLOWED_USERS 里配置的都是管理账号（如 Wyc / Gjw / Sys）
+        conn.execute("UPDATE users SET role = 'admin' WHERE account = ?", (account,))
 
