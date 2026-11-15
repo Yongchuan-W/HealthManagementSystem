@@ -18,7 +18,7 @@ import urllib.request
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta
 
-from . import ai, asr, auth, db, mailer
+from . import ai, asr, auth, db, mailer, telemetry
 from .errors import ApiError
 
 # ==========================================================
@@ -275,6 +275,15 @@ def auth_password(ctx):
         keep_token=ctx.token,
     )
     return {"ok": True}
+
+
+# ==========================================================
+# 管理员数据大屏：终端日志 / 请求 / 模型调用可视化
+# ==========================================================
+@route("GET", "/api/admin/overview")
+def admin_overview(ctx):
+    auth.require_admin(ctx.user)
+    return telemetry.snapshot(ctx.conn)
 
 
 # ==========================================================

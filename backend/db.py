@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS users (
     password_hash TEXT    NOT NULL,
     salt          TEXT    NOT NULL,
     nickname      TEXT,
+    role          TEXT    NOT NULL DEFAULT 'user',   -- user / admin
     created_at    TEXT    NOT NULL
 );
 
@@ -335,6 +336,12 @@ def backup_database(keep=BACKUP_KEEP):
 
 def _migrate(conn):
     """对已存在的旧库补齐新增字段。"""
+    user_columns = {row[1] for row in conn.execute("PRAGMA table_info(users)")}
+    if user_columns and "role" not in user_columns:
+        conn.execute("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'user'")
+    # admin 账号自动成为管理员，其余账号都是普通用户
+    conn.execute("UPDATE users SET role = 'admin' WHERE lower(account) = 'admin'")
+
     meal_columns = {row[1] for row in conn.execute("PRAGMA table_info(meal_records)")}
     if meal_columns and "image" not in meal_columns:
         conn.execute("ALTER TABLE meal_records ADD COLUMN image TEXT")

@@ -176,12 +176,32 @@ def logout(conn, token):
 
 
 def public_user(user):
+    try:
+        role = user["role"] or "user"
+    except (IndexError, KeyError):
+        role = "user"
     return {
         "id": user["id"],
         "account": user["account"],
         "nickname": user["nickname"] or "",
+        "role": role,
         "createdAt": user["created_at"],
     }
+
+
+def is_admin(user):
+    """admin 账号是管理员，其余都是普通用户。"""
+    if user is None:
+        return False
+    try:
+        return str(user["role"] or "") == "admin"
+    except (IndexError, KeyError):
+        return False
+
+
+def require_admin(user):
+    if not is_admin(user):
+        raise ApiError(403, "只有管理员可以访问", "forbidden")
 
 
 # ---------- 注册 / 登录 ----------
@@ -221,9 +241,11 @@ def register(conn, account, password, nickname=""):
         raise ApiError(409, "该账号已被注册")
 
     password_hash, salt = hash_password(password)
+    role = "admin" if account.lower() == "admin" else "user"
     cursor = conn.execute(
-        "INSERT INTO users(account, password_hash, salt, nickname, created_at) VALUES (?, ?, ?, ?, ?)",
-        (account, password_hash, salt, nickname or account, db.now()),
+        "INSERT INTO users(account, password_hash, salt, nickname, role, created_at) "
+        "VALUES (?, ?, ?, ?, ?, ?)",
+        (account, password_hash, salt, nickname or account, role, db.now()),
     )
     user_id = cursor.lastrowid
     ensure_defaults(conn, user_id, nickname or account)
@@ -293,4 +315,6 @@ def ensure_allowed_users(conn):
                 "UPDATE users SET password_hash = ?, salt = ? WHERE id = ?",
                 (password_hash, salt, row["id"]),
             )
+        if account.lower() == "admin":
+            conn.execute("UPDATE users SET role = 'admin' WHERE account = ?", (account,))
 

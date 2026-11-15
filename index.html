@@ -2543,6 +2543,25 @@ a { text-decoration: none; }
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.news-img img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.news-img::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(20, 30, 25, 0) 58%, rgba(20, 30, 25, 0.16));
+  pointer-events: none;
 }
 
 .news-img .icon { width: 44px; height: 44px; stroke-width: 1.4; opacity: 0.55; }
@@ -3375,9 +3394,31 @@ body { color: var(--text); }
 /* 每日计划勾选 */
 .plan-day {
   display: grid;
-  grid-template-columns: 22px 40px 1fr;
+  grid-template-columns: 22px 48px 1fr;
   align-items: center;
   justify-content: initial;
+}
+
+.plan-day-label b { font-weight: 600; }
+
+.plan-day .plan-date {
+  display: block;
+  font-style: normal;
+  font-size: 10px;
+  line-height: 1.15;
+  color: #a89a8b;
+  margin-top: 1px;
+}
+
+/* 今天那一行：跟随日历高亮，跨周自动移动 */
+.plan-day.today {
+  background: #fdf3ea;
+  border-radius: 8px;
+}
+
+.plan-day.today .plan-date {
+  color: #8b4a22;
+  font-weight: 600;
 }
 
 .plan-check {
@@ -4692,6 +4733,124 @@ body { color: var(--text); }
   .side-nav button.active { background: #eefaf6; }
   .side-nav button.active::before { display: none; }
 }
+/* ==========================================================
+   管理员数据大屏
+   ========================================================== */
+.admin-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.admin-head h2 { font-size: 19px; color: #3a2a1d; letter-spacing: 0.5px; }
+.admin-head p { font-size: 12.5px; color: #8b7d70; margin-top: 4px; }
+
+.admin-refresh {
+  border: 1px solid #e2d6c8;
+  background: #fff;
+  color: #8b4a22;
+  font-size: 13px;
+  padding: 8px 14px;
+  border-radius: 9px;
+  flex: none;
+}
+
+.admin-refresh:active { background: #fdf3ea; }
+
+.admin-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.admin-kpi {
+  background: #fff;
+  border: 1px solid #eee3d8;
+  border-radius: 12px;
+  padding: 14px 16px;
+  box-shadow: var(--shadow);
+}
+
+.admin-kpi span { display: block; font-size: 12px; color: #8b7d70; }
+.admin-kpi b {
+  display: block;
+  font-size: 22px;
+  color: #3a2a1d;
+  margin-top: 6px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+.admin-kpi em {
+  display: block;
+  font-style: normal;
+  font-size: 11.5px;
+  color: #a89a8b;
+  margin-top: 4px;
+}
+
+.admin-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.admin-card {
+  background: #fff;
+  border: 1px solid #eee3d8;
+  border-radius: 12px;
+  padding: 14px 16px 8px;
+  box-shadow: var(--shadow);
+}
+
+.admin-card h3 { font-size: 14px; color: #4a3525; font-weight: 600; margin-bottom: 8px; }
+.admin-card h3 .admin-log-hint {
+  font-size: 11px;
+  color: #a89a8b;
+  font-weight: 400;
+  margin-left: 6px;
+}
+
+.admin-chart { height: 220px; width: 100%; }
+
+.admin-logs-card { padding-bottom: 14px; }
+
+.admin-logs {
+  max-height: 340px;
+  overflow: auto;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 12px;
+}
+
+.admin-log-row {
+  display: flex;
+  gap: 8px;
+  padding: 6px 2px;
+  border-bottom: 1px dashed #f0e8df;
+  align-items: flex-start;
+}
+
+.admin-log-time { color: #a89a8b; flex: none; }
+.admin-log-level {
+  flex: none;
+  border-radius: 4px;
+  padding: 0 5px;
+  font-size: 11px;
+  line-height: 18px;
+}
+.admin-log-level.INFO { background: #eef7f1; color: #4f8a37; }
+.admin-log-level.WARN { background: #fff5e6; color: #c07a1e; }
+.admin-log-level.ERROR { background: #fdecec; color: #d24b4b; }
+.admin-log-text { color: #5c4a3b; word-break: break-all; }
+
+@media (max-width: 820px) {
+  .admin-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .admin-grid { grid-template-columns: 1fr; }
+}
+
 </style>
 </head>
 <body>
@@ -4998,6 +5157,7 @@ body { color: var(--text); }
     <button data-page="family"><svg class="icon"><use href="#i-heart"/></svg>家人健康</button>
     <button data-page="assistant"><svg class="icon"><use href="#i-chat"/></svg>健康小管家</button>
     <button data-page="news"><svg class="icon"><use href="#i-book"/></svg>科普资讯</button>
+    <button data-page="admin" id="navAdmin" hidden><svg class="icon"><use href="#i-activity"/></svg>数据大屏</button>
   </nav>
 
   <button class="voice-fab" id="voiceFab" type="button" aria-label="语音输入">
@@ -5236,7 +5396,7 @@ body { color: var(--text); }
             <div class="sleep-time">
               <input id="sleepHour" type="number" step="1" min="0" max="24" placeholder="7">
               <span>小时</span>
-              <input id="sleepMinute" type="number" step="5" min="0" max="59" placeholder="30">
+              <input id="sleepMinute" type="number" step="1" min="0" max="59" placeholder="30">
               <span>分钟</span>
             </div>
             <select id="sleepQuality" aria-label="睡眠质量">
@@ -5652,7 +5812,7 @@ body { color: var(--text); }
 
                 <div class="weight-log">
                   <label for="beautyWeightNow">记录当前体重</label>
-                  <input id="beautyWeightNow" type="number" step="0.1" placeholder="65.2">
+                  <input id="beautyWeightNow" type="number" step="0.1" placeholder="">
                   <button class="btn-ghost-sm" type="button" id="logBeautyWeight">记录</button>
                 </div>
               </div>
@@ -5812,6 +5972,43 @@ body { color: var(--text); }
             <svg class="icon"><use href="#i-send"/></svg>
           </button>
         </div>
+      </div>
+    </section>
+
+    <!-- 管理员数据大屏：终端日志 / 接口请求 / 模型调用可视化 -->
+    <section class="page" id="page-admin">
+      <div class="admin-head">
+        <div>
+          <h2>数据大屏</h2>
+          <p>管理员视图 · 与服务器终端同源的运行状态、接口请求、报错与模型调用</p>
+        </div>
+        <button class="admin-refresh" id="adminRefresh" type="button">刷新数据</button>
+      </div>
+
+      <div class="admin-kpis" id="adminKpis"></div>
+
+      <div class="admin-grid">
+        <div class="admin-card">
+          <h3>近 12 小时接口请求</h3>
+          <div class="admin-chart" id="adminChartRequests"></div>
+        </div>
+        <div class="admin-card">
+          <h3>近 12 小时报错数量</h3>
+          <div class="admin-chart" id="adminChartErrors"></div>
+        </div>
+        <div class="admin-card">
+          <h3>模型响应耗时（最近 20 次）</h3>
+          <div class="admin-chart" id="adminChartAi"></div>
+        </div>
+        <div class="admin-card">
+          <h3>数据量分布</h3>
+          <div class="admin-chart" id="adminChartData"></div>
+        </div>
+      </div>
+
+      <div class="admin-card admin-logs-card">
+        <h3>终端日志<span class="admin-log-hint">就是服务器上打印的那部分内容</span></h3>
+        <div class="admin-logs" id="adminLogs"></div>
       </div>
     </section>
 
@@ -7358,12 +7555,202 @@ function switchPage(name) {
   pages.forEach(function (page) {
     page.classList.toggle('active', page.id === 'page-' + name);
   });
+  // 数据大屏只给管理员看，打开时刷新一次，之后每 20 秒自动更新
+  if (name === 'admin') {
+    loadAdminDashboard();
+    if (!adminTimer) adminTimer = setInterval(loadAdminDashboard, 20000);
+  } else if (adminTimer) {
+    clearInterval(adminTimer);
+    adminTimer = null;
+  }
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 navButtons.forEach(function (btn) {
   btn.addEventListener('click', function () {
     switchPage(btn.dataset.page);
+  });
+});
+
+/* ==========================================================
+   管理员数据大屏：把终端里刷的运行信息画成图
+   ========================================================== */
+let adminTimer = null;
+const adminCharts = {};
+
+// 只有 admin 账号能看到入口，普通用户完全不可见
+function updateAdminEntry() {
+  const btn = document.getElementById('navAdmin');
+  if (!btn) return;
+  const allowed = !!(serverMode && currentUser && currentUser.role === 'admin');
+  btn.hidden = !allowed;
+  const adminPage = document.getElementById('page-admin');
+  if (!allowed && adminPage && adminPage.classList.contains('active')) {
+    switchPage('data');
+  }
+}
+
+function ensureECharts() {
+  if (window.echarts) return Promise.resolve(true);
+  if (window.__hmEChartsLoading) return window.__hmEChartsLoading;
+  window.__hmEChartsLoading = new Promise(function (resolve) {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js';
+    script.onload = function () { resolve(true); };
+    script.onerror = function () { resolve(false); };
+    document.head.appendChild(script);
+  });
+  return window.__hmEChartsLoading;
+}
+
+const ADMIN_CHART_TEXT = { color: '#8b7d70', fontSize: 11 };
+
+function adminBaseOption(extra) {
+  return Object.assign({
+    grid: { left: 40, right: 16, top: 26, bottom: 28 },
+    tooltip: { trigger: 'axis' },
+    textStyle: ADMIN_CHART_TEXT
+  }, extra);
+}
+
+function drawAdminChart(id, option) {
+  const box = document.getElementById(id);
+  if (!box || !window.echarts) return;
+  if (!adminCharts[id]) adminCharts[id] = window.echarts.init(box);
+  adminCharts[id].setOption(option, true);
+}
+
+function renderAdminKpis(d) {
+  const items = [
+    { label: '注册账号', value: d.users, note: '今日新增 ' + d.usersToday + ' 个 · 在线 ' + d.online + ' 个' },
+    { label: '本次运行', value: Math.floor(d.uptime / 3600) + ' 小时', note: '服务启动至今' },
+    { label: '接口请求', value: d.requests24h, note: '平均 ' + d.avgMs + ' ms · 报错 ' + d.errors24h + ' 次' },
+    { label: '模型调用', value: d.aiCalls, note: '成功率 ' + d.aiOkRate + '% · 平均 ' + d.aiAvgMs + ' ms' },
+    { label: '饮食记录', value: d.meals, note: '累计条数' },
+    { label: '体重记录', value: d.weights, note: '累计条数' },
+    { label: '运动记录', value: d.sports, note: '累计天数' },
+    { label: 'AI 对话', value: d.aiMessages, note: '累计消息数' }
+  ];
+  document.getElementById('adminKpis').innerHTML = items.map(function (item) {
+    return '<div class="admin-kpi"><span>' + item.label + '</span><b>' + item.value +
+      '</b><em>' + item.note + '</em></div>';
+  }).join('');
+}
+
+function renderAdminLogs(logs) {
+  const box = document.getElementById('adminLogs');
+  if (!logs.length) {
+    box.innerHTML = '<div class="admin-log-row"><span class="admin-log-text">' +
+      '暂无日志，操作一下页面再刷新。</span></div>';
+    return;
+  }
+  box.innerHTML = logs.slice().reverse().map(function (log) {
+    return '<div class="admin-log-row"><span class="admin-log-time">' +
+      escapeNewsHtml(log.time) + '</span><span class="admin-log-level ' + log.level + '">' +
+      log.level + '</span><span class="admin-log-text">' + escapeNewsHtml(log.text) + '</span></div>';
+  }).join('');
+}
+
+function renderAdminCharts(d) {
+  if (!window.echarts) return;
+
+  drawAdminChart('adminChartRequests', adminBaseOption({
+    xAxis: {
+      type: 'category', data: d.hours,
+      axisLine: { lineStyle: { color: '#e6dccf' } }, axisLabel: ADMIN_CHART_TEXT
+    },
+    yAxis: {
+      type: 'value', minInterval: 1,
+      splitLine: { lineStyle: { color: '#f3ece3' } }, axisLabel: ADMIN_CHART_TEXT
+    },
+    series: [{
+      type: 'bar', data: d.hourRequests, barWidth: 12,
+      itemStyle: { color: '#c98a5a', borderRadius: [4, 4, 0, 0] }
+    }]
+  }));
+
+  drawAdminChart('adminChartErrors', adminBaseOption({
+    xAxis: {
+      type: 'category', data: d.hours,
+      axisLine: { lineStyle: { color: '#e6dccf' } }, axisLabel: ADMIN_CHART_TEXT
+    },
+    yAxis: {
+      type: 'value', minInterval: 1,
+      splitLine: { lineStyle: { color: '#f3ece3' } }, axisLabel: ADMIN_CHART_TEXT
+    },
+    series: [{
+      type: 'line', data: d.hourErrors, smooth: true, symbolSize: 6,
+      lineStyle: { color: '#d24b4b', width: 2 },
+      itemStyle: { color: '#d24b4b' },
+      areaStyle: { color: 'rgba(210, 75, 75, 0.10)' }
+    }]
+  }));
+
+  const aiSeries = d.aiSeries || [];
+  drawAdminChart('adminChartAi', adminBaseOption({
+    xAxis: {
+      type: 'category', data: aiSeries.map(function (item) { return item.time.slice(6); }),
+      axisLine: { lineStyle: { color: '#e6dccf' } }, axisLabel: ADMIN_CHART_TEXT
+    },
+    yAxis: {
+      type: 'value', name: 'ms',
+      splitLine: { lineStyle: { color: '#f3ece3' } }, axisLabel: ADMIN_CHART_TEXT
+    },
+    series: [{
+      type: 'line', smooth: true, symbolSize: 6,
+      data: aiSeries.map(function (item) {
+        return {
+          value: item.ms,
+          itemStyle: { color: item.ok ? '#5d9c43' : '#d24b4b' }
+        };
+      }),
+      lineStyle: { color: '#8b4a22', width: 2 }
+    }]
+  }));
+
+  drawAdminChart('adminChartData', {
+    tooltip: { trigger: 'item' },
+    legend: { bottom: 0, textStyle: ADMIN_CHART_TEXT },
+    series: [{
+      type: 'pie',
+      radius: ['42%', '68%'],
+      center: ['50%', '44%'],
+      itemStyle: { borderColor: '#fff', borderWidth: 2 },
+      label: { color: '#6b5a4a', fontSize: 11 },
+      data: [
+        { name: '饮食', value: d.meals },
+        { name: '体重', value: d.weights },
+        { name: '运动', value: d.sports },
+        { name: '睡眠', value: d.sleeps },
+        { name: '心情', value: d.moods },
+        { name: '报告', value: d.reports }
+      ]
+    }]
+  });
+}
+
+async function loadAdminDashboard() {
+  if (!serverMode || !currentUser) return;
+
+  const libReady = await ensureECharts();
+  const result = await api('/api/admin/overview');
+  if (!result.ok) {
+    showToast((result.data && result.data.error) || '数据大屏加载失败');
+    return;
+  }
+
+  const d = result.data;
+  renderAdminKpis(d);
+  renderAdminLogs(d.logs || []);
+  if (libReady) renderAdminCharts(d);
+}
+
+const adminRefreshBtn = document.getElementById('adminRefresh');
+if (adminRefreshBtn) adminRefreshBtn.addEventListener('click', loadAdminDashboard);
+
+window.addEventListener('resize', function () {
+  Object.keys(adminCharts).forEach(function (id) {
+    adminCharts[id].resize();
   });
 });
 
@@ -9003,6 +9390,8 @@ function generateBeautyPlan(type, target, weeks, times, silent) {
     const row = document.createElement('div');
     row.className = 'plan-day';
     if (doneMap[dateKey]) row.classList.add('done');
+    // 跟随日历：标出今天是哪一格，跨周后自动换成新一周的日期
+    if (dateKey === toISODate(new Date())) row.classList.add('today');
 
     // 每天计划前的勾选框：完成后划线标记，并按日期保存，重新进页面仍保留
     const check = document.createElement('button');
@@ -9019,7 +9408,9 @@ function generateBeautyPlan(type, target, weeks, times, silent) {
     });
 
     const dayEl = document.createElement('span');
-    dayEl.textContent = day;
+    dayEl.className = 'plan-day-label';
+    dayEl.innerHTML = '<b>' + day + '</b><em class="plan-date">' +
+      dateKey.slice(5).replace('-', '/') + '</em>';
 
     const activityEl = document.createElement('span');
     activityEl.textContent = slot === -1 ? '休息 / 轻松散步' : pool[slot % pool.length];
@@ -10854,9 +11245,11 @@ function addWeightRecord(weight) {
   refreshDietViews();
 }
 
-// 曲线数据：只取 15 天内，同一天多次记录以最后一次为准
+// 曲线数据：图表只展示最近 7 天，同一天多次记录以最后一次为准
+const WEIGHT_CHART_DAYS = 7;
+
 function recentWeightData() {
-  const cutoff = toISODate(addDays(new Date(), -(WEIGHT_KEEP_DAYS - 1)));
+  const cutoff = toISODate(addDays(new Date(), -(WEIGHT_CHART_DAYS - 1)));
   const byDate = {};
 
   weightHistory.forEach(function (item) {
@@ -10883,7 +11276,7 @@ function renderWeightChart() {
   } else {
     const data = recentWeightData();
     const latest = data[data.length - 1].weight;
-    const head = '<div class="weight-chart-head"><span>近 15 天体重趋势（' + data.length + ' 天有记录）</span><b>' +
+    const head = '<div class="weight-chart-head"><span>近 7 天体重趋势（' + data.length + ' 天有记录）</span><b>' +
       latest.toFixed(1) + ' kg</b></div>';
 
     if (data.length === 1) {
@@ -11099,6 +11492,11 @@ function updateFoodTotal() {
   const box = document.getElementById('foodTotal');
   if (!pendingMeal) return;
 
+  if (pendingMeal.pending && !(pendingMeal.matches || []).length) {
+    box.textContent = '正在估算热量，稍等片刻就会显示具体数值。';
+    return;
+  }
+
   const count = foodCountValue();
   if (count < 0.25 || count > 10) {
     box.textContent = '份数需在 0.25～10 之间，例如半碗填 0.5。';
@@ -11111,22 +11509,48 @@ function updateFoodTotal() {
     'g，脂肪 ' + (total.fat * count).toFixed(1) + 'g。';
 }
 
-// 弹出分量参考弹窗（source: local 食物库 / ai 模型估算）
-function showFoodModal(meal, text, matches, input, source) {
-  pendingMeal = { meal: meal, text: text, input: input, matches: matches };
-  document.getElementById('foodSummary').textContent =
-    (source === 'ai' ? 'AI 估算到 ' : '本餐识别到 ') + matches.length + ' 种食物：' +
-    matches.map(function (food) {
-      return food.name;
-    }).join('、');
+// 按当前 pendingMeal 重绘弹窗内容（AI 返回后原地更新，不重复弹窗）
+function renderFoodModal() {
+  if (!pendingMeal) return;
 
-  document.getElementById('foodPortions').innerHTML = matches.map(function (food) {
-    return '<div class="food-portion-row"><span>' + food.name + ' · 参考分量 ' + food.portion +
-      '</span><b>' + food.kcal + ' kcal / 份</b></div>';
-  }).join('');
+  const matches = pendingMeal.matches || [];
+  const pending = !!pendingMeal.pending;
+  const summary = document.getElementById('foodSummary');
+  const portions = document.getElementById('foodPortions');
 
-  foodCountInput.value = 1;
+  if (!matches.length) {
+    summary.textContent = pending
+      ? 'AI 正在估算「' + pendingMeal.text + '」的热量，请稍候…'
+      : '这一句没有识别出具体食物，可以换个说法再试。';
+    portions.innerHTML = '<div class="food-portion-row"><span>' +
+      (pending ? '估算中…' : '例如：米饭 鸡胸肉 西兰花') + '</span><b>' +
+      (pending ? '…' : '—') + '</b></div>';
+  } else {
+    summary.textContent = (pendingMeal.source === 'ai' ? 'AI 估算到 ' : '本餐识别到 ') +
+      matches.length + ' 种食物：' + matches.map(function (food) {
+        return food.name;
+      }).join('、') + (pending ? '（其他食物还在估算…）' : '');
+    portions.innerHTML = matches.map(function (food) {
+      return '<div class="food-portion-row"><span>' + food.name + ' · 参考分量 ' + food.portion +
+        '</span><b>' + food.kcal + ' kcal / 份</b></div>';
+    }).join('');
+  }
+
   updateFoodTotal();
+}
+
+// 弹出分量参考弹窗（source: local 食物库 / ai 模型估算；pending 表示 AI 还在估算）
+function showFoodModal(meal, text, matches, input, source, pending) {
+  pendingMeal = {
+    meal: meal,
+    text: text,
+    input: input,
+    matches: matches || [],
+    source: source,
+    pending: !!pending
+  };
+  foodCountInput.value = 1;
+  renderFoodModal();
   openMask(foodMask);
 }
 
@@ -11154,19 +11578,27 @@ function requestMealRecord(meal, rawText, input) {
     return;
   }
 
-  showToast('正在用 AI 估算「' + text + '」的热量…');
+  // 先把弹窗立刻打开（显示估算中），AI 返回后原地补全，
+  // 避免第一次点了没反应、用户以为失败而反复点击
+  showFoodModal(meal, text, matches, input, 'ai', true);
+
   api('/api/ai/food', { method: 'POST', body: { text: text } })
     .then(function (result) {
+      if (!pendingMeal || pendingMeal.text !== text) return;
+
       if (!result.ok || !result.data.foods) {
         // AI 不可用时，至少把本地识别到的食物用上，避免这一餐完全记不上
-        if (matches.length) {
-          showFoodModal(meal, text, matches, input, 'local');
-          return;
+        pendingMeal.pending = false;
+        pendingMeal.matches = matches || [];
+        if (matches.length) pendingMeal.source = 'local';
+        renderFoodModal();
+        if (!matches.length) {
+          showToast((result.data && result.data.error) || '估算失败，换个说法再试');
         }
-        showToast((result.data && result.data.error) || '估算失败，请稍后再试');
         return;
       }
-      const foods = result.data.foods.map(function (food) {
+
+      pendingMeal.matches = result.data.foods.map(function (food) {
         return {
           name: food.name,
           portion: food.portion || '1 份',
@@ -11177,7 +11609,17 @@ function requestMealRecord(meal, rawText, input) {
           fiber: Number(food.fiber) || 0
         };
       });
-      showFoodModal(meal, text, foods, input, 'ai');
+      pendingMeal.source = 'ai';
+      pendingMeal.pending = false;
+      renderFoodModal();
+    })
+    .catch(function () {
+      if (!pendingMeal || pendingMeal.text !== text) return;
+      pendingMeal.pending = false;
+      pendingMeal.matches = matches || [];
+      if (matches.length) pendingMeal.source = 'local';
+      renderFoodModal();
+      showToast('网络不稳定，估算没完成，可以再点一次记录');
     });
 }
 
@@ -11197,6 +11639,11 @@ foodMask.addEventListener('click', function (event) {
 
 document.getElementById('foodSave').addEventListener('click', function () {
   if (!pendingMeal) return;
+
+  if (pendingMeal.pending && !(pendingMeal.matches || []).length) {
+    showToast('正在估算热量，请稍等一两秒');
+    return;
+  }
 
   const count = foodCountValue();
   if (count < 0.25 || count > 10) {
@@ -12400,9 +12847,45 @@ function scoreArticle(article, keyword) {
   }, 0);
 }
 
+// 科普封面：按主题生成写实封面图，加载失败时回退到渐变底 + 线性图标
+const NEWS_COVER_PROMPTS = {
+  diet: 'healthy balanced meal with vegetables, grilled fish, brown rice on a wooden table, natural daylight, food photography',
+  stretch: 'office worker doing shoulder stretch beside a desk in a bright modern office, morning light, lifestyle photo',
+  sleep: 'cozy bedroom at night with soft warm lamp, neatly made bed, calm sleep atmosphere, interior photography',
+  bp: 'home blood pressure monitor on a clean table with a notebook, morning light, health checkup photography',
+  weightloss: 'fitness woman measuring waist with tape in a bright gym, healthy lifestyle, natural light, photography',
+  breakfast: 'healthy breakfast with oatmeal, milk, egg and fresh fruit on a bright kitchen table, food photography',
+  water: 'glass of clear water with lemon on a table, water droplets, fresh cool morning light, photography',
+  cervical: 'person working at laptop with correct upright posture, modern bright workspace, lifestyle photography',
+  eyes: 'young woman resting eyes looking away from computer screen in a bright office, natural light, lifestyle photo',
+  mood: 'person doing deep breathing meditation by a window with green plants, soft morning light, calm mood',
+  immunity: 'fresh vegetables and fruits rich in vitamin C on a table, colorful healthy food, natural light, photography',
+  women: 'warm cozy scene with herbal tea and soft blanket, gentle morning light, self care lifestyle photography'
+};
+
+const NEWS_LIVE_COVERS = [
+  'health news lifestyle photography, fresh fruits and vegetables, bright natural light',
+  'doctor consulting patient in a bright modern clinic, health care photography',
+  'person running outdoors in a green park in the morning, healthy lifestyle, photography',
+  'sleep and wellness flat lay with water glass and notebook, soft natural light, photography'
+];
+
+function newsCoverUrl(prompt) {
+  return 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=' +
+    encodeURIComponent(prompt || 'healthy lifestyle photography, natural light') +
+    '&image_size=landscape_4_3';
+}
+
+function newsCoverHtml(url, color, icon) {
+  return '<div class="news-img ' + color + '">' +
+    '<svg class="icon"><use href="#' + icon + '"/></svg>' +
+    '<img src="' + url + '" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">' +
+    '</div>';
+}
+
 function newsCardHtml(key, article, keyword) {
   return '<article class="news-card" data-article="' + key + '">' +
-    '<div class="news-img ' + article.color + '"><svg class="icon"><use href="#' + article.icon + '"/></svg></div>' +
+    newsCoverHtml(newsCoverUrl(NEWS_COVER_PROMPTS[key]), article.color, article.icon) +
     '<div class="news-body">' +
       '<div class="news-cat ' + article.color + '">' + escapeNewsHtml(article.cat) + '</div>' +
       '<div class="news-title">' + highlightNewsTitle(article.title, keyword) + '</div>' +
@@ -12519,7 +13002,7 @@ function liveNewsCardHtml(item, index) {
   const summary = item.summary || '点击查看这条资讯的完整内容。';
 
   return '<article class="news-card live" data-link="' + escapeNewsHtml(item.link) + '">' +
-    '<div class="news-img ' + color + '"><svg class="icon"><use href="#' + icon + '"/></svg></div>' +
+    newsCoverHtml(newsCoverUrl(NEWS_LIVE_COVERS[index % NEWS_LIVE_COVERS.length]), color, icon) +
     '<div class="news-body">' +
       '<div class="news-cat ' + color + '">' + escapeNewsHtml(item.source || '健康资讯') + '</div>' +
       '<div class="news-title">' + escapeNewsHtml(item.title) + '</div>' +
@@ -12675,6 +13158,7 @@ function refreshAllViews() {
   restoreReport();
   applyGenderView();
   renderPeriodFeel();
+  updateAdminEntry();
 }
 
 // 恢复最近一份体检报告的指标

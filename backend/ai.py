@@ -12,8 +12,11 @@ import base64
 import json
 import os
 import re
+import time
 import urllib.error
 import urllib.request
+
+from . import telemetry
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LOCAL_ENV_PATH = os.path.join(BASE_DIR, "ai_local.env")
@@ -128,7 +131,21 @@ def _build_messages(message, history, context):
     return messages
 
 
-def _post(settings, payload, timeout=TIMEOUT, not_found_hint=""):
+def _post(settings, payload, timeout=TIMEOUT, not_found_hint="", kind="chat"):
+    """包一层计时与监控，真实请求在 _post_raw 里。"""
+    started = time.time()
+    try:
+        result = _post_raw(settings, payload, timeout, not_found_hint)
+    except AiError as error:
+        telemetry.record_ai((time.time() - started) * 1000, False,
+                            settings.get("model", ""), kind, str(error))
+        raise
+    telemetry.record_ai((time.time() - started) * 1000, True,
+                        settings.get("model", ""), kind)
+    return result
+
+
+def _post_raw(settings, payload, timeout=TIMEOUT, not_found_hint=""):
     """向兼容 OpenAI 的服务发请求，返回解析后的 JSON。"""
     request = urllib.request.Request(
         settings["api_base"] + "/chat/completions",
@@ -295,7 +312,8 @@ def estimate_food(text):
         # 推理类模型会先输出思考过程，额度给小了正文会为空
         "max_tokens": 2000,
         "stream": False,
-    }, timeout=30, not_found_hint="当前模型不可用，请确认 HM_AI_MODEL")
+    }, timeout=30, not_found_hint="当前模型不可用，请确认 HM_AI_MODEL",
+        kind="食物热量估算")
 
     return parse_json_object(_message_text(body)), {
         "model": settings["model"],
@@ -380,7 +398,8 @@ def vision(image_bytes, mime, task):
         "max_tokens": VISION_MAX_TOKENS,
         "stream": False,
     }, timeout=VISION_TIMEOUT,
-        not_found_hint="当前模型不支持图片识别，请确认 HM_AI_MODEL 为多模态模型")
+        not_found_hint="当前模型不支持图片识别，请确认 HM_AI_MODEL 为多模态模型",
+        kind="图片识别")
 
     return parse_json_object(_message_text(body)), {
         "configured": True,

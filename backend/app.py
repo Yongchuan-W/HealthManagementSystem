@@ -10,11 +10,12 @@ import json
 import mimetypes
 import os
 import sqlite3
+import time
 import traceback
 from http.server import BaseHTTPRequestHandler
 from urllib.parse import parse_qs, unquote, urlparse
 
-from . import auth, db, routes
+from . import auth, db, routes, telemetry
 from .errors import ApiError
 
 MAX_BODY_BYTES = 14 * 1024 * 1024
@@ -107,6 +108,9 @@ class HealthAppHandler(BaseHTTPRequestHandler):
         self._send_body(200, data, mime, extra=[("Cache-Control", "private, max-age=86400")])
 
     def _handle_api(self, method, path, query):
+        started = time.time()
+        status = 500
+        current_user = None
         try:
             raw_body = self._read_body()
             body = self._parse_json(raw_body)
@@ -114,6 +118,7 @@ class HealthAppHandler(BaseHTTPRequestHandler):
 
             with db.session() as conn:
                 user = auth.user_from_token(conn, token)
+                current_user = user
                 status, payload = routes.dispatch(
                     conn, method, path,
                     user=user, token=token, body=body, query=query,
@@ -132,20 +137,33 @@ class HealthAppHandler(BaseHTTPRequestHandler):
             self._send_json(status, payload, extra=extra)
 
         except ApiError as error:
+            status = error.status
+            if status >= 500:
+                telemetry.record_error("接口异常", path, error.message)
             self._send_json(
-                error.status,
+                status,
                 {"ok": False, "error": error.message, "code": error.code},
             )
         except sqlite3.IntegrityError as error:
+            status = 409
             print("[DB] 约束错误：", error)
+            telemetry.record_error("数据库约束冲突", path, str(error))
             self._send_json(409, {"ok": False, "error": "数据冲突，请检查输入", "code": "conflict"})
         except (ValueError, UnicodeDecodeError) as error:
+            status = 400
             self._send_json(400, {"ok": False, "error": "请求格式有误：%s" % error, "code": "bad_request"})
         except Exception:  # noqa: BLE001 - 兜底，避免服务被单个请求打断
             # 详细堆栈只写服务端日志，返回给前端的内容不暴露异常与路径
             traceback.print_exc()
+            status = 500
+            telemetry.record_error("未捕获异常", path, telemetry.exception_text())
             self._send_json(500, {"ok": False, "error": "服务器开小差了，请稍后再试",
                                   "code": "internal_error"})
+        finally:
+            telemetry.record_request(
+                method, path, status, (time.time() - started) * 1000,
+                current_user["id"] if current_user is not None else None,
+            )
 
     # ---------- 请求体 ----------
     def _read_body(self):
