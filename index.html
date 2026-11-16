@@ -5519,7 +5519,7 @@ body { color: var(--text); }
       <div class="score score-total" data-score="total" title="点击查看分析">
         <span class="score-ico"><svg class="icon"><use href="#i-heart"/></svg></span>
         <div class="score-main">
-          <div class="row"><span>综合健康评分</span><span class="score-num"><b id="scoreTotal">0</b>/100</span></div>
+          <div class="row"><span>综合健康评分</span><span class="score-num"><b id="scoreTotal">—</b><span class="score-den" hidden>/100</span></span></div>
           <div class="bar"><i id="scoreTotalBar"></i></div>
         </div>
       </div>
@@ -5527,7 +5527,7 @@ body { color: var(--text); }
       <div class="score score-diet" data-score="diet" title="点击查看分析">
         <span class="score-ico"><svg class="icon"><use href="#i-leaf"/></svg></span>
         <div class="score-main">
-          <div class="row"><span>饮食健康评分</span><span class="score-num"><b id="scoreDiet">0</b>/100</span></div>
+          <div class="row"><span>饮食健康评分</span><span class="score-num"><b id="scoreDiet">—</b><span class="score-den" hidden>/100</span></span></div>
           <div class="bar"><i id="scoreDietBar"></i></div>
         </div>
       </div>
@@ -5535,7 +5535,7 @@ body { color: var(--text); }
       <div class="score score-sport" data-score="sport" title="点击查看分析">
         <span class="score-ico"><svg class="icon"><use href="#i-run"/></svg></span>
         <div class="score-main">
-          <div class="row"><span>运动完成评分</span><span class="score-num"><b id="scoreSport">0</b>/100</span></div>
+          <div class="row"><span>运动完成评分</span><span class="score-num"><b id="scoreSport">—</b><span class="score-den" hidden>/100</span></span></div>
           <div class="bar"><i id="scoreSportBar"></i></div>
         </div>
       </div>
@@ -5678,31 +5678,31 @@ body { color: var(--text); }
         </div>
 
         <div class="report-result" id="reportResult" hidden>
-          <div class="report-meta">识别结果 · 报告日期 <span id="reportDateText">2026年10月20日</span></div>
+          <div class="report-meta">识别结果 · 报告日期 <span id="reportDateText">—</span></div>
           <div class="report-grid">
             <div class="report-item">
               <div class="label">体重</div>
-              <div class="value"><span id="reportWeight">64.8</span><span class="unit">kg</span></div>
+              <div class="value"><span id="reportWeight">—</span><span class="unit">kg</span></div>
             </div>
             <div class="report-item">
               <div class="label">体脂率</div>
-              <div class="value"><span id="reportFat">24.0</span><span class="unit">%</span></div>
+              <div class="value"><span id="reportFat">—</span><span class="unit">%</span></div>
             </div>
             <div class="report-item">
               <div class="label">BMI</div>
-              <div class="value" id="reportBmi">23.8</div>
+              <div class="value" id="reportBmi">—</div>
             </div>
             <div class="report-item">
               <div class="label">血压</div>
-              <div class="value"><span id="reportBp">112/72</span><span class="unit">mmHg</span></div>
+              <div class="value"><span id="reportBp">—</span><span class="unit">mmHg</span></div>
             </div>
             <div class="report-item">
               <div class="label">血糖</div>
-              <div class="value"><span id="reportGlucose">5.0</span><span class="unit">mmol/L</span></div>
+              <div class="value"><span id="reportGlucose">—</span><span class="unit">mmol/L</span></div>
             </div>
           </div>
           <div class="report-items" id="reportItems" hidden></div>
-          <div class="report-summary" id="reportSummary">综合分析：各项指标总体处于正常范围。建议保持每周 3 次有氧运动，晚餐适当补充优质蛋白，并在 3 个月后复查。</div>
+          <div class="report-summary" id="reportSummary"></div>
           <div class="report-actions">
             <button class="btn-primary" id="applyReport">同步到核心体征</button>
           </div>
@@ -10640,12 +10640,15 @@ function renderSleepWeek() {
   const bars = days.map(function (day) {
     const height = day.hours ? Math.max(4, Math.round(day.hours / maxHours * 64)) : 4;
     return '<div class="sleep-bar" title="' + day.key + '">' +
-      '<em class="em">' + (day.hours ? day.hours.toFixed(1) + 'h' : '—') + '</em>' +
+      '<em class="em">' + (day.hours ? day.hours.toFixed(1) + 'h' : '') + '</em>' +
       '<i style="height:' + height + 'px"></i><span>' + day.label + '</span></div>';
   }).join('');
 
+  const hasAny = days.some(function (day) { return day.hours > 0; });
   box.innerHTML = '<div class="sleep-bars">' + bars + '</div>' +
-    '<div class="sleep-today" style="margin-top:6px">最近 7 天记录，柱高按睡眠小时数显示。</div>';
+    '<div class="sleep-today" style="margin-top:6px">' +
+    (hasAny ? '最近 7 天记录，柱高按睡眠小时数显示。' : '最近 7 天还没有睡眠记录，记录后会显示在这里。') +
+    '</div>';
 }
 
 renderSleepWeek();
@@ -12357,12 +12360,16 @@ function computeBmiScore() {
   return 60;
 }
 
-function setScore(id, value) {
+function setScore(id, value, hasData) {
   const num = Math.max(0, Math.min(100, Math.round(value)));
   const textEl = document.getElementById(id);
   const barEl = document.getElementById(id + 'Bar');
-  if (textEl) textEl.textContent = num;
-  if (barEl) barEl.style.width = num + '%';
+  const denEl = textEl && textEl.parentNode
+    ? textEl.parentNode.querySelector('.score-den') : null;
+  // 没有记录时不显示 0 分，改为「—」，避免新用户一进来就被低分劝退
+  if (textEl) textEl.textContent = hasData ? num : '—';
+  if (denEl) denEl.hidden = !hasData;
+  if (barEl) barEl.style.width = (hasData ? num : 0) + '%';
 }
 
 function updateScores() {
@@ -12371,9 +12378,9 @@ function updateScores() {
   const bmi = computeBmiScore();
   const total = diet * 0.4 + sport * 0.4 + bmi * 0.2;
 
-  setScore('scoreDiet', diet);
-  setScore('scoreSport', sport);
-  setScore('scoreTotal', total);
+  setScore('scoreDiet', diet, diet > 0);
+  setScore('scoreSport', sport, sport > 0);
+  setScore('scoreTotal', total, diet > 0 || sport > 0 || bmi > 0);
 
   // 新用户还没有任何记录时，解释评分为什么偏低，而不是只给一个红色的 20/100
   const hint = document.getElementById('heroHint');
@@ -12507,10 +12514,12 @@ function buildTotalAnalysis() {
 }
 
 function openScoreModal(type) {
+  const dietScore = computeDietScore();
+  const sportScore = computeSportScore();
   const values = {
-    total: Number(document.getElementById('scoreTotal').textContent),
-    diet: computeDietScore(),
-    sport: computeSportScore()
+    total: Math.round(dietScore * 0.4 + sportScore * 0.4 + computeBmiScore() * 0.2),
+    diet: dietScore,
+    sport: sportScore
   };
   const titles = {
     total: '综合健康评分分析',
@@ -12524,9 +12533,10 @@ function openScoreModal(type) {
   };
 
   const value = values[type];
+  const hasData = value > 0;
   document.getElementById('scoreModalTitle').textContent = titles[type];
-  document.getElementById('scoreModalValue').textContent = value;
-  document.getElementById('scoreModalLevel').textContent = scoreLevelText(value);
+  document.getElementById('scoreModalValue').textContent = hasData ? value : '—';
+  document.getElementById('scoreModalLevel').textContent = hasData ? scoreLevelText(value) : '暂无数据';
   document.getElementById('scoreModalBody').innerHTML = bodies[type]();
   openMask(scoreMask);
 }
