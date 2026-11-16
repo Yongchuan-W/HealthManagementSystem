@@ -1905,41 +1905,175 @@ a { text-decoration: none; }
   inset: 0;
   z-index: 100;
   overflow-y: auto;
-  background:
-    radial-gradient(circle at 12% 18%, rgba(78, 211, 176, 0.18), transparent 42%),
-    radial-gradient(circle at 88% 24%, rgba(91, 141, 239, 0.14), transparent 40%),
-    #f6f8fb;
-}
-
-.login-wrap {
-  min-height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 22px;
-  padding: 40px 20px;
+  padding: 40px 24px 56px;
+  background:
+    radial-gradient(70% 55% at 14% 16%, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0) 62%),
+    radial-gradient(58% 46% at 90% 84%, rgba(232, 246, 228, 0.92), rgba(232, 246, 228, 0) 70%),
+    linear-gradient(135deg, #e6f4e2 0%, #f3fbf0 36%, #edf8f3 66%, #f8fcf5 100%);
 }
 
-.login-brand {
+/* 背景装饰：心电曲线（上）与柱状图（左下） */
+.auth-layer::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 130px;
+  transform: translateY(-50%);
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpolyline points='0,70 150,70 175,70 195,30 215,96 235,70 380,70 405,70 425,52 445,86 465,70 620,70 640,70 660,24 680,100 700,70 860,70 885,70 905,54 925,84 945,70 1200,70' fill='none' stroke='%23a9cfb4' stroke-width='2' stroke-linejoin='round'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.auth-layer::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 44%;
+  height: 46%;
+  background-image: repeating-linear-gradient(90deg, rgba(150, 200, 160, 0.26) 0 12px, transparent 12px 30px);
+  -webkit-mask-image: linear-gradient(to top, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0));
+  mask-image: linear-gradient(to top, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0));
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+.login-shell {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
+  justify-content: center;
+  gap: 76px;
+  width: 100%;
+  max-width: 1040px;
+}
+
+.login-hero {
+  flex: 1;
+  min-width: 0;
+  max-width: 430px;
+}
+
+/* 左上角几层半透明“窗口”卡片 */
+.lh-panes {
+  display: flex;
+  align-items: flex-end;
   gap: 10px;
-  font-size: 18px;
-  font-weight: 700;
-  color: #2c3648;
+  height: 104px;
+  margin-bottom: 30px;
+}
+
+.lh-pane {
+  flex: 1;
+  height: 88px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.66);
+  border: 1px solid rgba(255, 255, 255, 0.92);
+  box-shadow: 0 12px 26px rgba(118, 158, 128, 0.14);
+  position: relative;
+  overflow: hidden;
+}
+
+.lh-pane::before {
+  content: '';
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  top: 9px;
+  height: 5px;
+  border-radius: 3px;
+  background: rgba(157, 194, 166, 0.42);
+}
+
+.lh-pane::after {
+  content: '';
+  position: absolute;
+  left: 10px;
+  right: 22px;
+  top: 24px;
+  bottom: 12px;
+  border-radius: 4px;
+  background: repeating-linear-gradient(180deg, rgba(167, 200, 174, 0.28) 0 5px, transparent 5px 13px);
+}
+
+.lh-pane:nth-child(2) { height: 96px; }
+.lh-pane:nth-child(3) { height: 104px; }
+
+.lh-pane .lh-mark {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: #9db9a8;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.lh-pane .lh-mark .icon { width: 16px; height: 16px; stroke-width: 2.2; }
+
+.login-hero h2 {
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #33402f;
+}
+
+.login-hero .lh-sub {
+  margin-top: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #43523d;
+}
+
+.login-hero .lh-desc {
+  margin-top: 7px;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: #7b8a76;
+}
+
+.login-chips {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 10px;
+  margin-top: 26px;
+  margin-left: 320px;
+}
+
+.login-chips span {
+  padding: 7px 16px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 6px 14px rgba(118, 158, 128, 0.12);
+  font-size: 12px;
+  color: #5c6b58;
 }
 
 .login-card {
   width: 380px;
   max-width: 100%;
   background: #fff;
-  border-radius: 18px;
-  padding: 30px;
-  box-shadow: 0 20px 50px rgba(35, 72, 110, 0.12);
+  border-radius: 12px;
+  padding: 34px 32px 28px;
+  border: 1px solid #eef2ee;
+  box-shadow: 0 22px 54px rgba(84, 108, 88, 0.16);
 }
 
-.login-card h1 { font-size: 24px; color: #1f2d3d; }
+.login-card h1 { font-size: 22px; color: #1f2d3d; font-weight: 700; }
 
 .login-sub {
   font-size: 13px;
@@ -1967,9 +2101,9 @@ a { text-decoration: none; }
 .login-field input {
   width: 100%;
   height: 44px;
-  border: 1px solid #e9edf2;
-  border-radius: 9px;
-  background: #f8f9fc;
+  border: 1px solid #e2e7e4;
+  border-radius: 8px;
+  background: #fbfcfb;
   padding: 0 14px;
   font-size: 14px;
   color: #39404f;
@@ -1979,8 +2113,8 @@ a { text-decoration: none; }
 
 .login-field input:focus {
   background: #fff;
-  border-color: #7fdccd;
-  box-shadow: 0 0 0 3px #e6faf5;
+  border-color: #c8a585;
+  box-shadow: 0 0 0 3px #f7ece2;
 }
 
 .login-error {
@@ -2140,8 +2274,51 @@ a { text-decoration: none; }
 .login-btn {
   width: 100%;
   justify-content: center;
-  padding: 12px;
-  font-size: 14px;
+  height: 46px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #a2652f, #8b4a22);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  box-shadow: 0 10px 22px rgba(139, 74, 34, 0.22);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.login-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 6px 14px rgba(139, 74, 34, 0.2);
+}
+
+.login-switch {
+  display: block;
+  width: 100%;
+  margin-top: 14px;
+  border: 0;
+  background: transparent;
+  color: #8b4a22;
+  font-size: 12.5px;
+  padding: 6px 0;
+}
+
+/* 窄屏：标题压缩到卡片上方，隐藏装饰层 */
+@media (max-width: 900px) {
+  .login-shell {
+    flex-direction: column;
+    gap: 22px;
+  }
+  .login-hero {
+    display: block;
+    max-width: 380px;
+    text-align: center;
+  }
+  .lh-panes, .login-chips { display: none; }
+  .login-hero h2 { font-size: 21px; letter-spacing: 0; }
+  .login-hero .lh-sub { margin-top: 8px; font-size: 13px; }
+  .login-hero .lh-desc { display: none; }
+  .auth-layer { padding: 28px 18px 40px; }
 }
 
 .mobile-hint {
@@ -2576,7 +2753,11 @@ a { text-decoration: none; }
   object-fit: cover;
   display: block;
   z-index: 1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
+
+.news-img img.is-ready { opacity: 1; }
 
 .news-img::after {
   content: '健康 · 科普';
@@ -4939,15 +5120,21 @@ body { color: var(--text); }
      登录界面
      ======================================================== -->
 <div class="auth-layer" id="loginView">
-  <div class="login-wrap">
-    <div class="login-brand">
-      <div class="logo"><svg class="icon"><use href="#i-pulse"/></svg></div>
-      <span>健康管理系统</span>
-    </div>
+  <div class="login-shell">
+    <section class="login-hero">
+      <div class="lh-panes">
+        <span class="lh-pane"></span>
+        <span class="lh-pane"></span>
+        <span class="lh-pane"><i class="lh-mark"><svg class="icon"><use href="#i-activity"/></svg></i></span>
+      </div>
+      <h2>数据记录系统</h2>
+      <p class="lh-sub">记录每一次数据，连接每一项管理</p>
+      <p class="lh-desc">统一记录、高效查看、持续追踪，让日常管理更清晰</p>
+    </section>
 
     <div class="login-card">
       <h1 id="authTitle">欢迎回来</h1>
-      <p class="login-sub" id="authSub">登录后开始科学管理你的健康</p>
+      <p class="login-sub" id="authSub">登录你的账户，继续管理数据记录</p>
 
       <div class="login-notice" id="loginNotice" hidden></div>
 
@@ -4977,6 +5164,12 @@ body { color: var(--text); }
 
       <button class="btn-primary login-btn" type="button" id="demoEnter" hidden>进入本地演示（不校验账号）</button>
     </div>
+  </div>
+
+  <div class="login-chips">
+    <span>记录管理</span>
+    <span>数据看板</span>
+    <span>协同追踪</span>
   </div>
 </div>
 
@@ -8246,18 +8439,55 @@ document.querySelectorAll('.meal-btn').forEach(function (btn) {
         识别结果仍为示例数据，接入豆包视觉模型 / OCR 后可替换。
    ========================================================== */
 
+// 上传前先把图片压小：手机原图常有 3–10MB，压缩后约 150KB，
+// 上传更快、模型读取也更稳，还能顺带把 iPhone 的 HEIC 转成 JPEG
+function compressImageFile(file, maxSide, quality) {
+  return new Promise(function (resolve) {
+    if (!file || !file.type || file.type.indexOf('image/') !== 0) {
+      resolve(file);
+      return;
+    }
+    const reader = new FileReader();
+    reader.onerror = function () { resolve(file); };
+    reader.onload = function () {
+      const image = new Image();
+      image.onerror = function () { resolve(file); };
+      image.onload = function () {
+        const scale = Math.min(1, maxSide / Math.max(image.width, image.height));
+        if (scale >= 1 && file.size < 400 * 1024) {
+          resolve(file);
+          return;
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(image.width * scale));
+        canvas.height = Math.max(1, Math.round(image.height * scale));
+        const context = canvas.getContext('2d');
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(function (blob) {
+          if (!blob) { resolve(file); return; }
+          const name = (file.name || 'photo').replace(/\.[^.]+$/, '') + '.jpg';
+          resolve(new File([blob], name, { type: 'image/jpeg' }));
+        }, 'image/jpeg', quality);
+      };
+      image.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 // 上传图片到后端，返回可访问的图片地址；静态演示模式不落库，返回 null
-function uploadImage(file) {
-  if (!serverMode) return Promise.resolve(null);
+async function uploadImage(file) {
+  if (!serverMode) return null;
+  const prepared = await compressImageFile(file, 1280, 0.82);
   const headers = {
-    'Content-Type': file.type || 'application/octet-stream',
-    'X-File-Name': encodeURIComponent(file.name || 'upload')
+    'Content-Type': prepared.type || 'application/octet-stream',
+    'X-File-Name': encodeURIComponent(prepared.name || 'upload')
   };
   return fetch('/api/uploads', {
     method: 'POST',
     credentials: 'same-origin',
     headers: headers,
-    body: file
+    body: prepared
   }).then(function (response) {
     return response.json().then(function (data) {
       if (!response.ok || !data.file || !data.file.url) {
@@ -8356,12 +8586,37 @@ async function recognizeMealImage(url) {
   dietMealRow.hidden = true;
   dietFillMeal.hidden = true;
 
-  const response = await api('/api/ai/vision', {
-    method: 'POST',
-    body: { task: 'meal', imageUrl: url }
-  });
+  async function askVision() {
+    return api('/api/ai/vision', {
+      method: 'POST',
+      body: { task: 'meal', imageUrl: url }
+    });
+  }
+
+  let response = null;
+  try {
+    response = await askVision();
+    // 大模型偶尔超时或返回 5xx，自动再试一次通常就能成功
+    if (!response.ok) {
+      dietStatus.textContent = '第一次识别超时，正在自动重试...';
+      response = await askVision();
+    }
+  } catch (error) {
+    try {
+      dietStatus.textContent = '网络有点慢，正在自动重试...';
+      response = await askVision();
+    } catch (again) {
+      response = null;
+    }
+  }
 
   dietStatus.className = 'upload-status';
+
+  if (!response) {
+    dietStatus.textContent = '网络不太稳定，识别没能完成。图片已保存，可在下方手动记录。';
+    showToast('网络不稳定，请稍后再试或手动记录');
+    return;
+  }
 
   if (!response.ok) {
     const message = (response.data && response.data.error) || '图片识别失败';
@@ -12919,11 +13174,37 @@ function scoreArticle(article, keyword) {
   }, 0);
 }
 
-// 科普封面：使用本站自己的封面图（assets/news/<主题>.jpg），加载失败时回退到渐变图标
+// 封面池：每个主题在几张真实照片之间轮换，点「换一批」整页换图
+const NEWS_COVER_POOL = {
+  diet: ['diet', 'breakfast', 'immunity'],
+  breakfast: ['breakfast', 'diet', 'water'],
+  sleep: ['sleep', 'mood', 'women'],
+  bp: ['bp', 'cervical', 'weightloss'],
+  weightloss: ['weightloss', 'stretch', 'cervical'],
+  water: ['water', 'immunity', 'breakfast'],
+  stretch: ['stretch', 'cervical', 'weightloss'],
+  cervical: ['cervical', 'stretch', 'eyes'],
+  eyes: ['eyes', 'cervical', 'mood'],
+  mood: ['mood', 'sleep', 'women'],
+  immunity: ['immunity', 'diet', 'water'],
+  women: ['women', 'mood', 'sleep']
+};
+
+let newsCoverSeed = Math.floor(Math.random() * 12);
+
+function newsCoverPick(key) {
+  const pool = NEWS_COVER_POOL[key] || [key];
+  const code = key.charCodeAt(0) + key.length;
+  return pool[(newsCoverSeed + code) % pool.length];
+}
+
+// 科普封面：本站封面图，加载完成才淡入；加载慢或失败时保留下面的渐变图标
 function newsCoverHtml(key, color, icon) {
+  const pick = newsCoverPick(key);
   return '<div class="news-img ' + color + '">' +
     '<svg class="icon"><use href="#' + icon + '"/></svg>' +
-    '<img src="/assets/news/' + key + '.jpg" alt="" loading="lazy" onerror="this.remove()">' +
+    '<img src="/assets/news/' + pick + '.jpg" alt="" loading="lazy" ' +
+    'onload="this.classList.add(\'is-ready\')" onerror="this.remove()">' +
     '</div>';
 }
 
@@ -13103,7 +13384,11 @@ async function refreshLiveNews(manual) {
 }
 
 document.getElementById('newsRefresh').addEventListener('click', function () {
-  refreshLiveNews(true);
+  newsCoverSeed += 1;
+  refreshLiveNews(true).then(function (ok) {
+    // 没取到网络资讯时，至少把内置卡片的封面换一批
+    if (!ok) filterNews();
+  });
 });
 
 // 点击网络资讯卡片：直接打开原文
