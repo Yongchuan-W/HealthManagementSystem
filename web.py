@@ -1618,7 +1618,8 @@ a { text-decoration: none; }
 .family-wrap { max-width: none; margin: 0; }
 
 .reminder-card {
-  background: #e2eada;
+  background: linear-gradient(135deg, #f8f2e4, #f4f7ee 72%);
+  border: 1px solid #e5dac2;
   border-radius: 16px;
   box-shadow: var(--shadow);
   padding: 24px;
@@ -3483,9 +3484,9 @@ body { color: var(--text); }
 .macro { background: #eef3e8; }
 .macro .label { color: #6b7a64; }
 .macro .value { color: #455c3d; }
-.meal-tag.morning { background: #e6f0ea; color: #0e7c74; }
-.meal-tag.noon { background: #e4edda; color: #5d7a4f; }
-.meal-tag.night { background: #f2f6ec; color: #455c3d; }
+.meal-tag.morning { background: #e3f0ec; color: #0e7c74; }
+.meal-tag.noon { background: #fbf0d8; color: #a2793f; }
+.meal-tag.night { background: #eeeaf7; color: #6e5fa8; }
 .meal input { background: #f7faf3; }
 .meal input:focus { box-shadow: 0 0 0 2px #c6d2b9; }
 .tip-card { background: #edf2e8; border-color: #d8e2cd; }
@@ -3564,7 +3565,7 @@ body { color: var(--text); }
 .tag .x:hover { background: rgba(61, 83, 54, 0.12); }
 
 /* 家人健康 */
-.family-card { background: #e2eada; border-color: #d1dcc6; }
+.family-card { background: #dcebe6; border-color: #c2dad3; }
 
 /* 家人档案空状态 */
 .family-empty {
@@ -3580,11 +3581,11 @@ body { color: var(--text); }
 .family-empty p { font-size: 14px; font-weight: 600; color: #1f2a1c; margin-bottom: 4px; }
 .family-empty span { display: block; font-size: 12.5px; margin-bottom: 12px; }
 .family-title .icon { color: #455c3d; }
-.family-card .btn-soft { border-color: #c6d2b9; color: #3d5336; }
-.family-card .btn-soft:hover { background: #dfe9d5; }
-.family-card .tag { background: #dfe9d5; color: #3d5336; }
-.family-card .tag.add { background: #fff; border-color: #c6d2b9; color: #455c3d; }
-.family-card .tag-option.selected { background: #dfe9d5; border-color: #b9caab; color: #3d5336; }
+.family-card .btn-soft { border-color: #bcd6ce; color: #0b655f; }
+.family-card .btn-soft:hover { background: #d0e6df; }
+.family-card .tag { background: #d0e6df; color: #0b655f; }
+.family-card .tag.add { background: #fff; border-color: #bcd6ce; color: #0e7c74; }
+.family-card .tag-option.selected { background: #d0e6df; border-color: #a9ccc2; color: #0b655f; }
 .tip-blue { background: #eef6fd; color: #5f7f96; }
 .reminder-count { background: #f2f6ec; color: #455c3d; }
 .reminder-badge.today { background: #f2f6ec; color: #455c3d; }
@@ -3656,10 +3657,10 @@ body { color: var(--text); }
 .ob-field input:focus, .ob-field select:focus { border-color: #b9caab; }
 
 /* 聊天 */
-.chat-head { background: linear-gradient(135deg, #5d9c43, #3f9c72); }
-.msg.user { background: #455c3d; }
-.chat-send { background: #455c3d; }
-.chat-send:hover { background: #8a5a26; }
+.chat-head { background: linear-gradient(135deg, #0e7c74, #455c3d); }
+.msg.user { background: linear-gradient(135deg, #2f9a8f, #0e7c74); }
+.chat-send { background: #0e7c74; }
+.chat-send:hover { background: #0b655f; }
 .chat-input input:focus { border-color: #b9caab; }
 .chat-body { background: #f7faf3; }
 .msg.bot { color: #5c4d40; }
