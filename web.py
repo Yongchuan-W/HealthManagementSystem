@@ -4012,9 +4012,9 @@ body { color: var(--text); }
   padding: 8px 6px 0;
   border-radius: 10px;
   background:
-    repeating-linear-gradient(to top, rgba(69, 92, 61, 0.07) 0 1px, rgba(255, 255, 255, 0) 1px 22px),
-    linear-gradient(180deg, #fbfdf8, #f4f8ee);
-  box-shadow: inset 0 0 0 1px #e5ecdd;
+    repeating-linear-gradient(to top, rgba(63, 109, 145, 0.08) 0 1px, rgba(255, 255, 255, 0) 1px 22px),
+    linear-gradient(180deg, #fbfdfe, #f1f7fb);
+  box-shadow: inset 0 0 0 1px #e2ecf3;
 }
 
 .mini-bar {
@@ -4030,20 +4030,20 @@ body { color: var(--text); }
 .mini-bar i {
   display: block;
   border-radius: 6px 6px 2px 2px;
-  background: linear-gradient(180deg, #8fb8a8 0%, #5d8a70 48%, #455c3d 100%);
-  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.25);
+  background: linear-gradient(180deg, #a6c8de 0%, #6f9fbe 48%, #3f6d91 100%);
+  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.3);
   min-height: 4px;
 }
 
-.mini-bar:last-child i {
-  background: linear-gradient(180deg, #e3c48f 0%, #c9a066 50%, #a87d47 100%);
+.mini-bar.empty i {
+  background: linear-gradient(180deg, #d6e7f1 0%, #bcd7e6 55%, #9dbdd3 100%);
 }
 
 .mini-bar:hover i { filter: brightness(1.06); }
 
 .mini-bar span { font-size: 10px; color: #8a9984; }
 
-.mini-bar em { font-style: normal; font-size: 10px; color: #455c3d; }
+.mini-bar em { font-style: normal; font-size: 10px; color: #3f6d91; }
 
 /* 运动：目标与数据填写 */
 .sport-inputs {
@@ -5093,8 +5093,8 @@ body { color: var(--text); }
 .recent-advice .ra-head { font-weight: 700; color: #4a5c3c; }
 .recent-advice .ra-empty { color: #5e6c58; }
 .mini-bar { border: 0; background: none; padding: 0; font: inherit; color: inherit; cursor: pointer; border-radius: 6px; }
-.mini-bar:hover { background: rgba(69, 92, 61, .06); }
-.mini-bar.active { background: rgba(69, 92, 61, .12); }
+.mini-bar:hover { background: rgba(63, 109, 145, .07); }
+.mini-bar.active { background: rgba(63, 109, 145, .13); }
 .day-meal-list { display: flex; flex-direction: column; gap: 8px; }
 .day-meal-item { padding: 9px 12px; border-radius: 10px; background: #faf6f0; border: 1px solid #f0e6d8; font-size: 13px; color: #5d4a3a; display: flex; justify-content: space-between; gap: 10px; }
 .day-meal-item b { color: #455c3d; white-space: nowrap; }
@@ -13047,7 +13047,8 @@ function renderWeekCompare() {
   html += '<div class="mini-bars">';
   days.forEach(function (day) {
     const height = day.kcal ? Math.max(4, Math.round(day.kcal / maxKcal * 64)) : 4;
-    html += '<button type="button" class="mini-bar" data-date="' + day.key + '">' +
+    html += '<button type="button" class="mini-bar' + (day.kcal ? '' : ' empty') +
+      '" data-date="' + day.key + '">' +
       '<em>' + (day.kcal ? Math.round(day.kcal) : '') +
       '</em><i style="height:' + height + 'px"></i><span>' + day.label + '</span></button>';
   });
