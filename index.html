@@ -357,6 +357,26 @@ a { text-decoration: none; }
   pointer-events: none;
 }
 
+/* 空状态提示与可点击引导 */
+.hint-link {
+  border: 0;
+  background: none;
+  padding: 0 2px;
+  font-size: inherit;
+  color: var(--teal-dark);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.hint-link:hover { color: #4d2610; }
+
+.vitals-tip {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
 /* 三条评分：同一行排布，图标 + 标题 + 进度条 + 分数 */
 .score-group {
   position: relative;
@@ -5512,7 +5532,10 @@ body { color: var(--text); }
         <p>遇见更好的自己</p>
         <div class="hero-underline"></div>
       </div>
-      <p class="hero-hint" id="heroHint">还没有饮食与运动记录，记录后评分会自动更新。</p>
+      <p class="hero-hint" id="heroHint">还没有饮食与运动记录：综合评分 = 饮食 40% + 运动 40% + BMI 20%，记录后自动更新。
+        <button type="button" class="hint-link" data-goto="diet">记录饮食</button>
+        <button type="button" class="hint-link" data-goto="sport">记录运动</button>
+      </p>
     </div>
 
     <div class="score-group">
@@ -5644,6 +5667,10 @@ body { color: var(--text); }
             <span id="bmiFormulaValue">填写身高体重后自动计算</span><br>
             <span>参考标准：中国成人 BMI 18.5–23.9 为正常（WS/T 428-2013）；血压、血糖参考《中国高血压防治指南》《中国 2 型糖尿病防治指南》。异常结果请以医院检查为准。</span>
           </div>
+
+          <p class="vitals-tip" id="vitalsTip" hidden>还没填写身高，BMI 与体重参考范围要等身高补充后才能计算。
+            <button type="button" class="hint-link" id="vitalsTipBtn">去填写身高</button>
+          </p>
         </div>
       </div>
 
@@ -6384,7 +6411,7 @@ body { color: var(--text); }
       <div class="field-row">
         <div class="field">
           <label for="pHeight">身高（cm）</label>
-          <input id="pHeight" type="number" value="165">
+          <input id="pHeight" type="number" placeholder="如 165">
         </div>
         <div class="field">
           <label for="pWeight">体重（kg）</label>
@@ -7901,6 +7928,22 @@ document.getElementById('onboardingForm').addEventListener('submit', function (e
 const navButtons = Array.from(document.querySelectorAll('#nav button'));
 const pages = Array.from(document.querySelectorAll('.page'));
 
+// 空状态里的引导按钮：跳转页面 / 聚焦输入框
+document.addEventListener('click', function (event) {
+  const goto = event.target.closest('[data-goto]');
+  if (goto) {
+    switchPage(goto.getAttribute('data-goto'));
+    return;
+  }
+  const focus = event.target.closest('[data-focus]');
+  if (focus) {
+    const el = document.getElementById(focus.getAttribute('data-focus'));
+    if (el) el.focus();
+  }
+});
+
+document.getElementById('vitalsTipBtn').addEventListener('click', openProfile);
+
 function switchPage(name) {
   // 数据大屏仅管理员可进入，普通用户即使触发也直接忽略
   if (name === 'admin' && !(serverMode && currentUser && currentUser.role === 'admin')) {
@@ -8912,8 +8955,9 @@ function renderReportResult(record, date) {
       : Math.round(reportMetrics.systolic) + '/' + Math.round(reportMetrics.diastolic);
   document.getElementById('reportGlucose').textContent = reportText(reportMetrics.glucose);
 
-  const bmi = reportNumber(record.bmi) || (reportMetrics.weight
-    ? reportMetrics.weight / Math.pow(currentHeightMeters(), 2)
+  const reportHeightM = currentHeightMeters();
+  const bmi = reportNumber(record.bmi) || (reportMetrics.weight && reportHeightM
+    ? reportMetrics.weight / (reportHeightM * reportHeightM)
     : null);
   document.getElementById('reportBmi').textContent = reportText(bmi);
 
@@ -9064,8 +9108,9 @@ document.getElementById('applyReport').addEventListener('click', async function 
     document.getElementById('weightValue').textContent = reportMetrics.weight.toFixed(1);
     // 体检同步的体重也进入趋势记录
     addWeightRecord(reportMetrics.weight);
-    // BMI 由体重和身高算出，不直接写入固定值
-    setBmiDisplay(reportMetrics.weight / Math.pow(currentHeightMeters(), 2));
+    // BMI 由体重和身高算出，身高未填写时不显示数值
+    const reportHeightM = currentHeightMeters();
+    setBmiDisplay(reportHeightM ? reportMetrics.weight / (reportHeightM * reportHeightM) : 0);
   }
 
   if (reportMetrics.fat !== null) {
@@ -10577,7 +10622,8 @@ function renderSleepToday() {
   const box = document.getElementById('sleepToday');
 
   if (!entry) {
-    box.textContent = '还没有记录今天的睡眠。';
+    box.innerHTML = '还没有记录今天的睡眠。' +
+      '<button type="button" class="hint-link" data-focus="sleepHour">现在记录</button>';
     document.getElementById('sleepHour').value = '';
     document.getElementById('sleepMinute').value = '';
     return;
@@ -11434,6 +11480,11 @@ vitalMask.addEventListener('click', function (event) {
 });
 
 function setBmiDisplay(bmi) {
+  if (!bmi || !isFinite(bmi)) {
+    document.getElementById('bmiValue').textContent = '—';
+    document.getElementById('bmiBadge').hidden = true;
+    return;
+  }
   document.getElementById('bmiValue').textContent = bmi.toFixed(1);
   const badge = document.getElementById('bmiBadge');
   badge.hidden = false;
@@ -11455,7 +11506,8 @@ function setBmiDisplay(bmi) {
 }
 
 function currentHeightMeters() {
-  return (parseFloat(document.getElementById('pHeight').value) || 165) / 100;
+  const heightCm = currentHeightCm();
+  return heightCm > 0 ? heightCm / 100 : 0;
 }
 
 /* ==========================================================
@@ -11467,7 +11519,7 @@ function currentHeightCm() {
   const saved = parseFloat(readProfile().height);
   if (saved > 0) return saved;
   const input = parseFloat(document.getElementById('pHeight').value);
-  return input > 0 ? input : 165;
+  return input > 0 ? input : 0;
 }
 
 function setRangeState(id, text, warn) {
@@ -11493,10 +11545,14 @@ function renderVitalRanges() {
   // 体重：按正常 BMI 区间反推
   const lowWeight = 18.5 * heightM * heightM;
   const highWeight = 23.9 * heightM * heightM;
-  document.getElementById('refWeight').textContent =
-    lowWeight.toFixed(1) + '–' + highWeight.toFixed(1) + ' kg';
+  document.getElementById('refWeight').textContent = heightM
+    ? lowWeight.toFixed(1) + '–' + highWeight.toFixed(1) + ' kg'
+    : '填写身高后显示';
 
-  if (weight) {
+  const tip = document.getElementById('vitalsTip');
+  if (tip) tip.hidden = heightM > 0;
+
+  if (weight && heightM) {
     if (weight < lowWeight) {
       setRangeState('stateWeight', '偏低', true);
       warnings.push('体重 ' + weight.toFixed(1) + ' kg 低于参考下限 ' + lowWeight.toFixed(1) +
@@ -11618,7 +11674,8 @@ function applyWeightChange(weight) {
   profile.weight = weight;
   saveData('profile', profile);
 
-  const bmi = weight / Math.pow(currentHeightMeters(), 2);
+  const heightM = currentHeightMeters();
+  const bmi = heightM ? weight / (heightM * heightM) : 0;
   setBmiDisplay(bmi);
   renderVitalRanges();
   addWeightRecord(weight);
@@ -11636,8 +11693,12 @@ document.getElementById('vitalSave').addEventListener('click', function () {
     }
     const bmi = applyWeightChange(value);
     pushVitalRecord('weight', value.toFixed(1) + ' kg');
-    pushVitalRecord('bmi', bmi.toFixed(1));
-    showToast('体重已更新为 ' + value.toFixed(1) + ' kg');
+    if (bmi > 0) {
+      pushVitalRecord('bmi', bmi.toFixed(1));
+      showToast('体重已更新为 ' + value.toFixed(1) + ' kg');
+    } else {
+      showToast('体重已更新；填写身高后才能计算 BMI');
+    }
   } else if (currentVital === 'fat') {
     const value = parseFloat(document.getElementById('vf_fat').value);
     if (!value || value < 3 || value > 60) {
@@ -11648,6 +11709,10 @@ document.getElementById('vitalSave').addEventListener('click', function () {
     pushVitalRecord('fat', value.toFixed(1) + ' %');
     showToast('体脂率已更新为 ' + value.toFixed(1) + '%');
   } else if (currentVital === 'bmi') {
+    if (!heightM) {
+      showToast('请先在「个人信息」里填写身高，再录入 BMI');
+      return;
+    }
     const bmi = parseFloat(document.getElementById('vf_bmi').value);
     if (!bmi || bmi < 12 || bmi > 45) {
       showToast('请输入 12-45 之间的 BMI');
@@ -12254,12 +12319,12 @@ function getActivityFactor() {
 // 按个人资料 + 体重变化 + 运动量计算每日营养目标（Mifflin-St Jeor，年龄按 22 岁估算）
 function getNutritionTargets() {
   const weight = getCurrentWeight();
-  const height = parseFloat(document.getElementById('pHeight').value) || 165;
+  const height = currentHeightCm();
   const gender = document.getElementById('pGender').value || '女';
   const activity = getActivityFactor();
 
-  // 还没有体重（未建档 / 未记录）时不编造目标值，交给界面显示「—」
-  if (!weight) {
+  // 没有体重或身高时不算目标值，避免用编造的身高（如 165cm）算出错误热量
+  if (!weight || !height) {
     return {
       kcal: 0, bmr: 0, activity: activity.factor,
       protein: 0, carb: 0, fat: 0, fiber: 25, ready: false
@@ -12326,7 +12391,8 @@ function computeSportScore() {
 function computeBmiScore() {
   const weight = getCurrentWeight();
   if (!weight) return 0;
-  const height = (parseFloat(document.getElementById('pHeight').value) || 165) / 100;
+  const height = currentHeightMeters();
+  if (!height) return 0;
   const bmi = weight / (height * height);
 
   if (bmi >= 18.5 && bmi < 24) return 100;
@@ -12475,10 +12541,11 @@ function buildTotalAnalysis() {
   const bmi = computeBmiScore();
   const weight = getCurrentWeight();
   const height = currentHeightMeters();
-  const bmiValue = weight / (height * height);
+  const bmiValue = height > 0 ? weight / (height * height) : 0;
 
   const html = ['<p>综合评分 = 饮食 40% + 运动 40% + BMI 20%。当前：饮食 ' + diet +
-    ' 分、运动 ' + sport + ' 分、BMI ' + bmi + ' 分（' + bmiValue.toFixed(1) + '）。</p>'];
+    ' 分、运动 ' + sport + ' 分、BMI ' + bmi + ' 分（' +
+    (bmiValue > 0 ? bmiValue.toFixed(1) : '待填写身高') + '）。</p>'];
 
   const items = [];
   if (diet < 60) items.push('饮食评分偏低：优先补足蛋白质与蔬菜，减少含糖饮料。');
