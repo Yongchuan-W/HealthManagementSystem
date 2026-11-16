@@ -112,7 +112,19 @@ def create_session(conn, user_id):
 
 
 def tls_enabled():
-    """配置了可用的 TLS 证书时返回 True（用于给 Cookie 加 Secure 标记）。"""
+    """判断当前是否通过 HTTPS 提供服务（用于给 Cookie 加 Secure 标记）。
+
+    满足任一条件即可：显式设置 HM_COOKIE_SECURE、HM_PUBLIC_URL 为 https 地址，
+    或配置了可用的 TLS 证书。本地 http 调试默认不加 Secure，避免登录态失效。
+    """
+    flag = os.environ.get("HM_COOKIE_SECURE", "").strip().lower()
+    if flag in ("1", "true", "yes", "on"):
+        return True
+
+    public_url = os.environ.get("HM_PUBLIC_URL", "").strip().lower()
+    if public_url.startswith("https://"):
+        return True
+
     cert = os.environ.get("HM_TLS_CERT", "").strip()
     key = os.environ.get("HM_TLS_KEY", "").strip()
     return bool(cert and key and os.path.isfile(cert) and os.path.isfile(key))

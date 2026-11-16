@@ -291,6 +291,15 @@ a { text-decoration: none; }
   margin-top: 7px;
 }
 
+/* 新用户提示：还没记录时解释评分为何偏低 */
+.hero-hint {
+  margin-top: 7px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: #6f7f66;
+  letter-spacing: 0.2px;
+}
+
 /* 顶部插画与角落装饰在紧凑版中不再展示 */
 .hero-illus, .hero-leaf, .hero-leaf-sm, .hero-bowl, .hero-glass { display: none; }
 .hero-illus {
@@ -3097,6 +3106,12 @@ a { text-decoration: none; }
 .fab.dragging .ai-run { animation-play-state: paused; }
 
 .fab:hover { transform: scale(1.06); }
+
+/* 弹窗打开时隐藏悬浮球，避免遮挡按钮与上传入口 */
+body:has(.mask.open) .fab {
+  opacity: 0;
+  pointer-events: none;
+}
 .fab .icon { width: 26px; height: 26px; }
 
 .fab .dot {
@@ -3431,7 +3446,21 @@ body { color: var(--text); }
 .tag .x:hover { background: rgba(110, 58, 24, 0.12); }
 
 /* 家人健康 */
-.family-card { background: #eaf3fb; border-color: #d8e7f4; }
+.family-card { background: #fff; border-color: var(--line); }
+
+/* 家人档案空状态 */
+.family-empty {
+  grid-column: 1 / -1;
+  padding: 26px 16px;
+  border: 1px dashed #e2d6c8;
+  border-radius: 12px;
+  background: #fbfaf7;
+  text-align: center;
+  color: #8b7d70;
+}
+
+.family-empty p { font-size: 14px; font-weight: 600; color: #5b4636; margin-bottom: 4px; }
+.family-empty span { display: block; font-size: 12.5px; margin-bottom: 12px; }
 .family-title .icon { color: #5f8fae; }
 .family-card .btn-soft { border-color: #cfe0ef; color: #4f7898; }
 .family-card .btn-soft:hover { background: #f6faff; }
@@ -3568,18 +3597,22 @@ body { color: var(--text); }
 
 @media (max-width: 560px) {
   .container { padding: 0 16px; }
-  .hero { padding: 16px 16px 18px; flex-direction: column; align-items: stretch; gap: 10px; }
-  .hero-title h1 { font-size: 21px; letter-spacing: 2px; }
-  .hero-title p { font-size: 12px; }
-  .hero-underline { width: 38px; height: 3px; margin-top: 6px; }
-  .score-group { grid-template-columns: 1fr; gap: 6px; }
-  .score { grid-template-columns: 30px minmax(0, 1fr); padding: 9px 10px; gap: 9px; }
-  .score .score-ico { width: 28px; height: 28px; }
-  .score .row { font-size: 12px; margin-bottom: 5px; }
-  .side-nav button { padding: 7px 8px; font-size: 13px; }
-  .score .score-ico .icon { width: 14px; height: 14px; }
+  /* 顶部横幅压缩：标题、提示与三条评分同屏，避免首屏被挤占 */
+  .hero { padding: 10px 12px; flex-direction: column; align-items: stretch; gap: 6px; }
+  .hero-title h1 { font-size: 19px; letter-spacing: 1px; }
+  .hero-title p { font-size: 11.5px; margin-top: 2px; }
+  .hero-underline { width: 34px; height: 2px; margin-top: 4px; }
+  .hero-hint { margin-top: 4px; font-size: 10.5px; }
+  .score-group { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+  .score { grid-template-columns: minmax(0, 1fr); padding: 7px 8px; gap: 0; }
+  .score .score-ico { display: none; }
+  .score .row { font-size: 10.5px; margin-bottom: 4px; gap: 2px; }
+  .score .row span:first-child { overflow: hidden; text-overflow: ellipsis; }
   .score .score-num { font-size: 9px; }
-  .score .score-num b { font-size: 15px; }
+  .score .score-num b { font-size: 14px; }
+  .score .bar { height: 4px; }
+  .side-nav button { padding: 7px 8px; font-size: 13px; }
+  .fab { width: 52px; height: 52px; right: 16px; bottom: 16px; }
   .macros { grid-template-columns: repeat(2, 1fr); }
   .female-card { padding: 18px; }
   .family-card { padding: 18px; }
@@ -3606,10 +3639,12 @@ body { color: var(--text); }
 
 .vital-edit {
   border: none;
+  border-radius: 6px;
   background: transparent;
   color: #a98a72;
-  font-size: 11px;
-  padding: 0;
+  font-size: 12px;
+  padding: 6px 8px;
+  margin: -6px -8px;
   cursor: pointer;
 }
 
@@ -3978,10 +4013,25 @@ body { color: var(--text); }
 .news-body .read-more {
   display: inline-block;
   margin-top: 10px;
+  margin-right: 12px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: inherit;
   font-size: 12px;
   color: #8b4a22;
   font-weight: 600;
+  cursor: pointer;
 }
+
+.news-body .read-more:focus-visible,
+.news-body .news-quick:focus-visible {
+  outline: 2px solid #8b4a22;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.news-body .news-quick { margin-left: 4px; }
 
 /* 关怀提醒删除 */
 .reminder-del {
@@ -5292,7 +5342,7 @@ body { color: var(--text); }
           <h2><svg class="icon"><use href="#i-user"/></svg>基本信息</h2>
           <div class="ob-field">
             <label for="obName">昵称</label>
-            <input id="obName" type="text" value="张三">
+            <input id="obName" type="text" placeholder="例如 小美">
           </div>
           <div class="ob-field">
             <label for="obEmail">QQ 邮箱（忘记密码时接收验证码）</label>
@@ -5308,17 +5358,17 @@ body { color: var(--text); }
             </div>
             <div class="ob-field">
               <label for="obAge">年龄</label>
-              <input id="obAge" type="number" value="28" min="1" max="120">
+              <input id="obAge" type="number" placeholder="28" min="1" max="120">
             </div>
           </div>
           <div class="ob-row">
             <div class="ob-field">
               <label for="obHeight">身高（cm）</label>
-              <input id="obHeight" type="number" value="165">
+              <input id="obHeight" type="number" placeholder="165">
             </div>
             <div class="ob-field">
               <label for="obWeight">体重（kg）</label>
-              <input id="obWeight" type="number" step="0.1" value="60.0">
+              <input id="obWeight" type="number" step="0.1" placeholder="60.0">
             </div>
           </div>
         </section>
@@ -5475,7 +5525,7 @@ body { color: var(--text); }
   <div class="side-user" id="userBtn" title="个人信息">
     <div class="avatar" id="sideAvatar"><svg class="icon"><use href="#i-user"/></svg></div>
     <div class="side-user-info">
-      <span class="side-user-name" id="sideUserName">张三</span>
+      <span class="side-user-name" id="sideUserName">未登录</span>
       <span class="side-user-sub" id="sideUserSub">女 · 165cm</span>
     </div>
     <svg class="icon caret"><use href="#i-chevron"/></svg>
@@ -5493,6 +5543,7 @@ body { color: var(--text); }
         <p>遇见更好的自己</p>
         <div class="hero-underline"></div>
       </div>
+      <p class="hero-hint" id="heroHint">还没有饮食与运动记录，记录后评分会自动更新。</p>
     </div>
 
     <div class="score-group">
@@ -5542,14 +5593,14 @@ body { color: var(--text); }
                 <div class="label">体重</div>
                 <button class="vital-edit" type="button" data-vital="weight">修改</button>
               </div>
-              <div class="value"><span id="weightValue">60.0</span><span class="unit">kg</span></div>
+              <div class="value"><span id="weightValue">—</span><span class="unit">kg</span></div>
             </div>
             <div class="vital">
               <div class="vital-head">
                 <div class="label">体脂率</div>
                 <button class="vital-edit" type="button" data-vital="fat">修改</button>
               </div>
-              <div class="value"><span id="fatValue">24.0</span><span class="unit">%</span></div>
+              <div class="value"><span id="fatValue">—</span><span class="unit">%</span></div>
             </div>
             <div class="vital">
               <div class="vital-head">
@@ -5557,8 +5608,8 @@ body { color: var(--text); }
                 <button class="vital-edit" type="button" data-vital="bmi">修改</button>
               </div>
               <div class="value">
-                <span id="bmiValue">22.0</span>
-                <span class="badge" id="bmiBadge">正常</span>
+                <span id="bmiValue">—</span>
+                <span class="badge" id="bmiBadge" hidden></span>
               </div>
             </div>
             <div class="vital">
@@ -5566,14 +5617,14 @@ body { color: var(--text); }
                 <div class="label">血压</div>
                 <button class="vital-edit" type="button" data-vital="bp">修改</button>
               </div>
-              <div class="value"><span id="bpValue">110/70</span><span class="unit">mmHg</span></div>
+              <div class="value"><span id="bpValue">—</span><span class="unit">mmHg</span></div>
             </div>
             <div class="vital">
               <div class="vital-head">
                 <div class="label">血糖（空腹）</div>
                 <button class="vital-edit" type="button" data-vital="glucose">修改</button>
               </div>
-              <div class="value"><span id="glucoseValue">5.2</span><span class="unit">mmol/L</span></div>
+              <div class="value"><span id="glucoseValue">—</span><span class="unit">mmol/L</span></div>
             </div>
           </div>
         </div>
@@ -5615,13 +5666,13 @@ body { color: var(--text); }
 
           <div class="abnormal-box ok" id="abnormalBox">
             <b>异常提醒</b>
-            <ul id="abnormalList"><li>各项体征均在参考范围内，继续保持。</li></ul>
+            <ul id="abnormalList"><li>尚未记录体征数据，点击各指标右侧「修改」即可录入并自动判断。</li></ul>
           </div>
 
           <div class="bmi-formula">
             <b>BMI 计算公式</b><br>
             <span class="formula-line">BMI = 体重（kg）÷ 身高（m）²</span><br>
-            <span id="bmiFormulaValue">60.0 ÷ 1.65² ≈ 22.0</span><br>
+            <span id="bmiFormulaValue">填写身高体重后自动计算</span><br>
             <span>参考标准：中国成人 BMI 18.5–23.9 为正常（WS/T 428-2013）；血压、血糖参考《中国高血压防治指南》《中国 2 型糖尿病防治指南》。异常结果请以医院检查为准。</span>
           </div>
         </div>
@@ -6202,7 +6253,7 @@ body { color: var(--text); }
             <div class="news-cat green">饮食营养</div>
             <div class="news-title">如何科学搭配三餐饮食？</div>
             <p class="news-desc">合理的饮食搭配不仅能提供充足的能量，还能帮助预防慢性疾病，让身体保持良好状态。</p>
-            <span class="read-more">在浏览器中查看全文 ›</span>
+            <button type="button" class="read-more">在浏览器中查看全文 ›</button>
             <span class="news-quick" data-quick="1">速读摘要</span>
           </div>
         </article>
@@ -6213,7 +6264,7 @@ body { color: var(--text); }
             <div class="news-cat blue">运动指南</div>
             <div class="news-title">久坐族的5分钟拉伸指南</div>
             <p class="news-desc">长时间面对电脑工作，肩颈酸痛？这几个动作帮你缓解疲劳，恢复身体活力。</p>
-            <span class="read-more">在浏览器中查看全文 ›</span>
+            <button type="button" class="read-more">在浏览器中查看全文 ›</button>
             <span class="news-quick" data-quick="1">速读摘要</span>
           </div>
         </article>
@@ -6224,7 +6275,7 @@ body { color: var(--text); }
             <div class="news-cat purple">睡眠健康</div>
             <div class="news-title">为什么你总是睡不够？</div>
             <p class="news-desc">了解深度睡眠的重要性，以及如何通过改善卧室环境提升睡眠质量，找回好状态。</p>
-            <span class="read-more">在浏览器中查看全文 ›</span>
+            <button type="button" class="read-more">在浏览器中查看全文 ›</button>
             <span class="news-quick" data-quick="1">速读摘要</span>
           </div>
         </article>
@@ -6235,7 +6286,7 @@ body { color: var(--text); }
             <div class="news-cat green">慢病管理</div>
             <div class="news-title">血压血糖，家庭自测怎么做才准？</div>
             <p class="news-desc">测压姿势、测量时间、记录方式都会影响结果，掌握几个细节让数据更可信。</p>
-            <span class="read-more">在浏览器中查看全文 ›</span>
+            <button type="button" class="read-more">在浏览器中查看全文 ›</button>
             <span class="news-quick" data-quick="1">速读摘要</span>
           </div>
         </article>
@@ -6344,7 +6395,7 @@ body { color: var(--text); }
       </div>
       <div class="field">
         <label for="pNickname">昵称（显示名称，不是账号）</label>
-        <input id="pNickname" type="text" value="张三" placeholder="给自己取个昵称，仅用于展示">
+        <input id="pNickname" type="text" placeholder="给自己取个昵称，仅用于展示">
       </div>
       <div class="field">
         <label for="pName">姓名（选填）</label>
@@ -7779,7 +7830,8 @@ document.getElementById('skipOnboarding').addEventListener('click', function () 
 document.getElementById('onboardingForm').addEventListener('submit', function (event) {
   event.preventDefault();
 
-  const name = document.getElementById('obName').value.trim() || '张三';
+  const name = document.getElementById('obName').value.trim() ||
+    (currentUser && (currentUser.nickname || currentUser.account)) || '';
   const email = document.getElementById('obEmail').value.trim();
   const gender = document.getElementById('obGender').value;
   const height = parseFloat(document.getElementById('obHeight').value);
@@ -7790,7 +7842,7 @@ document.getElementById('onboardingForm').addEventListener('submit', function (e
   const restrictions = getChipValues('obRestrictions');
 
   // 同步到侧边栏
-  document.getElementById('sideUserName').textContent = name;
+  document.getElementById('sideUserName').textContent = name || '健康用户';
   document.getElementById('sideUserSub').textContent =
     gender + ' · ' + (height > 0 ? height + 'cm' : '未填写身高');
 
@@ -8205,7 +8257,8 @@ function renderAvatarPicker() {
 // 页面加载：回显已保存的昵称、姓名、头像与体重
 function loadProfileView() {
   const profile = readProfile();
-  const nickname = profile.nickname || '张三';
+  const nickname = profile.nickname ||
+    (currentUser && (currentUser.nickname || currentUser.account)) || '健康用户';
 
   document.getElementById('sideUserName').textContent = nickname;
   if (profile.gender) {
@@ -8227,12 +8280,15 @@ function loadProfileView() {
       setBmiDisplay(profile.weight / Math.pow(profile.height / 100, 2));
     }
   } else {
-    // 没有档案时按页面初始体重与默认身高重算，避免 BMI 与体重不一致
+    // 没有任何体重数据时保持「—」，不再用默认体重编造 BMI
     const shownWeight = parseFloat(document.getElementById('weightValue').textContent);
     if (shownWeight > 0) {
       setBmiDisplay(shownWeight / Math.pow(currentHeightCm() / 100, 2));
     }
   }
+
+  // 体重 / 身高变化后同步正常值范围与异常提醒
+  renderVitalRanges();
 }
 
 function openProfile() {
@@ -8240,7 +8296,7 @@ function openProfile() {
   // 打开弹窗时回显当前资料
   document.getElementById('pAccount').value = (currentUser && currentUser.account) || '';
   document.getElementById('pEmail').value = profile.email || '';
-  document.getElementById('pNickname').value = profile.nickname || '张三';
+  document.getElementById('pNickname').value = profile.nickname || '';
   document.getElementById('pName').value = profile.name || '';
   document.getElementById('pGender').value = currentGender;
   if (profile.height) document.getElementById('pHeight').value = profile.height;
@@ -8574,6 +8630,15 @@ const dietUploadEmpty = document.getElementById('dietUploadEmpty');
 const dietPreviewImg = document.getElementById('dietPreviewImg');
 const dietFileName = document.getElementById('dietFileName');
 const dietStatus = document.getElementById('dietStatus');
+
+// 识别期间禁用「选择图片」并给出即时反馈
+function setDietBusy(busy) {
+  const btn = document.getElementById('dietChooseBtn');
+  if (!btn) return;
+  btn.disabled = busy;
+  btn.setAttribute('aria-busy', busy ? 'true' : 'false');
+  btn.textContent = busy ? '识别中…' : '选择图片';
+}
 const dietResult = document.getElementById('dietResult');
 const dietFillMeal = document.getElementById('dietFillMeal');
 const dietMealRow = document.getElementById('dietMealRow');
@@ -8654,6 +8719,7 @@ async function recognizeMealImage(url) {
   dietResult.hidden = true;
   dietMealRow.hidden = true;
   dietFillMeal.hidden = true;
+  setDietBusy(true);
 
   async function askVision() {
     return api('/api/ai/vision', {
@@ -8684,6 +8750,7 @@ async function recognizeMealImage(url) {
   if (!response) {
     dietStatus.textContent = '网络不太稳定，识别没能完成。图片已保存，可在下方手动记录。';
     showToast('网络不稳定，请稍后再试或手动记录');
+    setDietBusy(false);
     return;
   }
 
@@ -8691,6 +8758,7 @@ async function recognizeMealImage(url) {
     const message = (response.data && response.data.error) || '图片识别失败';
     dietStatus.textContent = message + '。图片已保存，也可以直接在下方手动记录。';
     showToast(message);
+    setDietBusy(false);
     return;
   }
 
@@ -8700,6 +8768,7 @@ async function recognizeMealImage(url) {
   dietStatus.textContent = '识别完成' +
     (typeof left === 'number' ? '（今日还可识别 ' + left + ' 次）' : '') +
     '，确认餐次后点「加入今日饮食」。';
+  setDietBusy(false);
 }
 
 dietImageInput.addEventListener('change', function () {
@@ -9737,9 +9806,14 @@ function currentWeekDates() {
 
 // 生成计划：点击按钮与登录后恢复共用同一套逻辑，silent 时跳过校验与提示
 function generateBeautyPlan(type, target, weeks, times, silent) {
-  const current = parseFloat(document.getElementById('weightValue').textContent) || 60.0;
+  // 当前体重统一取记录/档案，不再用固定 60kg 兜底
+  const current = getCurrentWeight();
 
   if (!silent) {
+    if (!current) {
+      showToast('请先在个人信息里填写体重，再制定变美计划');
+      return false;
+    }
     if (!target || target < 20 || target > 200) {
       showToast('请输入 20-200 kg 的目标体重');
       return false;
@@ -10696,6 +10770,24 @@ function renderFamilyMembers() {
   const grid = document.getElementById('familyGrid');
   grid.innerHTML = '';
 
+  // 空状态：还没有家人档案时给出说明与入口，避免整块空白
+  if (!familyMembers.length) {
+    const empty = document.createElement('div');
+    empty.className = 'family-empty';
+    empty.innerHTML = '<p>还没有家人档案</p>' +
+      '<span>添加家人后，可以记录血压、用药与复诊提醒，统一在这里查看。</span>';
+    const addBtn = document.createElement('button');
+    addBtn.type = 'button';
+    addBtn.className = 'btn-soft btn-small';
+    addBtn.textContent = '添加家人';
+    addBtn.addEventListener('click', function () {
+      document.getElementById('openMember').click();
+    });
+    empty.appendChild(addBtn);
+    grid.appendChild(empty);
+    return;
+  }
+
   familyMembers.forEach(function (member) {
     const card = document.createElement('div');
     card.className = 'person-card';
@@ -11397,6 +11489,7 @@ vitalMask.addEventListener('click', function (event) {
 function setBmiDisplay(bmi) {
   document.getElementById('bmiValue').textContent = bmi.toFixed(1);
   const badge = document.getElementById('bmiBadge');
+  badge.hidden = false;
 
   // 中国成人 BMI 标准：＜18.5 偏瘦，18.5–23.9 正常，24.0–27.9 超重，≥28.0 肥胖
   if (bmi < 18.5) {
@@ -11536,9 +11629,12 @@ function renderVitalRanges() {
     }
   }
 
-  // 异常提醒列表
+  // 异常提醒列表：先区分「未记录」「已记录且正常」「存在异常」三种情况
   const box = document.getElementById('abnormalBox');
   const list = document.getElementById('abnormalList');
+  const recordedCount = [weight, bmi, fat, systolic, glucose].filter(function (value) {
+    return isFinite(value) && value > 0;
+  }).length;
   list.innerHTML = '';
   if (warnings.length) {
     box.classList.remove('ok');
@@ -11550,7 +11646,9 @@ function renderVitalRanges() {
   } else {
     box.classList.add('ok');
     const li = document.createElement('li');
-    li.textContent = '各项体征均在参考范围内，继续保持。';
+    li.textContent = recordedCount
+      ? '已记录的体征均在参考范围内。'
+      : '尚未记录体征数据，点击各指标右侧「修改」即可录入并自动判断。';
     list.appendChild(li);
   }
 
@@ -12182,12 +12280,15 @@ if (mealDateInput) {
   });
 }
 
-// 当前体重：优先取最近一次体重记录，其次取个人档案
+// 当前体重：只认一个来源——最近一次体重记录，其次个人档案，最后页面上的实际数值
 function getCurrentWeight() {
   if (weightHistory.length) {
     return weightHistory[weightHistory.length - 1].weight;
   }
-  return parseFloat(document.getElementById('pWeight').value) || 65;
+  const saved = parseFloat(readProfile().weight);
+  if (saved > 0) return saved;
+  const shown = parseFloat(document.getElementById('weightValue').textContent);
+  return shown > 0 ? shown : 0;
 }
 
 // 活动水平由用户在下拉框中选择，不再由系统擅自推测运动量
@@ -12210,6 +12311,14 @@ function getNutritionTargets() {
   const gender = document.getElementById('pGender').value || '女';
   const activity = getActivityFactor();
 
+  // 还没有体重（未建档 / 未记录）时不编造目标值，交给界面显示「—」
+  if (!weight) {
+    return {
+      kcal: 0, bmr: 0, activity: activity.factor,
+      protein: 0, carb: 0, fat: 0, fiber: 25, ready: false
+    };
+  }
+
   const bmr = gender === '男'
     ? 10 * weight + 6.25 * height - 5 * 22 + 5
     : 10 * weight + 6.25 * height - 5 * 22 - 161;
@@ -12222,7 +12331,8 @@ function getNutritionTargets() {
     protein: Math.round(weight * activity.proteinPerKg),
     carb: Math.round(kcal * 0.5 / 4),
     fat: Math.round(weight * 0.8),
-    fiber: 25
+    fiber: 25,
+    ready: true
   };
 }
 
@@ -12265,10 +12375,12 @@ function computeSportScore() {
   return sportPercent(todaySport(), sportState.goal);
 }
 
-// BMI 评分：正常区间满分，偏瘦 / 超重按程度扣分
+// BMI 评分：正常区间满分，偏瘦 / 超重按程度扣分；没有体重时不参与评分
 function computeBmiScore() {
+  const weight = getCurrentWeight();
+  if (!weight) return 0;
   const height = (parseFloat(document.getElementById('pHeight').value) || 165) / 100;
-  const bmi = getCurrentWeight() / (height * height);
+  const bmi = weight / (height * height);
 
   if (bmi >= 18.5 && bmi < 24) return 100;
   if (bmi >= 24 && bmi < 28) return 80;
@@ -12294,10 +12406,14 @@ function updateScores() {
   setScore('scoreSport', sport);
   setScore('scoreTotal', total);
 
+  // 新用户还没有任何记录时，解释评分为什么偏低，而不是只给一个红色的 20/100
+  const hint = document.getElementById('heroHint');
+  if (hint) hint.hidden = !(diet === 0 && sport === 0);
+
   // 核心体征右侧环形评分同步
   const ringScore = document.getElementById('ringScore');
   const ringArc = document.getElementById('ringArc');
-  if (ringScore) ringScore.textContent = Math.round(total) + '%';
+  if (ringScore) ringScore.textContent = total > 0 ? Math.round(total) + '%' : '—';
   if (ringArc) {
     const circumference = 2 * Math.PI * 52;
     ringArc.setAttribute('stroke-dashoffset',
@@ -12483,11 +12599,16 @@ function renderNutrition() {
   const today = toISODate(new Date());
   const eaten = dateRangeSum(today, today).total;
 
-  document.getElementById('macroProtein').textContent = Math.round(eaten.protein) + '/' + targets.protein + 'g';
-  document.getElementById('macroCarb').textContent = Math.round(eaten.carb) + '/' + targets.carb + 'g';
-  document.getElementById('macroFiber').textContent = Math.round(eaten.fiber) + '/' + targets.fiber + 'g';
-  document.getElementById('macroFat').textContent = Math.round(eaten.fat) + '/' + targets.fat + 'g';
-  document.getElementById('macroKcal').textContent = Math.round(eaten.kcal) + '/' + targets.kcal + 'k';
+  // 目标未生成时显示「—」，避免出现 0/0g 这类假数据
+  function macroText(value, target, unit) {
+    return Math.round(value) + '/' + (target > 0 ? target + unit : '—');
+  }
+
+  document.getElementById('macroProtein').textContent = macroText(eaten.protein, targets.protein, 'g');
+  document.getElementById('macroCarb').textContent = macroText(eaten.carb, targets.carb, 'g');
+  document.getElementById('macroFiber').textContent = macroText(eaten.fiber, targets.fiber, 'g');
+  document.getElementById('macroFat').textContent = macroText(eaten.fat, targets.fat, 'g');
+  document.getElementById('macroKcal').textContent = macroText(eaten.kcal, targets.kcal, ' kcal');
 
   const rows = [
     { label: '蛋白质', value: eaten.protein, target: targets.protein, unit: 'g' },
@@ -12505,7 +12626,7 @@ function renderNutrition() {
     const item = document.createElement('div');
     item.innerHTML =
       '<div class="nutri-head"><span>' + row.label + '</span><span><b>' +
-      Math.round(row.value) + '</b> / ' + row.target + ' ' + row.unit + '</span></div>' +
+      Math.round(row.value) + '</b> / ' + (row.target > 0 ? row.target : '—') + ' ' + row.unit + '</span></div>' +
       '<div class="nutri-bar' + (percent >= 100 ? ' over' : '') +
       '"><i style="width:' + percent.toFixed(1) + '%"></i></div>';
     box.appendChild(item);
@@ -12514,10 +12635,12 @@ function renderNutrition() {
   // 把计算依据写清楚，避免“为什么体重一改热量就变”的困惑
   const note = document.getElementById('nutriNote');
   if (note) {
-    note.textContent = '计算依据：基础代谢 ' + targets.bmr + ' kcal × 活动系数 ' + targets.activity +
-      ' ≈ ' + targets.kcal + ' kcal（Mifflin-St Jeor 公式）；蛋白质 ' + targets.protein +
-      'g、脂肪 ' + targets.fat + 'g 按当前体重 ' + getCurrentWeight().toFixed(1) +
-      'kg 计算。体重变化会改变基础代谢，所以目标值会随之调整。';
+    note.textContent = targets.ready
+      ? '计算依据：基础代谢 ' + targets.bmr + ' kcal × 活动系数 ' + targets.activity +
+        ' ≈ ' + targets.kcal + ' kcal（Mifflin-St Jeor 公式）；蛋白质 ' + targets.protein +
+        'g、脂肪 ' + targets.fat + 'g 按当前体重 ' + getCurrentWeight().toFixed(1) +
+        'kg 计算。体重变化会改变基础代谢，所以目标值会随之调整。'
+      : '还没有体重数据。先在「核心体征」或个人信息里记录身高体重，系统才会生成营养目标。';
   }
 }
 
@@ -13368,7 +13491,7 @@ function newsCardHtml(key, article, keyword) {
       '<div class="news-cat ' + article.color + '">' + escapeNewsHtml(article.cat) + '</div>' +
       '<div class="news-title">' + highlightNewsTitle(article.title, keyword) + '</div>' +
       '<p class="news-desc">' + escapeNewsHtml(article.desc) + '</p>' +
-      '<span class="read-more">在浏览器中查看全文 ›</span>' +
+      '<button type="button" class="read-more">在浏览器中查看全文 ›</button>' +
       '<span class="news-quick" data-quick="1">速读摘要</span>' +
     '</div></article>';
 }
@@ -13490,7 +13613,7 @@ function liveNewsCardHtml(item, index) {
       '<p class="news-desc">' + escapeNewsHtml(summary) + '</p>' +
       '<div class="news-live-meta"><span class="src">网络资讯</span><span>' +
         escapeNewsHtml(time || '刚刚更新') + '</span></div>' +
-      '<span class="read-more">在浏览器中查看全文 ›</span>' +
+      '<button type="button" class="read-more">在浏览器中查看全文 ›</button>' +
     '</div></article>';
 }
 

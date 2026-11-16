@@ -215,18 +215,47 @@ def api_index(_ctx):
 # 账号
 # ==========================================================
 
+# 注册频控：进程内滑动窗口，避免脚本批量注册（无需额外依赖）
+REGISTER_WINDOW_SECONDS = 600
+REGISTER_MAX_ATTEMPTS = 5
+_register_hits = {}
+
+
+def client_ip(headers):
+    forwarded = (headers.get("X-Forwarded-For") or "").split(",")[0].strip()
+    return forwarded or (headers.get("X-Real-IP") or "").strip() or "unknown"
+
+
+def check_register_rate(headers, account):
+    ip = client_ip(headers)
+    key = ip if ip != "unknown" else "account:" + str(account)
+    now = time.time()
+    hits = [stamp for stamp in _register_hits.get(key, [])
+            if now - stamp < REGISTER_WINDOW_SECONDS]
+    if len(hits) >= REGISTER_MAX_ATTEMPTS:
+        raise ApiError(429, "注册过于频繁，请稍后再试", "too_many_requests")
+    hits.append(now)
+    _register_hits[key] = hits
+
+    # 顺手清理过期记录，避免长期运行后字典无限增长
+    if len(_register_hits) > 1000:
+        for stale in list(_register_hits):
+            if not [s for s in _register_hits[stale] if now - s < REGISTER_WINDOW_SECONDS]:
+                _register_hits.pop(stale, None)
+
+
 @route("POST", "/api/auth/register", auth_required=False)
 def auth_register(ctx):
     # 保留公开注册：新注册用户只能访问自己的数据
     if auth.user_from_token(ctx.conn, ctx.token):
         raise ApiError(409, "当前已登录，无需重复注册")
     account = ctx.body.get("account")
+    check_register_rate(ctx.headers, account)
     password = ctx.body.get("password")
     nickname = clean_text(ctx.body.get("nickname"), "nickname", 30, required=False)
     user = auth.register(ctx.conn, account, password, nickname)
     token = auth.create_session(ctx.conn, user["id"])
     return 201, {
-        "token": token,
         "cookie": auth.cookie_header(token),
         "user": auth.public_user(user),
     }
@@ -245,7 +274,6 @@ def auth_login(ctx):
     user = auth.login(ctx.conn, ctx.body.get("account"), ctx.body.get("password"))
     token = auth.create_session(ctx.conn, user["id"])
     return {
-        "token": token,
         "cookie": auth.cookie_header(token),
         "user": auth.public_user(user),
     }
