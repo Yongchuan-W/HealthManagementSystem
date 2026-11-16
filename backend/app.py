@@ -66,6 +66,8 @@ class HealthAppHandler(BaseHTTPRequestHandler):
             self._send_body(204, b"", "image/x-icon")
         elif path.startswith("/uploads/"):
             self._serve_upload(path)
+        elif path.startswith("/assets/"):
+            self._serve_asset(path)
         elif path == API_PREFIX or path.startswith(API_PREFIX + "/"):
             self._handle_api(method, path, query)
         else:
@@ -75,6 +77,32 @@ class HealthAppHandler(BaseHTTPRequestHandler):
         html = self.page_html.replace("__MOBILE_URL__", self.mobile_url)
         self._send_body(200, html.encode("utf-8"), "text/html; charset=utf-8",
                         extra=[("Cache-Control", "no-store")])
+
+    def _serve_asset(self, path):
+        """科普资讯封面等静态图片：公开访问，浏览器缓存一周。"""
+        name = os.path.basename(path[len("/assets/"):])
+        if not name or name.startswith("."):
+            self._send_json(404, {"ok": False, "error": "文件不存在", "code": "not_found"})
+            return
+
+        file_path = os.path.join(db.BASE_DIR, "assets", "news", name)
+        if not os.path.isfile(file_path):
+            self._send_json(404, {"ok": False, "error": "文件不存在", "code": "not_found"})
+            return
+
+        types = {
+            ".jpg": "image/jpeg",
+            ".jpeg": "image/jpeg",
+            ".png": "image/png",
+            ".webp": "image/webp",
+            ".svg": "image/svg+xml",
+        }
+        with open(file_path, "rb") as handle:
+            body = handle.read()
+        self._send_body(
+            200, body, types.get(os.path.splitext(name)[1].lower(), "application/octet-stream"),
+            extra=[("Cache-Control", "public, max-age=604800")],
+        )
 
     def _serve_upload(self, path):
         name = os.path.basename(path[len("/uploads/"):])

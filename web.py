@@ -2599,16 +2599,31 @@ a { text-decoration: none; }
   pointer-events: none;
 }
 
+.news-img img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  z-index: 1;
+}
+
 .news-img::after {
   content: '健康 · 科普';
   position: absolute;
-  right: 14px;
+  right: 12px;
   bottom: 12px;
+  padding: 3px 9px;
+  border-radius: 99px;
   font-size: 11px;
-  letter-spacing: 2px;
+  letter-spacing: 1px;
   font-weight: 600;
-  color: rgba(40, 70, 60, 0.4);
+  color: #3b6152;
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: 0 2px 6px rgba(30, 50, 40, 0.14);
   pointer-events: none;
+  z-index: 2;
 }
 
 .news-img .icon {
@@ -12935,16 +12950,17 @@ function scoreArticle(article, keyword) {
   }, 0);
 }
 
-// 科普封面：本地绘制（渐变 + 纹理 + 主题图标），不再依赖远程生成图
-function newsCoverHtml(color, icon) {
+// 科普封面：使用本站自己的封面图（assets/news/<主题>.jpg），加载失败时回退到渐变图标
+function newsCoverHtml(key, color, icon) {
   return '<div class="news-img ' + color + '">' +
     '<svg class="icon"><use href="#' + icon + '"/></svg>' +
+    '<img src="/assets/news/' + key + '.jpg" alt="" loading="lazy" onerror="this.remove()">' +
     '</div>';
 }
 
 function newsCardHtml(key, article, keyword) {
   return '<article class="news-card" data-article="' + key + '">' +
-    newsCoverHtml(article.color, article.icon) +
+    newsCoverHtml(key, article.color, article.icon) +
     '<div class="news-body">' +
       '<div class="news-cat ' + article.color + '">' + escapeNewsHtml(article.cat) + '</div>' +
       '<div class="news-title">' + highlightNewsTitle(article.title, keyword) + '</div>' +
@@ -13060,8 +13076,9 @@ function liveNewsCardHtml(item, index) {
   const time = formatNewsTime(item.published);
   const summary = item.summary || '点击查看这条资讯的完整内容。';
 
+  const covers = ['diet', 'cervical', 'mood', 'sleep'];
   return '<article class="news-card live" data-link="' + escapeNewsHtml(item.link) + '">' +
-    newsCoverHtml(color, icon) +
+    newsCoverHtml(covers[index % covers.length], color, icon) +
     '<div class="news-body">' +
       '<div class="news-cat ' + color + '">' + escapeNewsHtml(item.source || '健康资讯') + '</div>' +
       '<div class="news-title">' + escapeNewsHtml(item.title) + '</div>' +
