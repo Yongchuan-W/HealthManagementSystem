@@ -1939,7 +1939,8 @@ a { text-decoration: none; }
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  /* 用 auto 外边距做垂直居中：内容超高时自动靠上，保证可以完整滚动查看 */
+  justify-content: flex-start;
   padding: 40px 24px 56px;
   background:
     radial-gradient(70% 55% at 14% 16%, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0) 62%),
@@ -1984,6 +1985,8 @@ a { text-decoration: none; }
   gap: 76px;
   width: 100%;
   max-width: 1040px;
+  flex: none;
+  margin-top: auto;
 }
 
 .login-hero {
@@ -2080,7 +2083,9 @@ a { text-decoration: none; }
   z-index: 1;
   display: flex;
   gap: 10px;
+  flex: none;
   margin-top: 26px;
+  margin-bottom: auto;
   margin-left: 320px;
 }
 
@@ -2334,22 +2339,51 @@ a { text-decoration: none; }
   padding: 6px 0;
 }
 
-/* 窄屏：标题压缩到卡片上方，隐藏装饰层 */
+/* 窄屏：装饰图案整体缩小保留，标题与卡片上下排列 */
 @media (max-width: 900px) {
   .login-shell {
     flex-direction: column;
-    gap: 22px;
+    gap: 18px;
   }
   .login-hero {
     display: block;
     max-width: 380px;
     text-align: center;
   }
-  .lh-panes, .login-chips { display: none; }
-  .login-hero h2 { font-size: 21px; letter-spacing: 0; }
+  .lh-panes {
+    height: 60px;
+    gap: 8px;
+    margin: 0 auto 14px;
+    max-width: 300px;
+  }
+  .lh-pane {
+    height: 50px;
+    border-radius: 9px;
+    box-shadow: 0 8px 18px rgba(118, 158, 128, 0.12);
+  }
+  .lh-pane:nth-child(2) { height: 55px; }
+  .lh-pane:nth-child(3) { height: 60px; }
+  .lh-pane::before { left: 7px; right: 7px; top: 7px; height: 4px; }
+  .lh-pane::after { left: 7px; right: 14px; top: 17px; bottom: 9px; }
+  .lh-pane .lh-mark {
+    left: 6px;
+    bottom: 6px;
+    width: 20px;
+    height: 20px;
+    border-radius: 7px;
+  }
+  .lh-pane .lh-mark .icon { width: 12px; height: 12px; }
+  .login-hero h2 { font-size: 21px; letter-spacing: 1px; }
   .login-hero .lh-sub { margin-top: 8px; font-size: 13px; }
   .login-hero .lh-desc { display: none; }
-  .auth-layer { padding: 28px 18px 40px; }
+  .login-chips {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin: 16px 0 auto;
+  }
+  .login-chips span { padding: 5px 13px; font-size: 11.5px; }
+  .auth-layer { padding: 24px 18px 34px; }
 }
 
 .mobile-hint {
@@ -5162,7 +5196,7 @@ body { color: var(--text); }
         <span class="lh-pane"></span>
         <span class="lh-pane"><i class="lh-mark"><svg class="icon"><use href="#i-activity"/></svg></i></span>
       </div>
-      <h2>数据记录系统</h2>
+      <h2>健康管理系统</h2>
       <p class="lh-sub">记录每一次数据，连接每一项管理</p>
       <p class="lh-desc">统一记录、高效查看、持续追踪，让日常管理更清晰</p>
     </section>
