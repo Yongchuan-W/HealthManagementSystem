@@ -425,7 +425,7 @@ a { text-decoration: none; }
   grid-template-columns: 32px minmax(0, 1fr);
   align-items: center;
   gap: 9px;
-  padding: 8px 12px 9px 9px;
+  padding: 9px 13px 10px 13px;
   border-radius: 10px;
   border: 1px solid transparent;
   margin-top: 0;
@@ -458,7 +458,7 @@ a { text-decoration: none; }
   align-items: baseline;
   gap: 6px;
   font-size: 12px;
-  color: #5b4636;
+  color: #5e6c58;
   margin-bottom: 5px;
   opacity: 1;
   white-space: nowrap;
@@ -466,12 +466,12 @@ a { text-decoration: none; }
 
 .score .score-num {
   font-size: 10.5px;
-  color: #9a8a7c;
+  color: #6f7d69;
   white-space: nowrap;
 }
 
 .score .score-num b {
-  font-size: 17px;
+  font-size: 19px;
   font-weight: 800;
   margin-right: 1px;
   letter-spacing: 0.3px;
@@ -480,14 +480,14 @@ a { text-decoration: none; }
 .score .score-num b.is-empty {
   font-size: 11.5px;
   font-weight: 600;
-  color: #9a8a7c;
+  color: #6f7d69;
   letter-spacing: 0;
 }
 
 .bar {
-  height: 6px;
+  height: 7px;
   border-radius: 99px;
-  background: rgba(31, 42, 28, 0.08);
+  background: rgba(31, 42, 28, 0.1);
   overflow: hidden;
 }
 
@@ -499,21 +499,20 @@ a { text-decoration: none; }
   transition: width 0.8s ease;
 }
 
-.score-total { background: #d8e2cd; border-color: #c6d2b9; }
+.score-total { background: #d3dfc4; border-color: #bfceb0; box-shadow: inset 3px 0 0 #6f8a5e; }
 .score-total .score-ico { background: linear-gradient(135deg, #6f8a5e, #455c3d); }
 .score-total .score-num b { color: #3d5336; }
 .score-total .bar i { background: linear-gradient(90deg, #8aa276, #455c3d); }
 
-.score-diet { background: #e2eada; border-color: #d1dcc6; }
-.score-diet .score-ico { background: linear-gradient(135deg, #93ad81, #5d7a4f); }
-.score-diet .score-num b { color: #455c3d; }
-.score-diet .bar i { background: linear-gradient(90deg, #a8bf96, #5d7a4f); }
+.score-diet { background: #d5e7e1; border-color: #bdd6cf; box-shadow: inset 3px 0 0 #0e7c74; }
+.score-diet .score-ico { background: linear-gradient(135deg, #2f938a, #0e7c74); }
+.score-diet .score-num b { color: #0b655f; }
+.score-diet .bar i { background: linear-gradient(90deg, #6fbfb5, #0e7c74); }
 
-.score-sport { background: #ebf1e4; border-color: #dbe6d0; }
-.score-sport .score-ico { background: linear-gradient(135deg, #a9c39a, #6f8a5e); }
-.score-sport .score-num b { color: #4c6640; }
-.score-sport .bar i { background: linear-gradient(90deg, #bfd3ae, #6f8a5e); }
-.score-sport .bar i { background: linear-gradient(90deg, #f8d97e, #dea31f); }
+.score-sport { background: #e9e3d0; border-color: #d6cdb5; box-shadow: inset 3px 0 0 #b08a5a; }
+.score-sport .score-ico { background: linear-gradient(135deg, #c09a6b, #97733f); }
+.score-sport .score-num b { color: #7a5c33; }
+.score-sport .bar i { background: linear-gradient(90deg, #ddbd8c, #b08a5a); }
 
 /* 评分的「视觉人格」：疲惫 → 平稳 → 活力，总分配色随状态渐变 */
 .score-total[data-mood="tired"] .score-num b { color: #c1622f; }
