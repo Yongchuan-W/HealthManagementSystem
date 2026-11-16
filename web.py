@@ -4390,7 +4390,15 @@ body { color: var(--text); }
   cursor: pointer;
 }
 
-.week-day .date { font-size: 11px; color: #a08d7d; }
+.week-day .date { font-size: 11px; color: #a08d7d; display: flex; align-items: center; gap: 3px; }
+.week-day .date em {
+  font-style: normal;
+  font-size: 9px;
+  padding: 0 3px;
+  border-radius: 4px;
+  background: #eefaf6;
+  color: var(--teal-dark);
+}
 
 .week-day .icon {
   width: 22px;
@@ -6018,10 +6026,10 @@ body { color: var(--text); }
             <span class="sport-pill" data-sport="瑜伽"><svg class="icon"><use href="#i-yoga"/></svg>瑜伽</span>
           </div>
 
-          <!-- 今日 / 本周 数据切换 -->
+          <!-- 今日 / 近 7 天 数据切换 -->
           <div class="tabs" id="sportTabs">
             <button class="active" data-tab="today">今日运动</button>
-            <button data-tab="week">本周统计</button>
+            <button data-tab="week">近 7 天</button>
           </div>
 
           <div class="ex-stats" id="todayStats">
@@ -8018,6 +8026,7 @@ function updateAdminEntry() {
   const allowed = !!(serverMode && currentUser && currentUser.role === 'admin');
   btn.hidden = !allowed;
   const adminPage = document.getElementById('page-admin');
+  if (adminPage) adminPage.hidden = !allowed;
   if (!allowed && adminPage && adminPage.classList.contains('active')) {
     switchPage('data');
   }
@@ -9574,11 +9583,11 @@ function renderWeekPanel() {
   if (!panel) return;
 
   const today = new Date();
-  const monday = addDays(today, -((today.getDay() + 6) % 7));
+  const start = addDays(today, -6); // 与睡眠、体重、饮食图表一致：近 7 天，今天在最后
   const days = [];
 
   for (let index = 0; index < 7; index++) {
-    const day = addDays(monday, index);
+    const day = addDays(start, index);
     const key = toISODate(day);
     const data = sportState.history[key] || { kcal: 0, steps: 0, minutes: 0 };
     days.push({ date: day, key: key, data: data });
@@ -9589,7 +9598,7 @@ function renderWeekPanel() {
     return item.data.kcal || 0;
   }).concat([1]));
 
-  panel.innerHTML = '<div class="week-grid" id="weekGrid"></div><div class="week-detail" id="weekDetail">点击上方任意日期，可查看并记录当天的运动。</div>';
+  panel.innerHTML = '<div class="week-grid" id="weekGrid"></div><div class="week-detail" id="weekDetail">点击上方任意日期，可查看并记录当天（近 7 天）的运动。</div>';
   const grid = document.getElementById('weekGrid');
 
   days.forEach(function (item) {
@@ -9598,7 +9607,9 @@ function renderWeekPanel() {
     tile.dataset.date = item.key;
     const icon = item.data.kcal >= maxKcal * 0.6 && item.data.kcal > 0 ? 'i-flame' : 'i-activity';
 
-    tile.innerHTML = '<div class="date">' + (item.date.getMonth() + 1) + '/' + item.date.getDate() + '</div>' +
+    const isToday = item.key === toISODate(today);
+    tile.innerHTML = '<div class="date">' + (item.date.getMonth() + 1) + '/' + item.date.getDate() +
+      (isToday ? '<em>今天</em>' : '') + '</div>' +
       '<svg class="icon"><use href="#' + icon + '"></use></svg>' +
       '<div class="kcal">' + (item.data.kcal ? Math.round(item.data.kcal) + ' kcal' : '无记录') + '</div>';
 
@@ -10742,7 +10753,7 @@ function renderSleepWeek() {
   const hasAny = days.some(function (day) { return day.hours > 0; });
   box.innerHTML = '<div class="sleep-bars">' + bars + '</div>' +
     '<div class="sleep-today" style="margin-top:6px">' +
-    (hasAny ? '最近 7 天记录，柱高按睡眠小时数显示。' : '最近 7 天还没有睡眠记录，记录后会显示在这里。') +
+    (hasAny ? '近 7 天记录，柱高按睡眠小时数显示。' : '近 7 天还没有睡眠记录，记录后会显示在这里。') +
     '</div>';
 }
 
@@ -12889,7 +12900,7 @@ function renderRecentDietAdvice() {
 
   const dayCount = Object.keys(days).length;
   if (!dayCount) {
-    box.innerHTML = '<div class="ra-empty">最近 7 天还没有饮食记录。连续记录 2-3 天后，这里会根据你的真实饮食给出综合建议。</div>';
+    box.innerHTML = '<div class="ra-empty">近 7 天还没有饮食记录。连续记录 2-3 天后，这里会根据你的真实饮食给出综合建议。</div>';
     return;
   }
 
