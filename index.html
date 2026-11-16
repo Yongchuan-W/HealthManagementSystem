@@ -5757,11 +5757,11 @@ body { color: var(--text); }
               </div>
               <div class="f-item">
                 <span class="left"><svg class="icon"><use href="#i-droplet"/></svg>排卵日预测</span>
-                <b id="ovulationDate">10月25日</b>
+                <b id="ovulationDate">—</b>
               </div>
               <div class="f-item">
                 <span class="left"><svg class="icon"><use href="#i-calendar"/></svg>最近一次经期</span>
-                <b id="lastPeriodRange">10月11日 - 10月15日</b>
+                <b id="lastPeriodRange">—</b>
               </div>
               <div class="f-item">
                 <span class="left"><svg class="icon"><use href="#i-droplet"/></svg>易孕期</span>
@@ -7902,6 +7902,10 @@ const navButtons = Array.from(document.querySelectorAll('#nav button'));
 const pages = Array.from(document.querySelectorAll('.page'));
 
 function switchPage(name) {
+  // 数据大屏仅管理员可进入，普通用户即使触发也直接忽略
+  if (name === 'admin' && !(serverMode && currentUser && currentUser.role === 'admin')) {
+    return;
+  }
   // 高亮当前导航
   navButtons.forEach(function (btn) {
     btn.classList.toggle('active', btn.dataset.page === name);
@@ -10025,8 +10029,8 @@ function applyGenderView() {
 // ---------- 生理周期：长度与日期都可自由选择 ----------
 let periodDays = 5;                          // 经期长度（天）
 let cycleDays = 28;                          // 周期长度（天）
-let lastPeriodStart = new Date(2026, 9, 11); // 最近一次经期开始日
-let lastPeriodEnd = addDays(lastPeriodStart, periodDays - 1); // 结束日，null 表示经期还没结束
+let lastPeriodStart = null; // 最近一次经期开始日，未记录时为 null
+let lastPeriodEnd = null;   // 结束日，null 表示经期还没结束或未记录
 
 const periodDaysSelect = document.getElementById('periodDays');
 const cycleDaysMainSelect = document.getElementById('cycleDaysMain');
@@ -10065,6 +10069,20 @@ function renderCycle() {
   periodDaysSelect.value = String(periodDays);
   cycleDaysMainSelect.value = String(cycleDays);
   cycleDaysInput.value = String(cycleDays);
+
+  document.getElementById('lastPeriodRange').textContent = '—';
+  if (!lastPeriodStart) {
+    ['ovulationDate', 'nextPeriodDate', 'fertileWindow', 'daysToPeriod'].forEach(function (id) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = '—';
+    });
+    const empty = document.getElementById('cycleForecast');
+    if (empty) {
+      empty.innerHTML = '<b>经期预测</b>　还没有记录最近一次经期，' +
+        '点上方「记录经期」填写后会自动计算下次经期、排卵日与易孕期。';
+    }
+    return;
+  }
 
   document.getElementById('lastPeriodRange').textContent =
     formatMD(lastPeriodStart) + ' - ' + (lastPeriodEnd ? formatMD(lastPeriodEnd) : '进行中');
@@ -10124,7 +10142,7 @@ function saveFemaleProfile() {
   saveData('femaleProfile', {
     periodDays: periodDays,
     cycleDays: cycleDays,
-    lastPeriodStart: toISODate(lastPeriodStart),
+    lastPeriodStart: lastPeriodStart ? toISODate(lastPeriodStart) : '',
     periodEnd: lastPeriodEnd ? toISODate(lastPeriodEnd) : ''
   });
 }
@@ -10203,7 +10221,7 @@ function todayStart() {
 }
 
 document.getElementById('openPeriod').addEventListener('click', function () {
-  periodStartInput.value = toISODate(lastPeriodStart);
+  periodStartInput.value = lastPeriodStart ? toISODate(lastPeriodStart) : '';
   periodEndInput.value = lastPeriodEnd ? toISODate(lastPeriodEnd) : '';
   cycleDaysInput.value = String(cycleDays);
   updatePeriodPreview();
@@ -10661,59 +10679,16 @@ const familyPersonSelect = document.getElementById('familyPerson');
 const familyTypeSelect = document.getElementById('familyType');
 const reminderMemberSelect = document.getElementById('reminderMember');
 
-// 家人列表（读取已保存的档案，首次使用时给出示例后可通过「添加家人」扩展）
-let familyMembers = loadData('familyMembers', [
-  {
-    id: 'm1',
-    relation: '母亲',
-    name: '',
-    age: 58,
-    conditions: '高血压',
-    medications: '降压药 每日 1 片',
-    emergencyName: '王小明（儿子）',
-    emergencyPhone: '13800000000'
-  },
-  {
-    id: 'm2',
-    relation: '爱人',
-    name: '',
-    age: 28,
-    conditions: '无',
-    medications: '无',
-    emergencyName: '',
-    emergencyPhone: ''
-  }
-]);
+// 家人列表：默认空，由用户自己「添加家人」创建，不再预置示例档案
+let familyMembers = loadData('familyMembers', []);
 
 const todayDate = new Date();
 
 // 健康记录
-let familyRecords = loadData('familyRecords', [
-  {
-    memberId: 'm1',
-    type: '体检',
-    date: toISODate(addDays(todayDate, -39)),
-    content: '各项指标正常'
-  }
-]);
+let familyRecords = loadData('familyRecords', []);
 
-// 关怀提醒：默认给出「今天」与「三天后」两条示例，之后读取本地保存的数据
-let reminders = loadData('reminders', [
-  {
-    id: 'r1',
-    memberId: 'm1',
-    title: '提醒母亲测量血压',
-    date: toISODate(todayDate),
-    done: false
-  },
-  {
-    id: 'r2',
-    memberId: 'm2',
-    title: '提醒爱人注意经期保暖',
-    date: toISODate(addDays(todayDate, 3)),
-    done: false
-  }
-]);
+// 关怀提醒：默认空，避免把示例提醒当成用户自己的待办
+let reminders = loadData('reminders', []);
 
 function getMember(memberId) {
   return familyMembers.filter(function (member) {
@@ -12378,22 +12353,25 @@ function updateScores() {
   const bmi = computeBmiScore();
   const total = diet * 0.4 + sport * 0.4 + bmi * 0.2;
 
+  // 综合分依赖饮食与运动记录；只有体征时不给总分，避免「体征都正常却只有 20 分」的矛盾
+  const hasRecord = diet > 0 || sport > 0;
+
   setScore('scoreDiet', diet, diet > 0);
   setScore('scoreSport', sport, sport > 0);
-  setScore('scoreTotal', total, diet > 0 || sport > 0 || bmi > 0);
+  setScore('scoreTotal', total, hasRecord);
 
   // 新用户还没有任何记录时，解释评分为什么偏低，而不是只给一个红色的 20/100
   const hint = document.getElementById('heroHint');
-  if (hint) hint.hidden = !(diet === 0 && sport === 0);
+  if (hint) hint.hidden = hasRecord;
 
   // 核心体征右侧环形评分同步
   const ringScore = document.getElementById('ringScore');
   const ringArc = document.getElementById('ringArc');
-  if (ringScore) ringScore.textContent = total > 0 ? Math.round(total) + '%' : '—';
+  if (ringScore) ringScore.textContent = hasRecord ? Math.round(total) + '%' : '—';
   if (ringArc) {
     const circumference = 2 * Math.PI * 52;
     ringArc.setAttribute('stroke-dashoffset',
-      (circumference * (1 - total / 100)).toFixed(1));
+      (circumference * (1 - (hasRecord ? total : 0) / 100)).toFixed(1));
   }
 }
 
