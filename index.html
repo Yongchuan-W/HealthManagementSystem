@@ -4275,6 +4275,10 @@ body { color: var(--text); }
 
 .week-day.empty { opacity: 0.55; }
 
+.week-day:hover { border-color: #d9c3a8; }
+
+.week-edit { color: #a08d7d; font-size: 11.5px; }
+
 .week-detail {
   margin-top: 12px;
   background: #fbf7f1;
@@ -6683,7 +6687,7 @@ body { color: var(--text); }
 <div class="mask" id="sportDataMask">
   <div class="modal">
     <div class="modal-head">
-      <svg class="icon"><use href="#i-activity"/></svg>填写今日运动数据
+      <svg class="icon"><use href="#i-activity"/></svg><span id="sdTitle">填写今日运动数据</span>
       <button class="modal-close" id="sdClose" aria-label="关闭">
         <svg class="icon"><use href="#i-close"/></svg>
       </button>
@@ -7183,19 +7187,26 @@ function afterLogin(profile) {
 }
 
 // 刚完成登录：拉取账号信息后决定进入哪个页面
-async function afterAuthenticated() {
-  const result = await api('/api/auth/me');
-  if (!result.ok) {
-    showAuthError('loginError', result.data.error || '会话已失效，请重新登录');
-    return false;
+// 已经拿到刚登录的用户信息时直接使用，省掉一次 /api/auth/me 往返
+async function afterAuthenticated(knownUser) {
+  let profile = null;
+  if (knownUser) {
+    currentUser = knownUser;
+  } else {
+    const result = await api('/api/auth/me');
+    if (!result.ok) {
+      showAuthError('loginError', result.data.error || '会话已失效，请重新登录');
+      return false;
+    }
+    currentUser = result.data.user || currentUser;
+    profile = result.data.profile;
   }
-  currentUser = result.data.user || currentUser;
   useAccountScope(currentUser);
   // 记住上次登录的账号名，下次打开只需输密码（密码由浏览器决定是否记住）
   try {
     window.localStorage.setItem('hm_last_account', (currentUser && currentUser.account) || '');
   } catch (error) {}
-  await restoreSession(result.data.profile);
+  await restoreSession(profile);
   return true;
 }
 
@@ -7242,21 +7253,7 @@ async function bootAuth() {
     return;
   }
 
-  // 没有后端就不提供登录入口，避免任意账号“登录成功”的假象
-  let backendReady = await detectBackend();
-  if (!backendReady) {
-    // 网络抖动时重试一次，避免误判成没有后端
-    await new Promise(function (resolve) { setTimeout(resolve, 800); });
-    backendReady = await detectBackend();
-  }
-  if (!backendReady) {
-    setServerMode(false);
-    switchToLocalDemo('这个地址没有运行后端服务，无法登录。请用电脑运行 python web.py，再用它提示的局域网地址访问。', true);
-    return;
-  }
-
-  setServerMode(true);
-
+  // 直接问会话：即使返回 401 也说明后端在线，省掉一次 /api/health 往返
   let result = null;
   try {
     result = await api('/api/auth/me');
@@ -7264,20 +7261,26 @@ async function bootAuth() {
     result = null;
   }
 
-  // 会话校验遇到网络异常时重试一次，避免已登录用户被弹回登录页
+  // 只有请求本身失败（网络不通）时，才额外确认后端是否可达
   if (!result) {
-    await new Promise(function (resolve) { setTimeout(resolve, 800); });
+    const backendReady = await detectBackend();
+    if (!backendReady) {
+      setServerMode(false);
+      switchToLocalDemo('这个地址没有运行后端服务，无法登录。请用电脑运行 python web.py，再用它提示的局域网地址访问。', true);
+      return;
+    }
     try {
       result = await api('/api/auth/me');
     } catch (error) {
       result = null;
     }
+    if (!result) {
+      showLoginNotice('连接后端失败，请确认电脑上的服务仍在运行。', true);
+      return;
+    }
   }
 
-  if (!result) {
-    showLoginNotice('连接后端失败，请确认电脑上的服务仍在运行。', true);
-    return;
-  }
+  setServerMode(true);
 
   if (result.ok) {
     currentUser = result.data.user || null;
@@ -7306,7 +7309,8 @@ document.getElementById('demoEnter').addEventListener('click', function () {
 // 已登录会话恢复：先取回账号数据，再决定进入哪个页面并重绘
 async function restoreSession(profile) {
   await hydrateFromServer();
-  afterLogin(profile);
+  // 登录接口不带档案，取回整包后再从本地缓存读一次，避免已填档案的老账号被要求重填
+  afterLogin(profile || loadData('profile', null));
   refreshAllViews();
   await loadChatHistory();
 }
@@ -7426,7 +7430,7 @@ document.getElementById('loginForm').addEventListener('submit', async function (
     document.getElementById('loginError').hidden = true;
     currentUser = result.data.user || null;
     document.getElementById('loginAccount').value = account;
-    await afterAuthenticated();
+    await afterAuthenticated(currentUser);
   } catch (error) {
     showAuthError('loginError', '无法连接服务器，请确认服务已启动');
   } finally {
@@ -9211,6 +9215,27 @@ function fillSportDateData(key) {
   document.getElementById('sdMinutes').value = data.minutes || 0;
 }
 
+// 打开运动数据弹窗：可指定日期（默认今天），用于补记某一天
+function openSportDataForDate(key) {
+  const today = toISODate(new Date());
+  const dayKey = key && key <= today ? key : today;
+  const input = document.getElementById('sdDate');
+  if (input) {
+    input.max = today;
+    input.value = dayKey;
+  }
+  fillSportDateData(dayKey);
+
+  const parts = dayKey.split('-');
+  const title = document.getElementById('sdTitle');
+  if (title) {
+    title.textContent = dayKey === today
+      ? '填写今日运动数据'
+      : '填写 ' + Number(parts[1]) + ' 月 ' + Number(parts[2]) + ' 日运动数据';
+  }
+  openMask(sportDataMask);
+}
+
 const sdDateInput = document.getElementById('sdDate');
 if (sdDateInput) {
   sdDateInput.addEventListener('change', function () {
@@ -9222,14 +9247,7 @@ if (sdDateInput) {
 
 document.querySelectorAll('.ex-stat[data-field]').forEach(function (card) {
   card.addEventListener('click', function () {
-    const today = toISODate(new Date());
-    const key = toISODate(today);
-    if (sdDateInput) {
-      sdDateInput.max = key;
-      sdDateInput.value = key;
-    }
-    fillSportDateData(key);
-    openMask(sportDataMask);
+    openSportDataForDate(toISODate(new Date()));
   });
 });
 
@@ -9337,7 +9355,37 @@ document.querySelectorAll('.sport-pill').forEach(function (pill) {
   });
 });
 
-// ---------- 本周统计：日期 + 图标，点击查看当天详情 ----------
+// ---------- 本周统计：点击某个日期，直接补记/修改那天的运动 ----------
+let weekDaysCache = [];
+let weekSelectedKey = '';
+
+function weekDetailText(item) {
+  const todayKey = toISODate(new Date());
+  const head = '<b>' + (item.date.getMonth() + 1) + ' 月 ' + item.date.getDate() + ' 日</b><br>';
+
+  if (item.key > todayKey) return head + '这天还没到，等当天再记录吧。';
+
+  return head +
+    '消耗：' + Math.round(item.data.kcal || 0) + ' kcal　步数：' + formatNumber(item.data.steps || 0) +
+    '　时长：' + Math.round(item.data.minutes || 0) + ' 分钟' +
+    '<br><span class="week-edit">点击日期可补记或修改这一天的运动</span>';
+}
+
+function selectWeekDay(key) {
+  weekSelectedKey = key;
+  const grid = document.getElementById('weekGrid');
+  if (grid) {
+    grid.querySelectorAll('.week-day').forEach(function (node) {
+      node.classList.toggle('selected', node.dataset.date === key);
+    });
+  }
+
+  const detail = document.getElementById('weekDetail');
+  const item = weekDaysCache.filter(function (day) { return day.key === key; })[0];
+  if (!detail) return;
+  detail.innerHTML = item ? weekDetailText(item) : '点击上方任意日期，可查看并记录当天的运动。';
+}
+
 function renderWeekPanel() {
   const panel = document.getElementById('weekPanel');
   if (!panel) return;
@@ -9352,17 +9400,19 @@ function renderWeekPanel() {
     const data = sportState.history[key] || { kcal: 0, steps: 0, minutes: 0 };
     days.push({ date: day, key: key, data: data });
   }
+  weekDaysCache = days;
 
   const maxKcal = Math.max.apply(null, days.map(function (item) {
     return item.data.kcal || 0;
   }).concat([1]));
 
-  panel.innerHTML = '<div class="week-grid" id="weekGrid"></div><div class="week-detail" id="weekDetail">点击上方任意日期，查看当天的运动记录。</div>';
+  panel.innerHTML = '<div class="week-grid" id="weekGrid"></div><div class="week-detail" id="weekDetail">点击上方任意日期，可查看并记录当天的运动。</div>';
   const grid = document.getElementById('weekGrid');
 
   days.forEach(function (item) {
     const tile = document.createElement('div');
     tile.className = 'week-day' + (item.data.kcal || item.data.steps ? '' : ' empty');
+    tile.dataset.date = item.key;
     const icon = item.data.kcal >= maxKcal * 0.6 && item.data.kcal > 0 ? 'i-flame' : 'i-activity';
 
     tile.innerHTML = '<div class="date">' + (item.date.getMonth() + 1) + '/' + item.date.getDate() + '</div>' +
@@ -9370,18 +9420,20 @@ function renderWeekPanel() {
       '<div class="kcal">' + (item.data.kcal ? Math.round(item.data.kcal) + ' kcal' : '无记录') + '</div>';
 
     tile.addEventListener('click', function () {
-      grid.querySelectorAll('.week-day').forEach(function (node) {
-        node.classList.remove('selected');
-      });
-      tile.classList.add('selected');
-      document.getElementById('weekDetail').innerHTML =
-        '<b>' + (item.date.getMonth() + 1) + ' 月 ' + item.date.getDate() + ' 日</b><br>' +
-        '消耗：' + Math.round(item.data.kcal || 0) + ' kcal　步数：' + formatNumber(item.data.steps || 0) +
-        '　时长：' + Math.round(item.data.minutes || 0) + ' 分钟';
+      selectWeekDay(item.key);
+      if (item.key > toISODate(new Date())) {
+        showToast('这天还没到，不能提前记录');
+        return;
+      }
+      openSportDataForDate(item.key);
     });
 
     grid.appendChild(tile);
   });
+
+  if (weekSelectedKey && days.some(function (item) { return item.key === weekSelectedKey; })) {
+    selectWeekDay(weekSelectedKey);
+  }
 }
 
 document.querySelectorAll('#sportTabs button').forEach(function (btn) {
@@ -13190,12 +13242,48 @@ const NEWS_COVER_POOL = {
   women: ['women', 'mood', 'sleep']
 };
 
-let newsCoverSeed = Math.floor(Math.random() * 12);
+const NEWS_COVER_ALL = ['diet', 'breakfast', 'water', 'sleep', 'mood', 'women',
+  'bp', 'weightloss', 'cervical', 'stretch', 'eyes', 'immunity'];
+
+let newsCoverSeed = Math.floor(Math.random() * NEWS_COVER_ALL.length);
+// 本次渲染已经用掉的封面，保证同一页里不出现重复图片
+let newsCoverUsed = [];
+
+function newsCoverReset() {
+  newsCoverUsed = [];
+}
+
+// 按主题取一组候选（用 seed 轮换顺序，点「换一批」时整体换一套）
+function newsCoverPool(key) {
+  const pool = NEWS_COVER_POOL[key] || [key];
+  const offset = (newsCoverSeed + key.charCodeAt(0) + key.length) % pool.length;
+  return pool.map(function (_, index) {
+    return pool[(offset + index) % pool.length];
+  });
+}
 
 function newsCoverPick(key) {
-  const pool = NEWS_COVER_POOL[key] || [key];
-  const code = key.charCodeAt(0) + key.length;
-  return pool[(newsCoverSeed + code) % pool.length];
+  const candidates = newsCoverPool(key);
+  let pick = '';
+
+  candidates.some(function (name) {
+    if (newsCoverUsed.indexOf(name) !== -1) return false;
+    pick = name;
+    return true;
+  });
+
+  // 主题图都被占用了，就从整张图库里补一张没用过的
+  if (!pick) {
+    for (let index = 0; index < NEWS_COVER_ALL.length; index++) {
+      const name = NEWS_COVER_ALL[(newsCoverSeed + index) % NEWS_COVER_ALL.length];
+      if (newsCoverUsed.indexOf(name) === -1) { pick = name; break; }
+    }
+  }
+  // 卡片多于 12 张时只能复用
+  if (!pick) pick = candidates[0] || NEWS_COVER_ALL[0];
+
+  newsCoverUsed.push(pick);
+  return pick;
 }
 
 // 科普封面：本站封面图，加载完成才淡入；加载慢或失败时保留下面的渐变图标
@@ -13247,6 +13335,7 @@ function filterNews() {
     visible.sort(function (a, b) { return newsOrder.indexOf(a.key) - newsOrder.indexOf(b.key); });
   }
 
+  newsCoverReset();
   newsGrid.innerHTML = visible.map(function (item) {
     return newsCardHtml(item.key, item.article, keyword);
   }).join('');
@@ -13326,9 +13415,10 @@ function liveNewsCardHtml(item, index) {
   const time = formatNewsTime(item.published);
   const summary = item.summary || '点击查看这条资讯的完整内容。';
 
-  const covers = ['diet', 'cervical', 'mood', 'sleep'];
+  const themes = ['diet', 'sleep', 'stretch', 'bp', 'mood', 'weightloss',
+    'water', 'cervical', 'eyes', 'breakfast', 'immunity', 'women'];
   return '<article class="news-card live" data-link="' + escapeNewsHtml(item.link) + '">' +
-    newsCoverHtml(covers[index % covers.length], color, icon) +
+    newsCoverHtml(themes[index % themes.length], color, icon) +
     '<div class="news-body">' +
       '<div class="news-cat ' + color + '">' + escapeNewsHtml(item.source || '健康资讯') + '</div>' +
       '<div class="news-title">' + escapeNewsHtml(item.title) + '</div>' +
@@ -13365,6 +13455,7 @@ async function refreshLiveNews(manual) {
     const picked = (fresh.length ? fresh : items).slice(0, 12);
 
     liveNews = picked;
+    newsCoverReset();
     newsGrid.innerHTML = picked.map(liveNewsCardHtml).join('');
     newsCount.textContent = '为你找到 ' + picked.length + ' 条最新资讯';
     document.getElementById('newsEmpty').hidden = true;
@@ -13399,8 +13490,6 @@ newsGrid.addEventListener('click', function (event) {
   if (link) window.open(link, '_blank', 'noopener');
 });
 
-filterNews();
-
 // 进入资讯页后自动尝试拉取一次真实资讯（失败保持内置内容）
 document.querySelectorAll('.side-nav button').forEach(function (button) {
   if (button.dataset.page !== 'news') return;
@@ -13418,15 +13507,19 @@ newsMask.addEventListener('click', function (event) {
 });
 
 // ---------- 新功能初始化 ----------
-loadProfileView();
-renderVitalRanges();
-renderMealLog();
-refreshDietViews();
-fillSportInputs();
-renderExercise('today');
-renderWeightChart();
-renderMoodWeek();
-renderWeekPanel();
+// 放到下一个任务里执行：先让登录页完成首屏绘制，再做图表与列表这些重活
+setTimeout(function () {
+  filterNews();
+  loadProfileView();
+  renderVitalRanges();
+  renderMealLog();
+  refreshDietViews();
+  fillSportInputs();
+  renderExercise('today');
+  renderWeightChart();
+  renderMoodWeek();
+  renderWeekPanel();
+}, 0);
 
 // 从后端取回数据后，把内存变量与页面重新同步成最新状态
 function resetSupplementDates() {

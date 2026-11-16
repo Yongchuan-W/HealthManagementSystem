@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import mimetypes
 import os
@@ -75,8 +76,18 @@ class HealthAppHandler(BaseHTTPRequestHandler):
 
     def _serve_page(self):
         html = self.page_html.replace("__MOBILE_URL__", self.mobile_url)
-        self._send_body(200, html.encode("utf-8"), "text/html; charset=utf-8",
-                        extra=[("Cache-Control", "no-store")])
+        body = html.encode("utf-8")
+        # 整页 400KB+，用 ETag 让浏览器复用时只做一次校验，不必重复下载
+        etag = '"%s"' % hashlib.md5(body).hexdigest()
+        if (self.headers.get("If-None-Match") or "").strip() == etag:
+            self.send_response(304)
+            self.send_header("ETag", etag)
+            self.send_header("Cache-Control", "no-cache")
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+            return
+        self._send_body(200, body, "text/html; charset=utf-8",
+                        extra=[("Cache-Control", "no-cache"), ("ETag", etag)])
 
     def _serve_asset(self, path):
         """科普资讯封面等静态图片：公开访问，浏览器缓存一周。"""
