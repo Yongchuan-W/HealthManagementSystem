@@ -6142,15 +6142,15 @@ body { color: var(--text); }
                 <div class="goal-stats">
                   <div class="goal-stat">
                     <div class="label">当前 → 目标</div>
-                    <div class="value"><span id="beautyCurrent">65.2</span> → <span id="beautyTargetText">58.0</span><span class="unit">kg</span></div>
+                    <div class="value"><span id="beautyCurrent">—</span> → <span id="beautyTargetText">—</span><span class="unit">kg</span></div>
                   </div>
                   <div class="goal-stat">
                     <div class="label">每周变化</div>
-                    <div class="value"><span id="beautyWeekly">0.6</span><span class="unit">kg/周</span></div>
+                    <div class="value"><span id="beautyWeekly">—</span><span class="unit">kg/周</span></div>
                   </div>
                   <div class="goal-stat">
                     <div class="label">每日热量</div>
-                    <div class="value"><span id="beautyDeficit">550</span><span class="unit">kcal/天</span></div>
+                    <div class="value"><span id="beautyDeficit">—</span><span class="unit">kcal/天</span></div>
                   </div>
                 </div>
 
@@ -6515,7 +6515,7 @@ body { color: var(--text); }
         </div>
         <div class="pp-item">
           <span>排卵日预测</span>
-          <b id="periodPreviewOvulation">10月25日</b>
+          <b id="periodPreviewOvulation">—</b>
         </div>
       </div>
     </div>
@@ -8298,18 +8298,17 @@ function loadProfileView() {
   renderSideAvatar();
   updateAvatarSelection();
 
-  // 恢复上次保存的身高体重与 BMI
-  if (profile.weight > 0) {
-    document.getElementById('weightValue').textContent = Number(profile.weight).toFixed(1);
-    if (profile.height > 0) {
-      setBmiDisplay(profile.weight / Math.pow(profile.height / 100, 2));
-    }
+  // 恢复体重与 BMI：与变美计划、营养目标使用同一个体重来源，避免一处有值一处显示「—」
+  const restoredWeight = getCurrentWeight();
+  if (restoredWeight > 0) {
+    document.getElementById('weightValue').textContent = restoredWeight.toFixed(1);
+    const restoredHeight = currentHeightCm();
+    setBmiDisplay(restoredHeight > 0
+      ? restoredWeight / Math.pow(restoredHeight / 100, 2)
+      : 0);
   } else {
-    // 没有任何体重数据时保持「—」，不再用默认体重编造 BMI
-    const shownWeight = parseFloat(document.getElementById('weightValue').textContent);
-    if (shownWeight > 0) {
-      setBmiDisplay(shownWeight / Math.pow(currentHeightCm() / 100, 2));
-    }
+    document.getElementById('weightValue').textContent = '—';
+    setBmiDisplay(0);
   }
 
   // 体重 / 身高变化后同步正常值范围与异常提醒
@@ -9885,7 +9884,7 @@ function generateBeautyPlan(type, target, weeks, times, silent) {
   const dailyCalories = Math.round(weeklyChange * 7700 / 7);
   const isWeightType = type === '健身减脂' || type === '增肌塑形';
 
-  document.getElementById('beautyCurrent').textContent = current.toFixed(1);
+  document.getElementById('beautyCurrent').textContent = current > 0 ? current.toFixed(1) : '—';
   document.getElementById('beautyTargetText').textContent = target.toFixed(1);
   document.getElementById('beautyWeekly').textContent = isWeightType ? weeklyChange.toFixed(1) : '—';
   document.getElementById('beautyDeficit').textContent = isWeightType
@@ -10211,7 +10210,11 @@ function applyFemaleProfile(profile) {
   const start = parseISODate(profile.lastPeriodStart);
   if (days >= 1 && days <= 15) periodDays = days;
   if (cycle >= 15 && cycle <= 60) cycleDays = cycle;
-  if (start) lastPeriodStart = start;
+  if (start) {
+    // 超过两个周期之前的旧记录不再用于预测，避免展示已过去的排卵日/经期
+    const ageDays = Math.round((todayStart() - start) / MS_PER_DAY);
+    if (ageDays >= 0 && ageDays <= cycleDays * 2) lastPeriodStart = start;
+  }
   if (Object.prototype.hasOwnProperty.call(profile, 'periodEnd')) {
     // 空字符串表示「经期还没结束」，保持进行中
     lastPeriodEnd = parseISODate(profile.periodEnd) || null;
@@ -13135,12 +13138,12 @@ function renderMoodWeek() {
 
   const today = new Date();
   const todayKey = toISODate(today);
-  const monday = addDays(today, -((today.getDay() + 6) % 7));
+  const start = addDays(today, -6); // 与其它模块一致：近 7 天，今天在最后，不展示未来日期
   const log = loadData('moodLog', {});
   box.innerHTML = '';
 
   for (let index = 0; index < 7; index++) {
-    const day = addDays(monday, index);
+    const day = addDays(start, index);
     const key = toISODate(day);
     const entry = log[key];
 
