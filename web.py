@@ -237,8 +237,9 @@ a { text-decoration: none; }
   overflow: hidden;
   color: #24512f;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 26px;
+  gap: 14px 26px;
   background:
     radial-gradient(90% 130% at 94% 4%, #ffffff 0%, rgba(255, 255, 255, 0) 58%),
     linear-gradient(112deg, #f0f8e7 0%, #f7fbf2 38%, #eef7f1 68%, #e6f2f5 100%);
@@ -263,7 +264,8 @@ a { text-decoration: none; }
 .hero-head {
   position: relative;
   z-index: 2;
-  flex: none;
+  flex: 0 1 auto;
+  min-width: 240px;
 }
 
 .hero-title h1 {
@@ -499,17 +501,17 @@ a { text-decoration: none; }
   transition: width 0.8s ease;
 }
 
-.score-total { background: #d3dfc4; border-color: #bfceb0; box-shadow: inset 3px 0 0 #6f8a5e; }
+.score-total { background: linear-gradient(135deg, #dbe7ce 0%, #cfdcc0 62%, #c3d3b2 100%); border-color: #b9cbad; box-shadow: inset 3px 0 0 #6f8a5e; }
 .score-total .score-ico { background: linear-gradient(135deg, #6f8a5e, #455c3d); }
 .score-total .score-num b { color: #3d5336; }
 .score-total .bar i { background: linear-gradient(90deg, #8aa276, #455c3d); }
 
-.score-diet { background: #d5e7e1; border-color: #bdd6cf; box-shadow: inset 3px 0 0 #0e7c74; }
+.score-diet { background: linear-gradient(135deg, #dcefe9 0%, #d0e5df 62%, #c2dbd5 100%); border-color: #b7d2cb; box-shadow: inset 3px 0 0 #0e7c74; }
 .score-diet .score-ico { background: linear-gradient(135deg, #2f938a, #0e7c74); }
 .score-diet .score-num b { color: #0b655f; }
 .score-diet .bar i { background: linear-gradient(90deg, #6fbfb5, #0e7c74); }
 
-.score-sport { background: #e9e3d0; border-color: #d6cdb5; box-shadow: inset 3px 0 0 #b08a5a; }
+.score-sport { background: linear-gradient(135deg, #f2ecdb 0%, #e9e2cf 62%, #ded5c0 100%); border-color: #d3c9b1; box-shadow: inset 3px 0 0 #b08a5a; }
 .score-sport .score-ico { background: linear-gradient(135deg, #c09a6b, #97733f); }
 .score-sport .score-num b { color: #7a5c33; }
 .score-sport .bar i { background: linear-gradient(90deg, #ddbd8c, #b08a5a); }
@@ -527,9 +529,11 @@ a { text-decoration: none; }
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
-  margin-top: 9px;
+  flex: 0 1 auto;
+  width: 100%;
+  margin-top: 0;
   font-size: 11.5px;
-  color: #7d6a5b;
+  color: #5e6c58;
 }
 
 .state-pill {
