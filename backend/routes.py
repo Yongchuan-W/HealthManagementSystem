@@ -2014,6 +2014,169 @@ def ai_vision(ctx):
     }
 
 
+PLAN_RISK_LEVELS = ("低风险", "中风险", "高风险")
+
+
+def normalize_report_plan(raw):
+    """把模型返回的干预方案收敛到固定结构，避免前端渲染时再兜底。"""
+    raw = raw if isinstance(raw, dict) else {}
+
+    risks = []
+    for item in (raw.get("risks") or [])[:5]:
+        if not isinstance(item, dict):
+            continue
+        name = _short_text(item.get("name"), 20)
+        if not name:
+            continue
+        risks.append({
+            "name": name,
+            "level": _short_text(item.get("level"), 8) or "需关注",
+            "value": _short_text(item.get("value"), 24),
+            "advice": _short_text(item.get("advice"), 80),
+        })
+
+    diet_raw = raw.get("diet") if isinstance(raw.get("diet"), dict) else {}
+    meals = []
+    for item in (diet_raw.get("meals") or [])[:4]:
+        if not isinstance(item, dict):
+            continue
+        name = _short_text(item.get("name"), 10)
+        if not name:
+            continue
+        foods = []
+        for food in (item.get("items") or [])[:8]:
+            text = _short_text(food, 30)
+            if text:
+                foods.append(text)
+        meals.append({
+            "name": name,
+            "kcal": int(_bounded_float(item.get("kcal"), 0, 2000) or 0),
+            "items": foods,
+            "tip": _short_text(item.get("tip"), 50),
+        })
+
+    avoid = []
+    for item in (diet_raw.get("avoid") or [])[:6]:
+        text = _short_text(item, 20)
+        if text:
+            avoid.append(text)
+
+    exercise_raw = raw.get("exercise") if isinstance(raw.get("exercise"), dict) else {}
+    weekly = []
+    for item in (exercise_raw.get("weekly") or [])[:6]:
+        if not isinstance(item, dict):
+            continue
+        day = _short_text(item.get("day"), 8)
+        if not day:
+            continue
+        weekly.append({
+            "day": day,
+            "type": _short_text(item.get("type"), 20),
+            "duration": _short_text(item.get("duration"), 16),
+            "note": _short_text(item.get("note"), 40),
+        })
+
+    caution = []
+    for item in (exercise_raw.get("caution") or [])[:5]:
+        text = _short_text(item, 50)
+        if text:
+            caution.append(text)
+
+    citations = []
+    for item in (raw.get("citations") or [])[:5]:
+        text = _short_text(item, 40)
+        if text:
+            citations.append(text)
+    if not citations:
+        citations = ["《中国居民膳食指南(2022)》", "《内科学（第9版）》"]
+
+    level = _short_text(raw.get("riskLevel"), 8)
+    if level not in PLAN_RISK_LEVELS:
+        level = "中风险" if risks else "低风险"
+
+    return {
+        "summary": _short_text(raw.get("summary"), 120),
+        "riskLevel": level,
+        "risks": risks,
+        "diet": {
+            "kcal": int(_bounded_float(diet_raw.get("kcal"), 0, 5000) or 0),
+            "principle": _short_text(diet_raw.get("principle"), 60),
+            "meals": meals,
+            "avoid": avoid,
+        },
+        "exercise": {
+            "goal": _short_text(exercise_raw.get("goal"), 60),
+            "weekly": weekly,
+            "caution": caution,
+        },
+        "citations": citations,
+        "disclaimer": _short_text(raw.get("disclaimer"), 160) or
+        "本建议仅用于健康管理，不构成医疗诊断；异常指标请遵医嘱复查。",
+        "provider": _short_text(raw.get("_provider"), 20),
+        "model": _short_text(raw.get("_model"), 40),
+    }
+
+
+def stream_report_plan(conn, user, body, emit):
+    """体检报告解读的流式编排：OCR → Function Calling → 流式方案。
+
+    emit(event, data) 由 app.py 写入 SSE；出错时直接抛出 ApiError / AiError。
+    """
+    image_url = str(body.get("imageUrl") or "").strip()
+    filename = os.path.basename(image_url) if image_url.startswith("/uploads/") else ""
+    if not filename:
+        raise ApiError(400, "imageUrl 必须是本站上传的图片地址")
+
+    row = conn.execute(
+        "SELECT * FROM uploads WHERE filename = ? AND user_id = ?", (filename, user["id"])
+    ).fetchone()
+    if row is None:
+        raise ApiError(404, "图片不存在或无权访问")
+
+    path = os.path.join(db.UPLOAD_DIR, filename)
+    if not os.path.isfile(path):
+        raise ApiError(404, "图片文件已丢失，请重新上传")
+    if os.path.getsize(path) > MAX_UPLOAD_BYTES:
+        raise ApiError(413, "图片超过 12MB，请压缩后再试")
+    if not ai.is_configured():
+        raise ApiError(503, "尚未配置模型密钥，演示模式仍可完整体验", "ai_not_configured")
+
+    used = _vision_count(conn, user["id"])
+    if used >= VISION_DAILY_LIMIT:
+        raise ApiError(429, "今天的解读次数已用完（每天 %d 次）" % VISION_DAILY_LIMIT,
+                       "vision_quota")
+
+    with open(path, "rb") as handle:
+        data = handle.read()
+
+    emit("stage", {"text": "正在调用视觉大模型进行 OCR 识别…"})
+    try:
+        raw, meta = ai.vision(data, row["mime"], "report")
+    except ai.AiError as error:
+        raise ApiError(502, "报告识别失败：%s" % error, "vision_failed")
+
+    report = normalize_report_result(raw)
+    abnormal = report.get("abnormal") or []
+    emit("ocr", {"report": report})
+    emit("stage", {
+        "text": "检测到 %d 项异常指标，正在调用专家规则库…" % len(abnormal)
+    })
+
+    profile = read_profile(conn, user["id"])
+    plan_raw = ai.stream_report_plan(report, profile, emit)
+    plan = normalize_report_plan(plan_raw)
+    _vision_bump(conn, user["id"])
+
+    emit("plan", {
+        "plan": plan,
+        "report": report,
+        "provider": meta["provider"],
+        "model": meta["model"],
+        "configured": True,
+    })
+    return plan
+
+
 @route("POST", "/api/ai/food")
 def ai_food(ctx):
     """按用户输入的食物名称估算热量，覆盖食物库以外的家常菜。

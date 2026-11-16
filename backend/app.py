@@ -16,7 +16,7 @@ import traceback
 from http.server import BaseHTTPRequestHandler
 from urllib.parse import parse_qs, unquote, urlparse
 
-from . import auth, db, routes, telemetry
+from . import ai, auth, db, routes, telemetry
 from .errors import ApiError
 
 MAX_BODY_BYTES = 14 * 1024 * 1024
@@ -65,6 +65,8 @@ class HealthAppHandler(BaseHTTPRequestHandler):
             self._serve_page()
         elif path == "/favicon.ico":
             self._send_body(204, b"", "image/x-icon")
+        elif path == "/api/ai/report-plan/stream" and method == "POST":
+            self._handle_report_stream()
         elif path.startswith("/uploads/"):
             self._serve_upload(path)
         elif path.startswith("/assets/"):
@@ -201,6 +203,94 @@ class HealthAppHandler(BaseHTTPRequestHandler):
         finally:
             telemetry.record_request(
                 method, path, status, (time.time() - started) * 1000,
+                current_user["id"] if current_user is not None else None,
+            )
+
+    # ---------- SSE：体检报告解读 ----------
+    def _handle_report_stream(self):
+        """流式接口单独处理：先发 SSE 头，再把 OCR/工具/生成进度边算边推。"""
+        started = time.time()
+        current_user = None
+        stream_started = False
+        status = 500
+        emit = None
+
+        def safe_emit(event, payload):
+            if emit is None:
+                return
+            try:
+                emit(event, payload)
+            except (BrokenPipeError, ConnectionResetError):
+                pass
+
+        try:
+            raw_body = self._read_body()
+            body = self._parse_json(raw_body)
+            token = auth.token_from_headers(self.headers)
+
+            with db.session() as conn:
+                user = auth.user_from_token(conn, token)
+                current_user = user
+                if user is None:
+                    status = 401
+                    self._send_json(401, {"ok": False, "error": "请先登录",
+                                          "code": "unauthorized"})
+                    return
+
+                self.send_response(200)
+                self.send_header("Content-Type", "text/event-stream; charset=utf-8")
+                self.send_header("Cache-Control", "no-cache")
+                self.send_header("X-Accel-Buffering", "no")
+                self.send_header("Connection", "close")
+                self.end_headers()
+                self.close_connection = True
+                stream_started = True
+                status = 200
+
+                def emit(event, payload):
+                    chunk = "event: %s\ndata: %s\n\n" % (
+                        event, json.dumps(payload, ensure_ascii=False))
+                    self.wfile.write(chunk.encode("utf-8"))
+                    self.wfile.flush()
+
+                try:
+                    routes.stream_report_plan(conn, user, body, emit)
+                    emit("done", {"ok": True})
+                except ApiError as error:
+                    safe_emit("error", {"ok": False, "error": error.message, "code": error.code})
+                except ai.AiError as error:
+                    safe_emit("error", {"ok": False, "error": str(error), "code": "ai_failed"})
+                except Exception:  # noqa: BLE001 - 已发头，只能把错误写进流里
+                    traceback.print_exc()
+                    telemetry.record_error("解读流式异常", "/api/ai/report-plan/stream",
+                                           telemetry.exception_text())
+                    safe_emit("error", {"ok": False, "error": "AI 解读失败，请稍后再试",
+                                        "code": "internal_error"})
+
+        except ApiError as error:
+            status = error.status
+            if stream_started:
+                safe_emit("error", {"ok": False, "error": error.message, "code": error.code})
+            else:
+                self._send_json(status, {"ok": False, "error": error.message,
+                                         "code": error.code})
+        except (ValueError, UnicodeDecodeError) as error:
+            status = 400
+            if stream_started:
+                safe_emit("error", {"ok": False, "error": "请求格式有误", "code": "bad_request"})
+            else:
+                self._send_json(400, {"ok": False, "error": "请求格式有误：%s" % error,
+                                      "code": "bad_request"})
+        except Exception:  # noqa: BLE001
+            traceback.print_exc()
+            status = 500
+            if not stream_started:
+                self._send_json(500, {"ok": False, "error": "服务器开小差了，请稍后再试",
+                                      "code": "internal_error"})
+        finally:
+            telemetry.record_request(
+                "POST", "/api/ai/report-plan/stream", status,
+                (time.time() - started) * 1000,
                 current_user["id"] if current_user is not None else None,
             )
 

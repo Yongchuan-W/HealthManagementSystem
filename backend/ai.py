@@ -406,3 +406,300 @@ def vision(image_bytes, mime, task):
         "model": settings["model"],
         "provider": provider_name(settings),
     }
+
+
+# ==========================================================
+# 体检报告 AI 解读：Function Calling + 流式输出
+# ==========================================================
+REPORT_PLAN_SYSTEM = (
+    "你是「AI 健康干预教练」，服务对象是拿到体检报告但看不懂的普通人。"
+    "你的任务是把报告翻译成可执行的饮食、运动与复查建议。\n"
+    "安全边界：不做疾病诊断，不推荐处方药或具体剂量；指标明显异常时提示尽快到相应科室复查。\n"
+    "只能输出一个 JSON 对象，不要 Markdown、不要代码块、不要任何解释。字段如下：\n"
+    '{"summary":"一句话总结报告与干预方向",'
+    '"riskLevel":"低风险|中风险|高风险",'
+    '"risks":[{"name":"尿酸偏高","level":"偏高","value":"486 μmol/L","advice":"可执行建议"}],'
+    '"diet":{"kcal":1680,"principle":"低嘌呤、控糖、优质蛋白",'
+    '"meals":[{"name":"早餐","kcal":420,"items":["食物与分量"],"tip":"小贴士"}],'
+    '"avoid":["动物内脏","浓肉汤"]},'
+    '"exercise":{"goal":"每周 150 分钟中等强度有氧",'
+    '"weekly":[{"day":"周一","type":"快走","duration":"30 分钟","note":"注意事项"}],'
+    '"caution":["避免突然剧烈运动"]},'
+    '"citations":["《中国居民膳食指南(2022)》","《内科学（第9版）》"],'
+    '"disclaimer":"本建议仅用于健康管理，不构成医疗诊断，异常指标请遵医嘱复查。"}\n'
+    "要求：risks 1-5 条；meals 3-4 条；weekly 4-5 条；avoid 3-5 条；"
+    "所有数值必须来自报告或工具结果，不要编造；语气口语化、具体到食物和分钟。"
+)
+
+REPORT_PLAN_TOOLS = [
+    {
+        "type": "function",
+        "function": {
+            "name": "calculate_bmi",
+            "description": "根据体重（kg）和身高（cm）计算 BMI，并给出体重分级与健康体重区间。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "weight": {"type": "number", "description": "体重，单位 kg"},
+                    "height": {"type": "number", "description": "身高，单位 cm"},
+                },
+                "required": ["weight", "height"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "generate_recipe",
+            "description": "按每日目标热量生成三餐热量分配，供后续给出中式食谱。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "calories": {"type": "number", "description": "每日目标热量，单位 kcal"},
+                    "avoid": {"type": "string", "description": "需要避开的食物，例如高嘌呤食物"},
+                },
+                "required": ["calories"],
+            },
+        },
+    },
+]
+
+TOOL_LABELS = {
+    "calculate_bmi": "计算 BMI 与体重分级",
+    "generate_recipe": "生成每日热量分配",
+}
+
+
+def tool_calculate_bmi(arguments):
+    weight = float(arguments.get("weight") or 0)
+    height = float(arguments.get("height") or 0)
+    if weight <= 0 or height <= 0:
+        raise AiError("calculate_bmi 参数不完整")
+    height_m = height / 100.0
+    bmi = weight / (height_m * height_m)
+    if bmi < 18.5:
+        level = "偏瘦"
+    elif bmi < 24:
+        level = "正常"
+    elif bmi < 28:
+        level = "超重"
+    else:
+        level = "肥胖"
+    low = round(18.5 * height_m * height_m, 1)
+    high = round(23.9 * height_m * height_m, 1)
+    return {
+        "bmi": round(bmi, 1),
+        "level": level,
+        "healthyWeight": "%s-%s kg" % (low, high),
+    }
+
+
+def tool_generate_recipe(arguments):
+    try:
+        calories = float(arguments.get("calories") or 1600)
+    except (TypeError, ValueError):
+        calories = 1600
+    calories = max(800, min(4000, calories))
+    return {
+        "targetKcal": int(round(calories)),
+        "split": {
+            "早餐": int(round(calories * 0.3)),
+            "午餐": int(round(calories * 0.4)),
+            "晚餐": int(round(calories * 0.3)),
+        },
+        "avoid": str(arguments.get("avoid") or "").strip()[:60],
+    }
+
+
+def _run_tool(name, arguments):
+    if name == "calculate_bmi":
+        return tool_calculate_bmi(arguments)
+    if name == "generate_recipe":
+        return tool_generate_recipe(arguments)
+    raise AiError("未知工具：%s" % name)
+
+
+def _stream_completion(settings, payload, on_delta, timeout=60, kind="体检解读"):
+    """以 stream=true 请求模型，逐段回调增量文本，返回完整内容。"""
+    payload = dict(payload)
+    payload["stream"] = True
+    started = time.time()
+    request = urllib.request.Request(
+        settings["api_base"] + "/chat/completions",
+        data=json.dumps(payload).encode("utf-8"),
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + settings["api_key"],
+            "Accept": "text/event-stream",
+        },
+        method="POST",
+    )
+
+    chunks = []
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            for raw in response:
+                line = raw.decode("utf-8", "ignore").strip()
+                if not line or not line.startswith("data:"):
+                    continue
+                data = line[5:].strip()
+                if data == "[DONE]":
+                    break
+                try:
+                    event = json.loads(data)
+                except ValueError:
+                    continue
+                choices = event.get("choices") or []
+                if not choices:
+                    continue
+                delta = (choices[0].get("delta") or {}).get("content") or ""
+                if delta:
+                    chunks.append(delta)
+                    on_delta(delta)
+    except urllib.error.HTTPError as error:
+        detail = ""
+        try:
+            data = json.loads(error.read().decode("utf-8"))
+            detail = (data.get("error") or {}).get("message") or data.get("message") or ""
+        except Exception:
+            detail = ""
+        telemetry.record_ai((time.time() - started) * 1000, False,
+                            settings.get("model", ""), kind, "HTTP %s" % error.code)
+        if error.code == 401:
+            raise AiError("密钥无效或已过期")
+        if error.code == 402:
+            raise AiError("账户余额不足")
+        if error.code == 429:
+            raise AiError("调用过于频繁，请稍后再试")
+        raise AiError("模型服务返回 %d%s" % (error.code, ("：" + detail) if detail else ""))
+    except urllib.error.URLError as error:
+        telemetry.record_ai((time.time() - started) * 1000, False,
+                            settings.get("model", ""), kind, "网络错误")
+        raise AiError("无法连接模型服务：%s" % getattr(error, "reason", error))
+
+    text = "".join(chunks).strip()
+    telemetry.record_ai((time.time() - started) * 1000, bool(text),
+                        settings.get("model", ""), kind, None if text else "空内容")
+    if not text:
+        raise AiError("模型没有返回内容")
+    return text
+
+
+def stream_report_plan(report, profile, emit):
+    """体检报告 → 结构化干预方案。
+
+    emit(event, data) 依次推送 stage / tool / delta / plan 事件：
+      - stage：当前阶段文案
+      - tool：真实执行的 Function Calling 结果
+      - delta：模型流式增量文本
+      - plan：最终结构化方案
+    """
+    settings = config()
+    if settings is None:
+        raise AiError("未配置 HM_AI_API_KEY")
+
+    profile = dict(profile or {})
+    height = None
+    for key in ("height",):
+        try:
+            value = float(profile.get(key) or 0)
+        except (TypeError, ValueError):
+            value = 0
+        height = value or None
+
+    metrics = {
+        "weight": report.get("weight"),
+        "fat": report.get("fat"),
+        "bmi": report.get("bmi"),
+        "systolic": report.get("systolic"),
+        "diastolic": report.get("diastolic"),
+        "glucose": report.get("glucose"),
+        "abnormal": report.get("abnormal") or [],
+        "items": (report.get("items") or [])[:20],
+        "height": height,
+        "gender": profile.get("gender"),
+    }
+
+    messages = [
+        {"role": "system", "content": REPORT_PLAN_SYSTEM},
+        {"role": "user", "content": "体检报告识别结果与用户基础信息：\n" +
+         json.dumps(metrics, ensure_ascii=False)},
+    ]
+
+    emit("stage", {"text": "正在读取报告指标，规划干预方案…"})
+
+    # 第一轮：把工具 schema 交给模型，按需触发 Function Calling
+    body = _post(settings, {
+        "model": settings["model"],
+        "messages": messages,
+        "tools": REPORT_PLAN_TOOLS,
+        "tool_choice": "auto",
+        "temperature": 0.2,
+        "max_tokens": 800,
+        "stream": False,
+    }, timeout=45, kind="体检解读工具")
+
+    choice = (body.get("choices") or [{}])[0]
+    message = choice.get("message") or {}
+    tool_calls = message.get("tool_calls") or []
+
+    if tool_calls:
+        messages.append({
+            "role": "assistant",
+            "content": message.get("content") or "",
+            "tool_calls": tool_calls,
+        })
+        for call in tool_calls:
+            function = call.get("function") or {}
+            name = function.get("name") or ""
+            try:
+                arguments = json.loads(function.get("arguments") or "{}")
+            except ValueError:
+                arguments = {}
+            if name in TOOL_LABELS:
+                try:
+                    result = _run_tool(name, arguments)
+                except AiError as error:
+                    result = {"error": str(error)}
+                emit("tool", {
+                    "name": name,
+                    "label": TOOL_LABELS[name],
+                    "result": result,
+                })
+            else:
+                result = {"error": "不支持的工具"}
+            messages.append({
+                "role": "tool",
+                "tool_call_id": call.get("id") or name,
+                "content": json.dumps(result, ensure_ascii=False),
+            })
+    else:
+        # 模型没主动调用工具时，用本地计算补上，保证方案里有可核对的 BMI
+        weight = metrics.get("weight")
+        if weight and height:
+            result = tool_calculate_bmi({"weight": weight, "height": height})
+            emit("tool", {
+                "name": "calculate_bmi",
+                "label": TOOL_LABELS["calculate_bmi"],
+                "result": result,
+            })
+            messages.append({
+                "role": "system",
+                "content": "工具计算结果（必须使用）：" + json.dumps(result, ensure_ascii=False),
+            })
+
+    emit("stage", {"text": "正在生成专属干预方案…"})
+
+    # 第二轮：流式输出最终 JSON，边生成边推给前端
+    full = _stream_completion(settings, {
+        "model": settings["model"],
+        "messages": messages,
+        "temperature": 0.4,
+        "max_tokens": 2200,
+        "stream": True,
+    }, lambda text: emit("delta", {"text": text}), timeout=90, kind="体检解读")
+
+    plan = parse_json_object(full)
+    plan["_provider"] = provider_name(settings)
+    plan["_model"] = settings["model"]
+    return plan

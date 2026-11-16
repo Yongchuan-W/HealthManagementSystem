@@ -34,7 +34,7 @@ PAGE_HTML = r"""<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>健康管理系统</title>
+<title>AI 健康干预教练 · 一键读懂体检单</title>
 <style>
 /* ==========================================================
    1. 全局基础样式
@@ -44,13 +44,13 @@ PAGE_HTML = r"""<!DOCTYPE html>
 [hidden] { display: none !important; }
 
 :root {
-  --teal: #8b4a22;
-  --teal-dark: #6e3a18;
-  --text: #433326;
-  --muted: #8b7d70;
-  --line: #e4ece4;
-  --bg: #edf5ee;
-  --shadow: 0 2px 14px rgba(74, 53, 37, 0.06);
+  --teal: #455c3d;
+  --teal-dark: #3a4f33;
+  --text: #1f2a1c;
+  --muted: #5e6c58;
+  --line: #e1e8dc;
+  --bg: #f4f7f1;
+  --shadow: 0 2px 10px rgba(69, 92, 61, 0.05);
 }
 
 body {
@@ -144,7 +144,7 @@ a { text-decoration: none; }
   border: 0;
   border-radius: 10px;
   background: transparent;
-  color: #6b7688;
+  color: #6b7a64;
   font-size: 14px;
   text-align: left;
   transition: background 0.2s, color 0.2s;
@@ -207,7 +207,7 @@ a { text-decoration: none; }
 .side-user-name {
   font-size: 13px;
   font-weight: 600;
-  color: #39404f;
+  color: #2f4237;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -215,14 +215,14 @@ a { text-decoration: none; }
 
 .side-user-sub {
   font-size: 11px;
-  color: #8a94a6;
+  color: #8a9984;
   margin-top: 2px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.caret { width: 14px; height: 14px; color: #8a94a6; }
+.caret { width: 14px; height: 14px; color: #8a9984; }
 
 .main-area { margin-left: 220px; min-height: 100vh; }
 
@@ -487,7 +487,7 @@ a { text-decoration: none; }
 .bar {
   height: 6px;
   border-radius: 99px;
-  background: rgba(74, 53, 37, 0.08);
+  background: rgba(31, 42, 28, 0.08);
   overflow: hidden;
 }
 
@@ -499,20 +499,74 @@ a { text-decoration: none; }
   transition: width 0.8s ease;
 }
 
-.score-total { background: #fdf2f3; border-color: #f8e2e6; }
-.score-total .score-ico { background: linear-gradient(135deg, #f9808f, #ec4f6b); }
-.score-total .score-num b { color: #e8465f; }
-.score-total .bar i { background: linear-gradient(90deg, #f79aa9, #ec4f6b); }
+.score-total { background: #d8e2cd; border-color: #c6d2b9; }
+.score-total .score-ico { background: linear-gradient(135deg, #6f8a5e, #455c3d); }
+.score-total .score-num b { color: #3d5336; }
+.score-total .bar i { background: linear-gradient(90deg, #8aa276, #455c3d); }
 
-.score-diet { background: #f2f8ec; border-color: #e1edd6; }
-.score-diet .score-ico { background: linear-gradient(135deg, #93c96f, #5d9c43); }
-.score-diet .score-num b { color: #4f8a37; }
-.score-diet .bar i { background: linear-gradient(90deg, #a9d886, #5d9c43); }
+.score-diet { background: #e2eada; border-color: #d1dcc6; }
+.score-diet .score-ico { background: linear-gradient(135deg, #93ad81, #5d7a4f); }
+.score-diet .score-num b { color: #455c3d; }
+.score-diet .bar i { background: linear-gradient(90deg, #a8bf96, #5d7a4f); }
 
-.score-sport { background: #fdf7e9; border-color: #f6ebc9; }
-.score-sport .score-ico { background: linear-gradient(135deg, #f4cf62, #dea31f); }
-.score-sport .score-num b { color: #c58f13; }
+.score-sport { background: #ebf1e4; border-color: #dbe6d0; }
+.score-sport .score-ico { background: linear-gradient(135deg, #a9c39a, #6f8a5e); }
+.score-sport .score-num b { color: #4c6640; }
+.score-sport .bar i { background: linear-gradient(90deg, #bfd3ae, #6f8a5e); }
 .score-sport .bar i { background: linear-gradient(90deg, #f8d97e, #dea31f); }
+
+/* 评分的「视觉人格」：疲惫 → 平稳 → 活力，总分配色随状态渐变 */
+.score-total[data-mood="tired"] .score-num b { color: #c1622f; }
+.score-total[data-mood="tired"] .bar i { background: linear-gradient(90deg, #f3b98c, #dc7a45); }
+.score-total[data-mood="steady"] .score-num b { color: #a5801a; }
+.score-total[data-mood="steady"] .bar i { background: linear-gradient(90deg, #f5d873, #d8a41f); }
+.score-total[data-mood="vital"] .score-num b { color: #2f7d4f; }
+.score-total[data-mood="vital"] .bar i { background: linear-gradient(90deg, #9fd47c, #3f8f5e); }
+
+.hero-state {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 9px;
+  font-size: 11.5px;
+  color: #7d6a5b;
+}
+
+.state-pill {
+  padding: 2px 9px;
+  border-radius: 99px;
+  font-weight: 700;
+  background: #f3efe9;
+  color: #8a7a6b;
+  transition: background 0.3s, color 0.3s;
+}
+
+.state-pill[data-mood="tired"] { background: #fdeee5; color: #c1622f; }
+.state-pill[data-mood="steady"] { background: #fdf6dc; color: #a5801a; }
+.state-pill[data-mood="vital"] { background: #e7f6ec; color: #2f7d4f; }
+
+.state-dots { display: flex; gap: 4px; }
+
+.state-dots i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: rgba(31, 42, 28, 0.12);
+  transition: background 0.35s, box-shadow 0.35s;
+}
+
+.state-dots i.on {
+  background: linear-gradient(135deg, #9fd47c, #4f9a45);
+  box-shadow: 0 0 0 2px rgba(120, 190, 110, 0.16);
+}
+
+.state-dots i.today { animation: stateDotPulse 2.2s ease-in-out infinite; }
+
+@keyframes stateDotPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.22); }
+}
 
 /* 角落的蔬果碗与一杯水 */
 .hero-bowl {
@@ -573,7 +627,7 @@ a { text-decoration: none; }
 .sub-title {
   font-size: 14px;
   font-weight: 500;
-  color: #4a5568;
+  color: #4c5d45;
   margin: 24px 0 10px;
 }
 
@@ -617,7 +671,7 @@ a { text-decoration: none; }
 .vital .value {
   font-size: 22px;
   font-weight: 700;
-  color: #222f3e;
+  color: #243329;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
@@ -641,7 +695,7 @@ a { text-decoration: none; }
   font-weight: 500;
 }
 
-.badge.warn { color: #d99a3f; background: #fdf3e0; }
+.badge.warn { color: #d99a3f; background: #f4f8ef; }
 
 /* 右侧健康参考面板：正常值范围 + 异常提醒 + BMI 公式 */
 .vital-side {
@@ -660,7 +714,7 @@ a { text-decoration: none; }
   gap: 10px;
   font-size: 13px;
   font-weight: 700;
-  color: #4a3525;
+  color: #1f2a1c;
 }
 
 .range-head .report-link { margin: 0; align-self: auto; }
@@ -694,8 +748,8 @@ a { text-decoration: none; }
   font-size: 12px;
 }
 
-.rr-name { color: #6f6154; white-space: nowrap; }
-.rr-ref { color: #8b7d70; font-size: 11.5px; }
+.rr-name { color: #5e6c58; white-space: nowrap; }
+.rr-ref { color: #5e6c58; font-size: 11.5px; }
 
 .rr-state {
   font-size: 11px;
@@ -706,8 +760,8 @@ a { text-decoration: none; }
   white-space: nowrap;
 }
 
-.rr-state.warn { background: #fdf3e0; color: #c07d20; }
-.rr-state.muted { background: #f0efec; color: #8b7d70; }
+.rr-state.warn { background: #f4f8ef; color: #c07d20; }
+.rr-state.muted { background: #f0efec; color: #5e6c58; }
 
 .abnormal-box {
   background: #fff8f2;
@@ -733,8 +787,8 @@ a { text-decoration: none; }
   color: #7c7367;
 }
 
-.bmi-formula b { color: #6e3a18; font-size: 12px; }
-.bmi-formula .formula-line { color: #6e3a18; font-weight: 600; }
+.bmi-formula b { color: #3d5336; font-size: 12px; }
+.bmi-formula .formula-line { color: #3d5336; font-weight: 600; }
 
 /* 头像上传 + 裁剪 */
 .avatar-option.avatar-upload {
@@ -802,12 +856,12 @@ a { text-decoration: none; }
   align-items: center;
   gap: 10px;
   font-size: 12px;
-  color: #6b7688;
+  color: #6b7a64;
 }
 
 .crop-zoom input[type="range"] {
   flex: 1;
-  accent-color: #8b4a22;
+  accent-color: #455c3d;
 }
 
 .crop-hint {
@@ -914,7 +968,7 @@ a { text-decoration: none; }
   flex: none;
 }
 
-.meal-tag.morning { background: #eaf2ff; color: #5b8def; }
+.meal-tag.morning { background: #eef3e8; color: #0e7c74; }
 .meal-tag.noon    { background: #fdf4dd; color: #d9a340; }
 .meal-tag.night   { background: #efeaff; color: #8a6cf0; }
 
@@ -931,7 +985,7 @@ a { text-decoration: none; }
   transition: box-shadow 0.2s, background 0.2s;
 }
 
-.meal input::placeholder { color: #aab2c0; }
+.meal input::placeholder { color: #b3c0a9; }
 
 .meal-btn {
   flex: none;
@@ -940,7 +994,7 @@ a { text-decoration: none; }
   border: 1px solid #d9c3ae;
   border-radius: 9px;
   background: #fdf7f0;
-  color: #8b4a22;
+  color: #455c3d;
   font-size: 12.5px;
   font-weight: 600;
   transition: background 0.2s, border-color 0.2s;
@@ -1055,9 +1109,9 @@ a { text-decoration: none; }
 .ex-stat .ico .icon { width: 26px; height: 26px; }
 .ico-flame { color: #f08a4b; }
 .ico-step  { color: #3fc7a4; }
-.ico-clock { color: #5b8def; }
+.ico-clock { color: #0e7c74; }
 
-.ex-stat .value { font-size: 18px; font-weight: 700; color: #222f3e; }
+.ex-stat .value { font-size: 18px; font-weight: 700; color: #243329; }
 
 /* 点「点击填写」后就地变成输入框 */
 .ex-inline-input {
@@ -1067,7 +1121,7 @@ a { text-decoration: none; }
   border: 1px solid #cbb9a4;
   border-radius: 8px;
   background: #fff;
-  color: #222f3e;
+  color: #243329;
   font-size: 16px;
   font-weight: 700;
 }
@@ -1140,7 +1194,7 @@ a { text-decoration: none; }
   gap: 8px;
   font-size: 18px;
   font-weight: 700;
-  color: #39404f;
+  color: #2f4237;
 }
 
 .female-title .icon { color: #e0679a; }
@@ -1172,14 +1226,14 @@ a { text-decoration: none; }
   padding: 14px 16px;
   margin-bottom: 12px;
   font-size: 13px;
-  color: #6b7688;
+  color: #6b7a64;
 }
 
 .f-item:last-child { margin-bottom: 0; }
 
 .f-item .left { display: flex; align-items: center; gap: 8px; }
 .f-item .icon { color: #e0679a; width: 16px; height: 16px; }
-.f-item b { font-size: 16px; color: #39404f; }
+.f-item b { font-size: 16px; color: #2f4237; }
 
 .status-card {
   background: #fff;
@@ -1194,7 +1248,7 @@ a { text-decoration: none; }
   gap: 8px;
   font-size: 14px;
   font-weight: 600;
-  color: #39404f;
+  color: #2f4237;
 }
 
 .status-title .icon { color: #e0679a; width: 16px; height: 16px; }
@@ -1239,7 +1293,7 @@ a { text-decoration: none; }
   padding: 0 16px 0 0;
   font-size: 16px;
   font-weight: 700;
-  color: #39404f;
+  color: #2f4237;
   text-align: right;
   outline: none;
   cursor: pointer;
@@ -1297,7 +1351,7 @@ a { text-decoration: none; }
 .tag-menu h4 {
   font-size: 12px;
   font-weight: 600;
-  color: #6b7688;
+  color: #6b7a64;
   margin-bottom: 10px;
 }
 
@@ -1306,7 +1360,7 @@ a { text-decoration: none; }
 .tag-option {
   border: 1px solid #eef0f5;
   background: #f8f9fc;
-  color: #6b7688;
+  color: #6b7a64;
   border-radius: 6px;
   padding: 5px 10px;
   font-size: 12px;
@@ -1345,7 +1399,7 @@ a { text-decoration: none; }
   padding: 24px;
 }
 
-.family-title .icon { color: #5b8def; }
+.family-title .icon { color: #0e7c74; }
 
 .family-card .btn-soft {
   border-color: #d5e5fb;
@@ -1378,8 +1432,8 @@ a { text-decoration: none; }
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #eaf2ff;
-  color: #5b8def;
+  background: #eef3e8;
+  color: #0e7c74;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1388,7 +1442,7 @@ a { text-decoration: none; }
   flex: none;
 }
 
-.person-name { font-size: 14px; font-weight: 700; color: #39404f; }
+.person-name { font-size: 14px; font-weight: 700; color: #2f4237; }
 
 .person-age { font-size: 11px; color: var(--muted); margin-left: 6px; }
 
@@ -1398,13 +1452,13 @@ a { text-decoration: none; }
   justify-content: space-between;
   gap: 10px;
   font-size: 12px;
-  color: #6b7688;
+  color: #6b7a64;
   padding: 8px 0;
   border-top: 1px dashed #eef1f6;
 }
 
 .family-line b {
-  color: #39404f;
+  color: #2f4237;
   font-weight: 600;
   max-width: 64%;
   text-align: right;
@@ -1419,7 +1473,7 @@ a { text-decoration: none; }
 
 .person-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(74, 53, 37, 0.1);
+  box-shadow: 0 8px 20px rgba(31, 42, 28, 0.1);
 }
 
 /* 家人健康档案弹窗 */
@@ -1433,8 +1487,8 @@ a { text-decoration: none; }
 }
 
 .member-detail-name { display: flex; flex-direction: column; gap: 3px; }
-.member-detail-name b { font-size: 15px; color: #39404f; }
-.member-detail-name span { font-size: 12px; color: #8a94a6; }
+.member-detail-name b { font-size: 15px; color: #2f4237; }
+.member-detail-name span { font-size: 12px; color: #8a9984; }
 
 .detail-grid {
   display: grid;
@@ -1452,12 +1506,12 @@ a { text-decoration: none; }
   gap: 5px;
 }
 
-.detail-item span { font-size: 11.5px; color: #8b7d70; }
-.detail-item b { font-size: 13px; color: #39404f; line-height: 1.5; word-break: break-all; }
+.detail-item span { font-size: 11.5px; color: #5e6c58; }
+.detail-item b { font-size: 13px; color: #2f4237; line-height: 1.5; word-break: break-all; }
 
 .detail-title {
   font-size: 13px;
-  color: #433326;
+  color: #1f2a1c;
   margin: 14px 0 8px;
 }
 
@@ -1465,10 +1519,10 @@ a { text-decoration: none; }
   .detail-grid { grid-template-columns: 1fr; }
 }
 
-.family-card .status-title .icon { color: #5b8def; }
+.family-card .status-title .icon { color: #0e7c74; }
 
 .family-card .tag {
-  background: #eaf2ff;
+  background: #eef3e8;
   color: #4f7fd0;
 }
 
@@ -1479,7 +1533,7 @@ a { text-decoration: none; }
 }
 
 .family-card .tag-option.selected {
-  background: #eaf2ff;
+  background: #eef3e8;
   border-color: #d5e5fb;
   color: #4f7fd0;
 }
@@ -1503,17 +1557,17 @@ a { text-decoration: none; }
 .family-records h4 {
   font-size: 12px;
   font-weight: 600;
-  color: #6b7688;
+  color: #6b7a64;
   margin-bottom: 6px;
 }
 
-.record-empty { font-size: 12px; color: #aab2c0; }
+.record-empty { font-size: 12px; color: #b3c0a9; }
 
 .record-item {
   display: flex;
   gap: 10px;
   font-size: 12px;
-  color: #6b7688;
+  color: #6b7a64;
   padding: 5px 0;
   border-top: 1px dashed #f1f4f8;
 }
@@ -1523,7 +1577,7 @@ a { text-decoration: none; }
 /* 弹窗中的取消按钮与说明文字 */
 .btn-cancel {
   background: #f1f3f7;
-  color: #6b7688;
+  color: #6b7a64;
   border: 0;
   border-radius: 8px;
   padding: 9px 14px;
@@ -1548,7 +1602,7 @@ a { text-decoration: none; }
 .family-wrap { max-width: none; margin: 0; }
 
 .reminder-card {
-  background: #fff;
+  background: #e2eada;
   border-radius: 16px;
   box-shadow: var(--shadow);
   padding: 24px;
@@ -1559,7 +1613,7 @@ a { text-decoration: none; }
   font-size: 12px;
   font-weight: 500;
   color: #d98a3f;
-  background: #fdf3e0;
+  background: #f4f8ef;
   border-radius: 999px;
   padding: 3px 9px;
   margin-left: 6px;
@@ -1601,10 +1655,10 @@ a { text-decoration: none; }
 
 .reminder-main { flex: 1; min-width: 0; }
 
-.reminder-title { font-size: 13px; font-weight: 600; color: #39404f; }
+.reminder-title { font-size: 13px; font-weight: 600; color: #2f4237; }
 .reminder-item.done .reminder-title { text-decoration: line-through; color: #9aa3b2; }
 
-.reminder-meta { font-size: 11px; color: #8a94a6; margin-top: 4px; }
+.reminder-meta { font-size: 11px; color: #8a9984; margin-top: 4px; }
 
 .reminder-badge {
   flex: none;
@@ -1616,12 +1670,12 @@ a { text-decoration: none; }
 }
 
 .reminder-badge.overdue { color: #d9534f; background: #fdeceb; }
-.reminder-badge.today { color: #d98a3f; background: #fdf3e0; }
-.reminder-badge.done { color: #8a94a6; background: #f1f3f7; }
+.reminder-badge.today { color: #d98a3f; background: #f4f8ef; }
+.reminder-badge.done { color: #8a9984; background: #f1f3f7; }
 
 .reminder-empty {
   font-size: 12px;
-  color: #aab2c0;
+  color: #b3c0a9;
   padding: 4px 0;
 }
 
@@ -1639,7 +1693,7 @@ a { text-decoration: none; }
 .family-record-head h3 {
   font-size: 14px;
   font-weight: 600;
-  color: #4a5568;
+  color: #4c5d45;
 }
 
 .family-card .family-records { margin-top: 0; }
@@ -1658,7 +1712,7 @@ a { text-decoration: none; }
   background: #f7fbfa;
 }
 
-.upload-empty { text-align: center; color: #8a94a6; font-size: 12px; }
+.upload-empty { text-align: center; color: #8a9984; font-size: 12px; }
 
 .upload-empty .icon {
   width: 30px;
@@ -1689,13 +1743,13 @@ a { text-decoration: none; }
 .upload-file {
   font-size: 12px;
   font-weight: 600;
-  color: #4a5568;
+  color: #4c5d45;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.upload-status { font-size: 12px; color: #8a94a6; margin-top: 6px; }
+.upload-status { font-size: 12px; color: #8a9984; margin-top: 6px; }
 
 .upload-status.scanning { color: #2fbf9b; }
 
@@ -1717,7 +1771,7 @@ a { text-decoration: none; }
 .upload-result {
   margin-top: 8px;
   font-size: 12px;
-  color: #4a5568;
+  color: #4c5d45;
   line-height: 1.9;
 }
 
@@ -1739,7 +1793,7 @@ a { text-decoration: none; }
   align-items: center;
   gap: 8px;
   font-size: 12px;
-  color: #6b7688;
+  color: #6b7a64;
 }
 
 .upload-meal select {
@@ -1773,7 +1827,7 @@ a { text-decoration: none; }
   line-height: 1.7;
 }
 
-.ai-note { margin-top: 6px; font-size: 11.5px; color: #8a94a6; line-height: 1.7; }
+.ai-note { margin-top: 6px; font-size: 11.5px; color: #8a9984; line-height: 1.7; }
 
 .report-items {
   margin-top: 12px;
@@ -1796,7 +1850,7 @@ a { text-decoration: none; }
 
 .report-item-row.is-abnormal { background: #fdf2f3; }
 
-.report-item-row .ri-name { color: #4a5568; }
+.report-item-row .ri-name { color: #4c5d45; }
 
 .report-item-row .ri-value {
   color: #2b7f6b;
@@ -1807,7 +1861,7 @@ a { text-decoration: none; }
 
 .report-item-row.is-abnormal .ri-value { color: #d9534f; }
 
-.report-item-row .ri-unit { font-size: 11px; font-weight: 400; color: #8a94a6; }
+.report-item-row .ri-unit { font-size: 11px; font-weight: 400; color: #8a9984; }
 
 .report-item-row .ri-ref {
   grid-column: 1 / -1;
@@ -1825,7 +1879,7 @@ a { text-decoration: none; }
 .btn-ghost-sm {
   background: #fff;
   border: 1px solid #d8dee9;
-  color: #6b7688;
+  color: #6b7a64;
   border-radius: 7px;
   padding: 6px 12px;
   font-size: 12px;
@@ -1836,7 +1890,7 @@ a { text-decoration: none; }
 /* 体检报告分析 */
 .report-card { margin-top: 20px; }
 
-.report-sub { font-size: 12px; color: #8a94a6; }
+.report-sub { font-size: 12px; color: #8a9984; }
 
 .report-result {
   margin-top: 16px;
@@ -1847,7 +1901,7 @@ a { text-decoration: none; }
 .report-meta {
   font-size: 12px;
   font-weight: 600;
-  color: #4a5568;
+  color: #4c5d45;
   margin-bottom: 10px;
 }
 
@@ -1863,18 +1917,18 @@ a { text-decoration: none; }
   padding: 12px 14px;
 }
 
-.report-item .label { font-size: 11px; color: #8a94a6; }
+.report-item .label { font-size: 11px; color: #8a9984; }
 
 .report-item .value {
   font-size: 17px;
   font-weight: 700;
-  color: #222f3e;
+  color: #243329;
   margin-top: 6px;
 }
 
 .report-item .value .unit {
   font-size: 11px;
-  color: #8a94a6;
+  color: #8a9984;
   font-weight: 400;
   margin-left: 3px;
 }
@@ -1936,8 +1990,8 @@ a { text-decoration: none; }
 
 .sport-avatar .icon { width: 17px; height: 17px; stroke-width: 1.9; }
 
-.sport-name { font-size: 13px; font-weight: 600; color: #39404f; }
-.sport-cal { font-size: 10px; color: #8a94a6; margin-top: 2px; }
+.sport-name { font-size: 13px; font-weight: 600; color: #2f4237; }
+.sport-cal { font-size: 10px; color: #8a9984; margin-top: 2px; }
 
 .active-sport {
   display: flex;
@@ -1958,7 +2012,7 @@ a { text-decoration: none; }
   margin-left: auto;
   background: none;
   border: 0;
-  color: #8a94a6;
+  color: #8a9984;
   font-size: 12px;
 }
 
@@ -2149,7 +2203,7 @@ a { text-decoration: none; }
 
 .login-sub {
   font-size: 13px;
-  color: #8a94a6;
+  color: #8a9984;
   margin: 8px 0 22px;
 }
 
@@ -2166,7 +2220,7 @@ a { text-decoration: none; }
 .login-field label {
   display: block;
   font-size: 12px;
-  color: #6b7688;
+  color: #6b7a64;
   margin-bottom: 8px;
 }
 
@@ -2178,14 +2232,14 @@ a { text-decoration: none; }
   background: #fbfcfb;
   padding: 0 14px;
   font-size: 14px;
-  color: #39404f;
+  color: #2f4237;
   outline: none;
   transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
 }
 
 .login-field input:focus {
   background: #fff;
-  border-color: #c8a585;
+  border-color: #b9caab;
   box-shadow: 0 0 0 3px #f7ece2;
 }
 
@@ -2205,7 +2259,7 @@ a { text-decoration: none; }
 .login-forgot {
   border: 0;
   background: transparent;
-  color: #8b4a22;
+  color: #455c3d;
   font-size: 13px;
   padding: 8px 8px;
   margin: -6px -8px -6px 0;
@@ -2238,13 +2292,13 @@ a { text-decoration: none; }
 
 .reset-card h2 {
   font-size: 18px;
-  color: #6e3a18;
+  color: #3d5336;
   margin-bottom: 6px;
 }
 
 .reset-sub {
   font-size: 12px;
-  color: #8b7d70;
+  color: #5e6c58;
   line-height: 1.6;
   margin-bottom: 14px;
 }
@@ -2256,14 +2310,14 @@ a { text-decoration: none; }
 .reset-field label {
   display: block;
   font-size: 12px;
-  color: #8b7d70;
+  color: #5e6c58;
   margin-bottom: 5px;
 }
 
 .reset-field input {
   width: 100%;
   height: 40px;
-  border: 1px solid #e4ece4;
+  border: 1px solid #e1e8dc;
   border-radius: 9px;
   padding: 0 12px;
   font-size: 14px;
@@ -2273,7 +2327,7 @@ a { text-decoration: none; }
 
 .reset-field input:focus {
   outline: none;
-  border-color: #c8a585;
+  border-color: #b9caab;
   background: #fff;
 }
 
@@ -2291,7 +2345,7 @@ a { text-decoration: none; }
   border-radius: 9px;
   border: 1px solid #e0d3c6;
   background: #fdf7f1;
-  color: #8b4a22;
+  color: #455c3d;
   font-size: 12px;
   white-space: nowrap;
 }
@@ -2320,9 +2374,9 @@ a { text-decoration: none; }
   flex: 0 0 34%;
   height: 42px;
   border-radius: 10px;
-  border: 1px solid #e4ece4;
+  border: 1px solid #e1e8dc;
   background: #fff;
-  color: #6f6154;
+  color: #5e6c58;
   font-size: 14px;
 }
 
@@ -2350,18 +2404,18 @@ a { text-decoration: none; }
   padding: 0 12px;
   border: 0;
   border-radius: 9px;
-  background: linear-gradient(135deg, #a2652f, #8b4a22);
+  background: linear-gradient(135deg, #a2652f, #455c3d);
   color: #fff;
   font-size: 15px;
   font-weight: 600;
   letter-spacing: 1px;
-  box-shadow: 0 10px 22px rgba(139, 74, 34, 0.22);
+  box-shadow: 0 10px 22px rgba(69, 92, 61, 0.22);
   transition: transform 0.15s, box-shadow 0.15s;
 }
 
 .login-btn:active {
   transform: translateY(1px);
-  box-shadow: 0 6px 14px rgba(139, 74, 34, 0.2);
+  box-shadow: 0 6px 14px rgba(69, 92, 61, 0.2);
 }
 
 .login-switch {
@@ -2370,7 +2424,7 @@ a { text-decoration: none; }
   margin-top: 14px;
   border: 0;
   background: transparent;
-  color: #8b4a22;
+  color: #455c3d;
   font-size: 12.5px;
   padding: 6px 0;
 }
@@ -2426,12 +2480,12 @@ a { text-decoration: none; }
   margin-top: 10px;
   font-size: 12px;
   line-height: 1.7;
-  color: #8b7d70;
+  color: #5e6c58;
   text-align: center;
   word-break: break-all;
 }
 
-.mobile-hint a { color: #8b4a22; text-decoration: underline; }
+.mobile-hint a { color: #455c3d; text-decoration: underline; }
 
 /* 睡眠板块并入健康数据 */
 .sleep-inline { margin-top: 20px; }
@@ -2458,7 +2512,7 @@ a { text-decoration: none; }
 
 .onboarding-head p {
   font-size: 13px;
-  color: #8a94a6;
+  color: #8a9984;
   margin-top: 6px;
 }
 
@@ -2492,7 +2546,7 @@ a { text-decoration: none; }
 .ob-field label {
   display: block;
   font-size: 12px;
-  color: #6b7688;
+  color: #6b7a64;
   margin-bottom: 7px;
 }
 
@@ -2505,7 +2559,7 @@ a { text-decoration: none; }
   background: #f8f9fc;
   padding: 0 12px;
   font-size: 13px;
-  color: #39404f;
+  color: #2f4237;
   outline: none;
   transition: border-color 0.2s, background 0.2s;
 }
@@ -2527,7 +2581,7 @@ a { text-decoration: none; }
 .pref-chip {
   border: 1px solid #eef0f5;
   background: #f8f9fc;
-  color: #6b7688;
+  color: #6b7a64;
   border-radius: 6px;
   padding: 5px 10px;
   font-size: 12px;
@@ -2554,11 +2608,11 @@ a { text-decoration: none; }
 .link-skip {
   background: none;
   border: 0;
-  color: #8a94a6;
+  color: #8a9984;
   font-size: 13px;
 }
 
-.link-skip:hover { color: #4a5568; }
+.link-skip:hover { color: #4c5d45; }
 
 .onboarding-actions .btn-primary { padding: 12px 24px; font-size: 14px; }
 
@@ -2567,7 +2621,7 @@ a { text-decoration: none; }
    ========================================================== */
 .beauty-card { margin-top: 20px; }
 
-.beauty-sub { font-size: 12px; color: #8a94a6; }
+.beauty-sub { font-size: 12px; color: #8a9984; }
 
 .beauty-body {
   display: grid;
@@ -2598,7 +2652,7 @@ a { text-decoration: none; }
   justify-content: center;
   text-align: center;
   font-size: 12px;
-  color: #aab2c0;
+  color: #b3c0a9;
   line-height: 1.8;
   padding: 0 24px;
 }
@@ -2615,18 +2669,18 @@ a { text-decoration: none; }
   padding: 12px;
 }
 
-.goal-stat .label { font-size: 11px; color: #8a94a6; }
+.goal-stat .label { font-size: 11px; color: #8a9984; }
 
 .goal-stat .value {
   font-size: 16px;
   font-weight: 700;
-  color: #222f3e;
+  color: #243329;
   margin-top: 6px;
 }
 
 .goal-stat .value .unit {
   font-size: 11px;
-  color: #8a94a6;
+  color: #8a9984;
   font-weight: 400;
   margin-left: 3px;
 }
@@ -2637,7 +2691,7 @@ a { text-decoration: none; }
   display: flex;
   justify-content: space-between;
   font-size: 12px;
-  color: #6b7688;
+  color: #6b7a64;
   margin-bottom: 7px;
 }
 
@@ -2655,13 +2709,13 @@ a { text-decoration: none; }
   height: 100%;
   width: 0;
   border-radius: 999px;
-  background: linear-gradient(90deg, #4ed3b0, #5b8def);
+  background: linear-gradient(90deg, #4ed3b0, #0e7c74);
   transition: width 0.4s ease;
 }
 
 .plan-summary {
   font-size: 12px;
-  color: #6b7688;
+  color: #6b7a64;
   line-height: 1.8;
   margin-top: 14px;
   background: #fff;
@@ -2684,10 +2738,10 @@ a { text-decoration: none; }
   border-radius: 8px;
   padding: 9px 12px;
   font-size: 12px;
-  color: #4a5568;
+  color: #4c5d45;
 }
 
-.plan-day span:last-child { color: #8a94a6; text-align: right; }
+.plan-day span:last-child { color: #8a9984; text-align: right; }
 
 .weight-log {
   display: flex;
@@ -2695,7 +2749,7 @@ a { text-decoration: none; }
   gap: 8px;
   margin-top: 14px;
   font-size: 12px;
-  color: #6b7688;
+  color: #6b7a64;
 }
 
 .weight-log input {
@@ -2706,7 +2760,7 @@ a { text-decoration: none; }
   background: #fff;
   padding: 0 10px;
   font-size: 12px;
-  color: #39404f;
+  color: #2f4237;
   outline: none;
 }
 
@@ -2790,7 +2844,7 @@ a { text-decoration: none; }
 
 .sleep-form input::placeholder { color: rgba(255, 255, 255, 0.72); }
 
-.sleep-form select option { color: #433326; }
+.sleep-form select option { color: #1f2a1c; }
 
 .sleep-form .btn-sleep { margin-top: 0; }
 
@@ -2887,7 +2941,7 @@ a { text-decoration: none; }
   filter: drop-shadow(0 8px 12px rgba(60, 90, 80, 0.16));
 }
 .news-img.green  { background: linear-gradient(135deg, #e8f8f2, #d6f2e8); color: #3fc7a4; }
-.news-img.blue   { background: linear-gradient(135deg, #eaf2ff, #dbe8ff); color: #5b8def; }
+.news-img.blue   { background: linear-gradient(135deg, #eef3e8, #dbe8ff); color: #0e7c74; }
 .news-img.purple { background: linear-gradient(135deg, #efebff, #e2dcff); color: #7f74e8; }
 .news-img.orange { background: linear-gradient(135deg, #fff1e6, #ffe3cc); color: #e98b3c; }
 .news-img.pink   { background: linear-gradient(135deg, #ffeef4, #ffdfe9); color: #e8709a; }
@@ -2896,7 +2950,7 @@ a { text-decoration: none; }
 
 .news-cat { font-size: 12px; font-weight: 600; }
 .news-cat.green  { color: #27b389; }
-.news-cat.blue   { color: #5b8def; }
+.news-cat.blue   { color: #0e7c74; }
 .news-cat.purple { color: #7f74e8; }
 .news-cat.orange { color: #e98b3c; }
 .news-cat.pink   { color: #e8709a; }
@@ -2989,7 +3043,7 @@ a { text-decoration: none; }
 .field label {
   display: block;
   font-size: 12px;
-  color: #6b7688;
+  color: #6b7a64;
   margin-bottom: 8px;
 }
 
@@ -3002,7 +3056,7 @@ a { text-decoration: none; }
   background: #f8f9fc;
   padding: 0 12px;
   font-size: 13px;
-  color: #39404f;
+  color: #2f4237;
   outline: none;
   transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
 }
@@ -3051,8 +3105,8 @@ a { text-decoration: none; }
 .avatar-option:hover { transform: translateY(-2px); }
 
 .avatar-option.selected {
-  border-color: #8b4a22;
-  box-shadow: 0 0 0 2px rgba(139, 74, 34, 0.16);
+  border-color: #455c3d;
+  box-shadow: 0 0 0 2px rgba(69, 92, 61, 0.16);
 }
 
 .avatar-option.selected::after {
@@ -3063,7 +3117,7 @@ a { text-decoration: none; }
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #8b4a22;
+  background: #455c3d;
   color: #fff;
   font-size: 10px;
   display: flex;
@@ -3096,7 +3150,7 @@ a { text-decoration: none; }
 .btn-logout {
   margin-right: auto;
   background: #f2efe9;
-  color: #8b7d70;
+  color: #5e6c58;
   border: 0;
   border-radius: 8px;
   padding: 9px 14px;
@@ -3234,7 +3288,7 @@ body:has(.mask.open) .fab {
 .msg.bot {
   align-self: flex-start;
   background: #fff;
-  color: #4a5568;
+  color: #4c5d45;
   border-top-left-radius: 4px;
   box-shadow: 0 1px 4px rgba(30, 42, 70, 0.05);
 }
@@ -3264,11 +3318,11 @@ body:has(.mask.open) .fab {
   border-radius: 999px;
   padding: 0 14px;
   font-size: 12px;
-  color: #39404f;
+  color: #2f4237;
   outline: none;
 }
 
-.chat-input input::placeholder { color: #aab2c0; }
+.chat-input input::placeholder { color: #b3c0a9; }
 .chat-input input:focus { border-color: #9fe3d5; }
 
 .chat-mic {
@@ -3351,84 +3405,84 @@ body { color: var(--text); }
 
 /* 侧边栏 */
 .sidebar { background: #e6f1e7; border-right-color: #d6e6d9; }
-.side-brand { color: #6e3a18; }
-.logo { background: linear-gradient(135deg, #8b4a22, #a9653a); }
-.side-nav button { color: #6f6154; }
-.side-nav button:hover { background: #dcebdc; color: #4a3525; }
-.side-nav button.active { background: #d7e8b9; color: #6e3a18; }
-.side-nav button.active::before { background: #8b4a22; }
-.avatar { background: #cfe4f2; color: #4f7898; }
-.side-user-name, .onboarding-card h2, .news-title { color: #4a3525; }
+.side-brand { color: #3d5336; }
+.logo { background: linear-gradient(135deg, #455c3d, #8a5a26); }
+.side-nav button { color: #5e6c58; }
+.side-nav button:hover { background: #dcebdc; color: #1f2a1c; }
+.side-nav button.active { background: #c6d2b9; color: #3d5336; }
+.side-nav button.active::before { background: #455c3d; }
+.avatar { background: #cfe4f2; color: #0e7c74; }
+.side-user-name, .onboarding-card h2, .news-title { color: #1f2a1c; }
 
 /* 图标 */
-.heart { color: #8b4a22; }
-.fork { color: #b06a3a; }
-.activity-icon { color: #5f8fae; }
+.heart { color: #455c3d; }
+.fork { color: #a05a32; }
+.activity-icon { color: #0e7c74; }
 
 /* 核心体征 */
-.vital { background: #f4f8f1; }
+.vital { background: #f7faf3; }
 .vital:hover { background: #eef5e9; }
-.vital .value { color: #4a3525; }
-.badge { color: #6b8f3f; background: #e8f2d8; }
-.badge.warn { color: #a9653a; background: #f8ece3; }
-.report-link { color: #8b4a22; }
+.vital .value { color: #1f2a1c; }
+.badge { color: #5d7a4f; background: #dfe9d5; }
+.badge.warn { color: #8a5a26; background: #f8ece3; }
+.report-link { color: #455c3d; }
 
 /* 按钮 */
 .btn-primary {
-  background: linear-gradient(135deg, #8b4a22, #a9653a);
-  box-shadow: 0 6px 14px rgba(139, 74, 34, 0.25);
+  background: linear-gradient(135deg, #455c3d, #8a5a26);
+  box-shadow: 0 6px 14px rgba(69, 92, 61, 0.25);
 }
-.btn-primary:hover { box-shadow: 0 9px 18px rgba(139, 74, 34, 0.32); }
-.btn-soft { border-color: #e3d3c4; color: #8b4a22; }
+.btn-primary:hover { box-shadow: 0 9px 18px rgba(69, 92, 61, 0.32); }
+.btn-soft { border-color: #e3d3c4; color: #455c3d; }
 .btn-soft:hover { background: #fdf7f2; }
-.btn-mini { background: #8b4a22; }
-.btn-ghost-sm:hover { border-color: #c8dcae; color: #6e3a18; }
+.btn-mini { background: #455c3d; }
+.btn-ghost-sm:hover { border-color: #b9caab; color: #3d5336; }
 .btn-cancel { background: #f2efe9; color: #7c7065; }
 .btn-cancel:hover { background: #ebe6de; }
-.btn-save { background: #8b4a22; }
-.btn-save:hover { background: #a9653a; }
+.btn-save { background: #455c3d; }
+.btn-save:hover { background: #3a4f33; }
 
 /* 饮食 */
-.macro { background: #fbf3e9; }
-.macro .label { color: #a08066; }
-.macro .value { color: #8b4a22; }
-.meal-tag.morning { background: #e3eff8; color: #4f7898; }
-.meal-tag.noon { background: #edf5df; color: #6b8f3f; }
-.meal-tag.night { background: #f6ede4; color: #8b4a22; }
-.meal input { background: #f5f8f1; }
-.meal input:focus { box-shadow: 0 0 0 2px #d7e8b9; }
-.tip-card { background: #f1f8e9; border-color: #dfeacd; }
-.tip-card .icon, .tip-card b { color: #6e3a18; }
-.tip-card p { color: #7a6b4c; }
+.macro { background: #eef3e8; }
+.macro .label { color: #6b7a64; }
+.macro .value { color: #455c3d; }
+.meal-tag.morning { background: #e6f0ea; color: #0e7c74; }
+.meal-tag.noon { background: #e4edda; color: #5d7a4f; }
+.meal-tag.night { background: #f2f6ec; color: #455c3d; }
+.meal input { background: #f7faf3; }
+.meal input:focus { box-shadow: 0 0 0 2px #c6d2b9; }
+.tip-card { background: #edf2e8; border-color: #d8e2cd; }
+.tip-card .icon, .tip-card b { color: #3d5336; }
+.tip-card p { color: #5e6c58; }
 
 /* 运动 */
-.tabs { border-bottom-color: #e4ece4; }
-.tabs button { color: #8b7d70; }
-.tabs button.active { color: #4a3525; }
-.ex-stat { background: #f4f8f1; }
-.ex-stat .value { color: #4a3525; }
-.ico-flame { color: #b06a3a; }
-.ico-step { color: #6b8f3f; }
-.ico-clock { color: #5f8fae; }
-.mood { background: #fbf6e8; border-color: #f1e7cd; }
-.mood-title { color: #6f5a3a; }
-.mood-title .icon { color: #a9653a; }
+.tabs { border-bottom-color: #e1e8dc; }
+.tabs button { color: #5e6c58; }
+.tabs button.active { color: #1f2a1c; }
+.ex-stat { background: #f7faf3; }
+.ex-stat .value { color: #1f2a1c; }
+.ico-flame { color: #a05a32; }
+.ico-step { color: #5d7a4f; }
+.ico-clock { color: #0e7c74; }
+.mood { background: #f4f8ef; border-color: #f1e7cd; }
+.mood-title { color: #4c5d45; }
+.mood-title .icon { color: #8a5a26; }
 .mood textarea::placeholder { color: #b3a58c; }
 
 /* 运动类型 */
-.sport-option { background: #f5f8f1; border-color: #e4ece4; }
-.sport-option:hover { border-color: #cfdcc7; }
+.sport-option { background: #f7faf3; border-color: #e1e8dc; }
+.sport-option:hover { border-color: #c6d2b9; }
 .sport-option.selected {
-  background: #e8f2d8;
-  border-color: #c8dcae;
-  box-shadow: 0 0 0 2px #edf5df;
+  background: #dfe9d5;
+  border-color: #b9caab;
+  box-shadow: 0 0 0 2px #e4edda;
 }
 .active-sport {
-  background: #e8f2d8;
-  border-color: #d5e6bd;
-  color: #6e3a18;
+  background: #dfe9d5;
+  border-color: #c6d2b9;
+  color: #3d5336;
 }
-.active-sport b { color: #8b4a22; }
+.active-sport b { color: #455c3d; }
 
 .sport-strip {
   display: flex;
@@ -3441,113 +3495,113 @@ body { color: var(--text); }
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: #f1f7e8;
-  color: #6e3a18;
+  background: #edf2e8;
+  color: #3d5336;
   border-radius: 999px;
   padding: 6px 12px;
   font-size: 12px;
 }
 
-.sport-pill .icon { width: 15px; height: 15px; color: #8b4a22; }
+.sport-pill .icon { width: 15px; height: 15px; color: #455c3d; }
 
 /* 科学变美 */
-.beauty-result { background: #f4f8f1; }
-.goal-stat .value { color: #4a3525; }
-.progress-label b { color: #8b4a22; }
-.progress-bar { background: #e4ece0; }
-.progress-bar i { background: linear-gradient(90deg, #8b4a22, #9fc6e4); }
-.plan-summary { color: #7a6b4c; }
-.plan-day { color: #4a3525; }
+.beauty-result { background: #f7faf3; }
+.goal-stat .value { color: #1f2a1c; }
+.progress-label b { color: #455c3d; }
+.progress-bar { background: #e1e8dc; }
+.progress-bar i { background: linear-gradient(90deg, #455c3d, #9fc6e4); }
+.plan-summary { color: #5e6c58; }
+.plan-day { color: #1f2a1c; }
 
 /* 女性健康 */
-.female-card { background: #f1f7e8; border-color: #dfeacd; }
-.female-title .icon, .f-item .icon, .status-title .icon { color: #8b4a22; }
-.female-title { color: #4a3525; }
-.f-item b { color: #4a3525; }
-.f-item select { color: #4a3525; }
-.tag { background: #e4f0cf; color: #6e3a18; }
-.tag.add { background: #fff; border-color: #c9dcae; color: #8b6b4a; }
-.tag.add:hover { background: #f8fbef; }
-.tip-pink { background: #f3f8ea; color: #7a6b4c; }
-.tag-option.selected { background: #e4f0cf; border-color: #c9dcae; color: #6e3a18; }
-.tag .x:hover { background: rgba(110, 58, 24, 0.12); }
+.female-card { background: #edf2e8; border-color: #d8e2cd; }
+.female-title .icon, .f-item .icon, .status-title .icon { color: #455c3d; }
+.female-title { color: #1f2a1c; }
+.f-item b { color: #1f2a1c; }
+.f-item select { color: #1f2a1c; }
+.tag { background: #dfe9d5; color: #3d5336; }
+.tag.add { background: #fff; border-color: #b9caab; color: #5e6c58; }
+.tag.add:hover { background: #f6faf1; }
+.tip-pink { background: #f3f7ee; color: #5e6c58; }
+.tag-option.selected { background: #dfe9d5; border-color: #b9caab; color: #3d5336; }
+.tag .x:hover { background: rgba(61, 83, 54, 0.12); }
 
 /* 家人健康 */
-.family-card { background: #fff; border-color: var(--line); }
+.family-card { background: #e2eada; border-color: #d1dcc6; }
 
 /* 家人档案空状态 */
 .family-empty {
   grid-column: 1 / -1;
   padding: 26px 16px;
-  border: 1px dashed #e2d6c8;
+  border: 1px dashed #c6d2b9;
   border-radius: 12px;
-  background: #fbfaf7;
+  background: rgba(255, 255, 255, 0.55);
   text-align: center;
-  color: #8b7d70;
+  color: #5e6c58;
 }
 
-.family-empty p { font-size: 14px; font-weight: 600; color: #5b4636; margin-bottom: 4px; }
+.family-empty p { font-size: 14px; font-weight: 600; color: #1f2a1c; margin-bottom: 4px; }
 .family-empty span { display: block; font-size: 12.5px; margin-bottom: 12px; }
-.family-title .icon { color: #5f8fae; }
-.family-card .btn-soft { border-color: #cfe0ef; color: #4f7898; }
-.family-card .btn-soft:hover { background: #f6faff; }
-.family-card .tag { background: #dcecf8; color: #4f7898; }
-.family-card .tag.add { background: #fff; border-color: #c5daf7; color: #86a6ce; }
-.family-card .tag-option.selected { background: #dcecf8; border-color: #c5daf7; color: #4f7898; }
+.family-title .icon { color: #455c3d; }
+.family-card .btn-soft { border-color: #c6d2b9; color: #3d5336; }
+.family-card .btn-soft:hover { background: #dfe9d5; }
+.family-card .tag { background: #dfe9d5; color: #3d5336; }
+.family-card .tag.add { background: #fff; border-color: #c6d2b9; color: #455c3d; }
+.family-card .tag-option.selected { background: #dfe9d5; border-color: #b9caab; color: #3d5336; }
 .tip-blue { background: #eef6fd; color: #5f7f96; }
-.reminder-count { background: #f6ede4; color: #8b4a22; }
-.reminder-badge.today { background: #f6ede4; color: #8b4a22; }
+.reminder-count { background: #f2f6ec; color: #455c3d; }
+.reminder-badge.today { background: #f2f6ec; color: #455c3d; }
 .reminder-check { border-color: #cfd8c5; }
 .reminder-item.done .reminder-check {
-  background: #8b4a22;
-  border-color: #8b4a22;
+  background: #455c3d;
+  border-color: #455c3d;
   color: #fff;
 }
 
 /* 睡眠 */
 .sleep-card {
-  background: linear-gradient(135deg, #8b4a22, #6e3a18);
-  box-shadow: 0 18px 40px rgba(110, 58, 24, 0.28);
+  background: linear-gradient(135deg, #455c3d, #3d5336);
+  box-shadow: 0 18px 40px rgba(61, 83, 54, 0.28);
 }
-.sleep-icon { background: rgba(255, 255, 255, 0.1); color: #d7e8b9; }
+.sleep-icon { background: rgba(255, 255, 255, 0.1); color: #c6d2b9; }
 .sleep-card p { color: #eadfce; }
-.btn-sleep { background: #d7e8b9; color: #6e3a18; }
+.btn-sleep { background: #c6d2b9; color: #3d5336; }
 .btn-sleep:hover { background: #e2f0c9; }
 
 /* 科普 */
-.news-img.purple { background: linear-gradient(135deg, #f7ece2, #f1e1d4); color: #8b4a22; }
-.news-cat.purple { color: #8b4a22; }
+.news-img.purple { background: linear-gradient(135deg, #f7ece2, #f1e1d4); color: #455c3d; }
+.news-cat.purple { color: #455c3d; }
 
 /* 上传与识别 */
-.upload-box { background: #f5f8f1; border-color: #dbe6d8; }
-.upload-box:hover { border-color: #c8dcae; background: #f8fbf3; }
-.upload-status.scanning { color: #8b4a22; }
+.upload-box { background: #f7faf3; border-color: #dbe6d8; }
+.upload-box:hover { border-color: #b9caab; background: #f8fbf3; }
+.upload-status.scanning { color: #455c3d; }
 .upload-status.scanning::before {
   border-color: #f0e4d7;
-  border-top-color: #8b4a22;
+  border-top-color: #455c3d;
 }
-.chip { background: #e4f0cf; color: #6e3a18; }
-.report-summary { background: #f1f8e9; border-color: #dfeacd; color: #6e5a3a; }
+.chip { background: #dfe9d5; color: #3d5336; }
+.report-summary { background: #edf2e8; border-color: #d8e2cd; color: #6e5a3a; }
 .report-summary.is-warn { background: #fdf2f3; border-color: #f8e2e6; color: #a94442; }
-.report-item { background: #f4f8f1; }
-.report-item .value { color: #4a3525; }
+.report-item { background: #f7faf3; }
+.report-item .value { color: #1f2a1c; }
 .report-item-row { background: #f7faf5; }
 .report-item-row.is-abnormal { background: #fdf2f3; }
-.report-item-row .ri-name { color: #4a3525; }
-.report-item-row .ri-value { color: #6e3a18; }
+.report-item-row .ri-name { color: #1f2a1c; }
+.report-item-row .ri-value { color: #3d5336; }
 .report-item-row.is-abnormal .ri-value { color: #c0392b; }
-.ai-total { background: #f1f8e9; color: #6e3a18; }
-.ai-food b { color: #6e3a18; }
+.ai-total { background: #edf2e8; color: #3d5336; }
+.ai-food b { color: #3d5336; }
 
 /* 弹窗与表单 */
-.modal-head { background: linear-gradient(135deg, #8b4a22, #a9653a); }
+.modal-head { background: linear-gradient(135deg, #455c3d, #8a5a26); }
 .field input:focus, .field select:focus {
-  border-color: #c8a585;
-  box-shadow: 0 0 0 2px #f6ede4;
+  border-color: #b9caab;
+  box-shadow: 0 0 0 2px #f2f6ec;
 }
-.modal { box-shadow: 0 24px 60px rgba(74, 53, 37, 0.25); }
-.tag-menu { border-color: #e4ece4; box-shadow: 0 14px 34px rgba(74, 53, 37, 0.16); }
-.tag-menu h4 { color: #8b7d70; }
+.modal { box-shadow: 0 24px 60px rgba(31, 42, 28, 0.25); }
+.tag-menu { border-color: #e1e8dc; box-shadow: 0 14px 34px rgba(31, 42, 28, 0.16); }
+.tag-menu h4 { color: #5e6c58; }
 
 /* 登录与资料填写 */
 .auth-layer {
@@ -3556,31 +3610,31 @@ body { color: var(--text); }
     radial-gradient(circle at 88% 24%, rgba(147, 189, 224, 0.35), transparent 40%),
     #eef6ef;
 }
-.login-brand { color: #6e3a18; }
-.login-card { box-shadow: 0 20px 50px rgba(74, 53, 37, 0.12); }
-.login-card h1 { color: #4a3525; }
+.login-brand { color: #3d5336; }
+.login-card { box-shadow: 0 20px 50px rgba(31, 42, 28, 0.12); }
+.login-card h1 { color: #1f2a1c; }
 .login-field input:focus {
-  border-color: #c8a585;
+  border-color: #b9caab;
   box-shadow: 0 0 0 3px #f3e8dd;
 }
 .login-error { color: #b3482f; }
-.login-notice { background: #f1f8e9; color: #6e3a18; }
+.login-notice { background: #edf2e8; color: #3d5336; }
 .login-notice.is-warn { background: #fdf2f3; color: #a94442; }
-.pref-chip { background: #f5f8f1; border-color: #e4ece4; color: #6f6154; }
-.pref-chip.selected { background: #e4f0cf; border-color: #c8dcae; color: #6e3a18; }
-.ob-field input:focus, .ob-field select:focus { border-color: #c8a585; }
+.pref-chip { background: #f7faf3; border-color: #e1e8dc; color: #5e6c58; }
+.pref-chip.selected { background: #dfe9d5; border-color: #b9caab; color: #3d5336; }
+.ob-field input:focus, .ob-field select:focus { border-color: #b9caab; }
 
 /* 聊天 */
 .chat-head { background: linear-gradient(135deg, #5d9c43, #3f9c72); }
-.msg.user { background: #8b4a22; }
-.chat-send { background: #8b4a22; }
-.chat-send:hover { background: #a9653a; }
-.chat-input input:focus { border-color: #c8a585; }
-.chat-body { background: #f5f8f1; }
+.msg.user { background: #455c3d; }
+.chat-send { background: #455c3d; }
+.chat-send:hover { background: #8a5a26; }
+.chat-input input:focus { border-color: #b9caab; }
+.chat-body { background: #f7faf3; }
 .msg.bot { color: #5c4d40; }
 
 /* 轻提示 */
-.toast { background: rgba(74, 53, 37, 0.94); }
+.toast { background: rgba(31, 42, 28, 0.94); }
 
 /* ==========================================================
    14. 响应式适配（窄屏）
@@ -3675,7 +3729,7 @@ body { color: var(--text); }
   cursor: pointer;
 }
 
-.vital-edit:hover { color: #8b4a22; }
+.vital-edit:hover { color: #455c3d; }
 
 .vital-edit-box {
   display: flex;
@@ -3692,14 +3746,14 @@ body { color: var(--text); }
   border-radius: 8px;
   padding: 0 8px;
   font-size: 13px;
-  color: #4a3525;
+  color: #1f2a1c;
   background: #fff;
 }
 
 .vital-edit-box button {
   border: none;
   border-radius: 8px;
-  background: #8b4a22;
+  background: #455c3d;
   color: #fff;
   font-size: 12px;
   padding: 7px 12px;
@@ -3717,22 +3771,22 @@ body { color: var(--text); }
 }
 
 .weight-chart svg { width: 100%; height: auto; display: block; }
-.weight-chart svg text { font-size: 9px; fill: #a08d7d; }
+.weight-chart svg text { font-size: 9px; fill: #8a9984; }
 
 .weight-chart-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
   font-size: 12px;
-  color: #8b7d70;
+  color: #5e6c58;
   padding: 0 6px 4px;
 }
 
-.weight-chart-head b { color: #8b4a22; }
+.weight-chart-head b { color: #455c3d; }
 
 .weight-chart-empty {
   font-size: 12px;
-  color: #a08d7d;
+  color: #8a9984;
   text-align: center;
   padding: 18px 6px;
   line-height: 1.8;
@@ -3764,7 +3818,7 @@ body { color: var(--text); }
 }
 
 .plan-day.today .plan-date {
-  color: #8b4a22;
+  color: #455c3d;
   font-weight: 600;
 }
 
@@ -3785,8 +3839,8 @@ body { color: var(--text); }
 }
 
 .plan-day.done .plan-check {
-  background: #8b4a22;
-  border-color: #8b4a22;
+  background: #455c3d;
+  border-color: #455c3d;
   color: #fff;
 }
 
@@ -3826,11 +3880,11 @@ body { color: var(--text); }
   display: flex;
   justify-content: space-between;
   font-size: 12px;
-  color: #7a6b5c;
+  color: #6b7a64;
   margin-bottom: 5px;
 }
 
-.nutri-head b { color: #8b4a22; }
+.nutri-head b { color: #455c3d; }
 
 .nutri-bar {
   height: 8px;
@@ -3844,11 +3898,11 @@ body { color: var(--text); }
   height: 100%;
   width: 0;
   border-radius: 999px;
-  background: linear-gradient(90deg, #8b4a22, #c08a5a);
+  background: linear-gradient(90deg, #455c3d, #a05a32);
   transition: width 0.35s ease;
 }
 
-.nutri-bar.over i { background: linear-gradient(90deg, #b06a3a, #d9a340); }
+.nutri-bar.over i { background: linear-gradient(90deg, #a05a32, #d9a340); }
 
 /* 饮食：今日记录标签 */
 .meal-log {
@@ -3892,7 +3946,7 @@ body { color: var(--text); }
 
 .meal-log-empty {
   font-size: 12px;
-  color: #a08d7d;
+  color: #8a9984;
   padding: 4px 0;
 }
 
@@ -3908,12 +3962,12 @@ body { color: var(--text); }
   padding: 8px 4px;
   text-align: center;
   border-bottom: 1px solid #f1eae0;
-  color: #7a6b5c;
+  color: #6b7a64;
 }
 
-.week-compare th { color: #a08d7d; font-weight: 600; }
-.week-compare td.up { color: #b06a3a; }
-.week-compare td.down { color: #6b8f3f; }
+.week-compare th { color: #8a9984; font-weight: 600; }
+.week-compare td.up { color: #a05a32; }
+.week-compare td.down { color: #5d7a4f; }
 
 .mini-bars {
   display: flex;
@@ -3936,13 +3990,13 @@ body { color: var(--text); }
 .mini-bar i {
   display: block;
   border-radius: 5px 5px 0 0;
-  background: linear-gradient(180deg, #c08a5a, #8b4a22);
+  background: linear-gradient(180deg, #a05a32, #455c3d);
   min-height: 4px;
 }
 
-.mini-bar span { font-size: 10px; color: #a08d7d; }
+.mini-bar span { font-size: 10px; color: #8a9984; }
 
-.mini-bar em { font-style: normal; font-size: 10px; color: #8b4a22; }
+.mini-bar em { font-style: normal; font-size: 10px; color: #455c3d; }
 
 /* 运动：目标与数据填写 */
 .sport-inputs {
@@ -3952,17 +4006,17 @@ body { color: var(--text); }
   margin-top: 12px;
 }
 
-.sport-inputs .field label { font-size: 12px; color: #8b7d70; }
+.sport-inputs .field label { font-size: 12px; color: #5e6c58; }
 
 .sport-inputs input {
   width: 100%;
   height: 38px;
-  border: 1px solid #e6dbcd;
+  border: 1px solid #e1e8dc;
   border-radius: 10px;
   background: #fbf8f4;
   padding: 0 10px;
   font-size: 13px;
-  color: #4a3525;
+  color: #1f2a1c;
 }
 
 .sport-actions {
@@ -3986,20 +4040,20 @@ body { color: var(--text); }
   border-radius: 999px;
   padding: 7px 14px;
   font-size: 12px;
-  color: #7a6b5c;
+  color: #6b7a64;
   cursor: pointer;
 }
 
 .mood-opt.selected {
-  background: #8b4a22;
-  border-color: #8b4a22;
+  background: #455c3d;
+  border-color: #455c3d;
   color: #fff;
 }
 
 .mood-tip {
   margin-top: 10px;
   font-size: 12px;
-  color: #7a6b5c;
+  color: #6b7a64;
   line-height: 1.85;
   background: #fffdf7;
   border-radius: 10px;
@@ -4011,7 +4065,7 @@ body { color: var(--text); }
 
 .news-article h4 {
   font-size: 14px;
-  color: #4a3525;
+  color: #1f2a1c;
   margin: 16px 0 6px;
 }
 
@@ -4031,7 +4085,7 @@ body { color: var(--text); }
 
 .news-article .note {
   font-size: 12px;
-  color: #a08d7d;
+  color: #8a9984;
   border-top: 1px dashed #e8ded0;
   padding-top: 10px;
   margin-top: 14px;
@@ -4046,14 +4100,14 @@ body { color: var(--text); }
   background: none;
   font-family: inherit;
   font-size: 12px;
-  color: #8b4a22;
+  color: #455c3d;
   font-weight: 600;
   cursor: pointer;
 }
 
 .news-body .read-more:focus-visible,
 .news-body .news-quick:focus-visible {
-  outline: 2px solid #8b4a22;
+  outline: 2px solid #455c3d;
   outline-offset: 3px;
   border-radius: 4px;
 }
@@ -4102,14 +4156,14 @@ body { color: var(--text); }
   height: 42px;
   padding: 0 14px;
   background: #fff;
-  border: 1px solid #e6dbcd;
+  border: 1px solid #e1e8dc;
   border-radius: 12px;
 }
 
 .news-search .icon {
   width: 16px;
   height: 16px;
-  color: #a08d7d;
+  color: #8a9984;
   flex: none;
 }
 
@@ -4119,10 +4173,10 @@ body { color: var(--text); }
   outline: none;
   background: transparent;
   font-size: 13px;
-  color: #4a3525;
+  color: #1f2a1c;
 }
 
-.news-count { font-size: 12px; color: #8b7d70; }
+.news-count { font-size: 12px; color: #5e6c58; }
 
 /* 热门搜索词 */
 .news-tags {
@@ -4132,7 +4186,7 @@ body { color: var(--text); }
   gap: 8px;
   margin: 12px 0 4px;
   font-size: 12px;
-  color: #a08d7d;
+  color: #8a9984;
 }
 
 .news-tag {
@@ -4146,7 +4200,7 @@ body { color: var(--text); }
 }
 
 .news-tag:hover { background: #fdf6ec; border-color: #dcc7a9; }
-.news-tag.active { background: #f6ead9; border-color: #d9b98f; color: #6e3a18; }
+.news-tag.active { background: #f6ead9; border-color: #d9b98f; color: #3d5336; }
 
 .news-refresh {
   display: inline-flex;
@@ -4154,7 +4208,7 @@ body { color: var(--text); }
   gap: 6px;
   height: 42px;
   padding: 0 16px;
-  border: 1px solid #e6dbcd;
+  border: 1px solid #e1e8dc;
   border-radius: 12px;
   background: #fff;
   color: #6b5a4a;
@@ -4169,7 +4223,7 @@ body { color: var(--text); }
 .news-quick {
   margin-left: 10px;
   font-size: 12px;
-  color: #a08d7d;
+  color: #8a9984;
   text-decoration: underline;
 }
 
@@ -4204,7 +4258,7 @@ body { color: var(--text); }
   min-height: 320px;
   overflow-y: auto;
   padding: 16px;
-  background: #f5f8f1;
+  background: #f7faf3;
   border: 1px solid var(--line);
   border-radius: 12px;
   display: flex;
@@ -4222,15 +4276,15 @@ body { color: var(--text); }
 .assistant-input input {
   flex: 1;
   height: 44px;
-  border: 1px solid #e6dbcd;
+  border: 1px solid #e1e8dc;
   border-radius: 999px;
   padding: 0 16px;
   font-size: 14px;
-  color: #4a3525;
+  color: #1f2a1c;
   outline: none;
 }
 
-.assistant-input input:focus { border-color: #c8a585; }
+.assistant-input input:focus { border-color: #b9caab; }
 
 .assistant-send {
   width: 44px;
@@ -4250,7 +4304,7 @@ body { color: var(--text); }
 .assistant-new {
   height: 32px;
   padding: 0 14px;
-  border: 1px solid #e6dbcd;
+  border: 1px solid #e1e8dc;
   border-radius: 999px;
   background: #fff;
   color: #6b5a4a;
@@ -4302,7 +4356,7 @@ body { color: var(--text); }
   text-align: left;
 }
 
-.assistant-hist-item:hover { border-color: #e6dbcd; }
+.assistant-hist-item:hover { border-color: #e1e8dc; }
 
 .assistant-hist-item.active {
   border-color: #d9b98f;
@@ -4313,7 +4367,7 @@ body { color: var(--text); }
 
 .assistant-hist-title {
   font-size: 13px;
-  color: #4a3525;
+  color: #1f2a1c;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -4321,7 +4375,7 @@ body { color: var(--text); }
 
 .assistant-hist-time {
   font-size: 11px;
-  color: #a08d7d;
+  color: #8a9984;
   margin-top: 2px;
 }
 
@@ -4343,7 +4397,7 @@ body { color: var(--text); }
 
 .news-empty {
   font-size: 13px;
-  color: #a08d7d;
+  color: #8a9984;
   text-align: center;
   padding: 40px 0;
   background: #fff;
@@ -4358,7 +4412,7 @@ body { color: var(--text); }
 
 .ex-stat:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 18px rgba(74, 53, 37, 0.1);
+  box-shadow: 0 8px 18px rgba(31, 42, 28, 0.1);
 }
 
 .ex-stat .hint {
@@ -4373,7 +4427,7 @@ body { color: var(--text); }
 
 .active-sport .timer {
   font-variant-numeric: tabular-nums;
-  color: #8b4a22;
+  color: #455c3d;
   font-weight: 700;
   margin-left: 8px;
 }
@@ -4397,7 +4451,7 @@ body { color: var(--text); }
   cursor: pointer;
 }
 
-.week-day .date { font-size: 11px; color: #a08d7d; display: flex; align-items: center; gap: 3px; }
+.week-day .date { font-size: 11px; color: #8a9984; display: flex; align-items: center; gap: 3px; }
 .week-day .date em {
   font-style: normal;
   font-size: 9px;
@@ -4411,15 +4465,15 @@ body { color: var(--text); }
   width: 22px;
   height: 22px;
   margin: 6px auto 4px;
-  color: #8b4a22;
+  color: #455c3d;
   display: block;
 }
 
 .week-day .emoji { font-size: 16px; display: block; margin: 4px 0; }
-.week-day .kcal { font-size: 10px; color: #8b7d70; }
+.week-day .kcal { font-size: 10px; color: #5e6c58; }
 
 .week-day.selected {
-  border-color: #8b4a22;
+  border-color: #455c3d;
   background: #fbf3ea;
 }
 
@@ -4427,7 +4481,7 @@ body { color: var(--text); }
 
 .week-day:hover { border-color: #d9c3a8; }
 
-.week-edit { color: #a08d7d; font-size: 11.5px; }
+.week-edit { color: #8a9984; font-size: 11.5px; }
 
 .week-detail {
   margin-top: 12px;
@@ -4435,7 +4489,7 @@ body { color: var(--text); }
   border-radius: 12px;
   padding: 12px 14px;
   font-size: 12px;
-  color: #7a6b5c;
+  color: #6b7a64;
   line-height: 1.9;
 }
 
@@ -4457,11 +4511,11 @@ body { color: var(--text); }
 }
 
 .mood-week .day .emoji { font-size: 18px; display: block; line-height: 1.3; }
-.mood-week .day .mood-label { display: block; font-size: 11px; color: #6f5a3a; margin-top: 2px; }
-.mood-week .day .date { font-size: 10px; color: #a08d7d; }
+.mood-week .day .mood-label { display: block; font-size: 11px; color: #4c5d45; margin-top: 2px; }
+.mood-week .day .date { font-size: 10px; color: #8a9984; }
 
 .mood-week .day.selected {
-  border-color: #8b4a22;
+  border-color: #455c3d;
   background: #fbf3ea;
 }
 
@@ -4469,7 +4523,7 @@ body { color: var(--text); }
 .nutri-note {
   margin-top: 10px;
   font-size: 11px;
-  color: #a08d7d;
+  color: #8a9984;
   line-height: 1.8;
 }
 
@@ -4483,21 +4537,21 @@ body { color: var(--text); }
   border-radius: 10px;
   padding: 0 12px;
   font-size: 12px;
-  color: #4a3525;
+  color: #1f2a1c;
   background: #fbf8f4;
   outline: none;
 }
 
-.pref-custom-input:focus { border-color: #8b4a22; border-style: solid; }
+.pref-custom-input:focus { border-color: #455c3d; border-style: solid; }
 
 /* 核心数据修改弹窗 */
 .vital-history-title {
   font-size: 13px;
-  color: #4a3525;
+  color: #1f2a1c;
   margin: 16px 0 8px;
 }
 
-.vital-history { font-size: 12px; color: #7a6b5c; }
+.vital-history { font-size: 12px; color: #6b7a64; }
 
 .vital-history-row {
   display: flex;
@@ -4506,12 +4560,12 @@ body { color: var(--text); }
   border-bottom: 1px dashed #f0e9df;
 }
 
-.vital-history-row span:first-child { color: #a08d7d; }
-.vital-history-empty { color: #a08d7d; font-size: 12px; padding: 6px 0; }
+.vital-history-row span:first-child { color: #8a9984; }
+.vital-history-empty { color: #8a9984; font-size: 12px; padding: 6px 0; }
 
 /* 生理期弹窗美化 */
 .period-modal .modal-head {
-  background: linear-gradient(135deg, #8b4a22, #b06a3a);
+  background: linear-gradient(135deg, #455c3d, #a05a32);
 }
 
 .period-tip {
@@ -4538,16 +4592,16 @@ body { color: var(--text); }
   gap: 6px;
 }
 
-.period-date-field label { font-size: 12px; color: #8b7d70; }
+.period-date-field label { font-size: 12px; color: #5e6c58; }
 
 .period-date-field input {
   width: 100%;
   height: 46px;
-  border: 1px solid #e6dbcd;
+  border: 1px solid #e1e8dc;
   border-radius: 12px;
   padding: 0 12px;
   font-size: 14px;
-  color: #4a3525;
+  color: #1f2a1c;
   background: #fbf8f4;
 }
 
@@ -4556,7 +4610,7 @@ body { color: var(--text); }
 
 .period-act { width: 100%; height: 36px; border-radius: 10px; font-size: 13px; }
 
-.period-hint { margin-top: 10px; font-size: 12px; line-height: 1.6; color: #a08d7d; }
+.period-hint { margin-top: 10px; font-size: 12px; line-height: 1.6; color: #8a9984; }
 
 .period-preview { display: flex; gap: 10px; margin-top: 14px; }
 
@@ -4568,15 +4622,15 @@ body { color: var(--text); }
   padding: 10px 12px;
 }
 
-.period-preview span { display: block; font-size: 11px; color: #a08d7d; }
-.period-preview b { display: block; margin-top: 4px; font-size: 15px; color: #8b4a22; }
+.period-preview span { display: block; font-size: 11px; color: #8a9984; }
+.period-preview b { display: block; margin-top: 4px; font-size: 15px; color: #455c3d; }
 
 /* 食物分量弹窗 */
 .food-modal { max-width: 560px; }
 
 .food-summary {
   font-size: 13px;
-  color: #4a3525;
+  color: #1f2a1c;
   line-height: 1.8;
   margin-bottom: 12px;
 }
@@ -4595,10 +4649,10 @@ body { color: var(--text); }
   border-radius: 10px;
   padding: 9px 12px;
   font-size: 12px;
-  color: #7a6b5c;
+  color: #6b7a64;
 }
 
-.food-portion-row b { color: #8b4a22; }
+.food-portion-row b { color: #455c3d; }
 
 .food-total {
   margin-top: 10px;
@@ -4627,8 +4681,8 @@ body { color: var(--text); }
 }
 
 .sport-board:hover { border-color: #c9a98d; background: #f8f1e8; }
-.sport-board b { display: block; font-size: 14px; color: #4a3525; }
-.sport-board span { display: block; font-size: 11px; color: #a08d7d; margin-top: 4px; }
+.sport-board b { display: block; font-size: 14px; color: #1f2a1c; }
+.sport-board span { display: block; font-size: 11px; color: #8a9984; margin-top: 4px; }
 
 .sport-board-head {
   display: flex;
@@ -4636,7 +4690,7 @@ body { color: var(--text); }
   justify-content: space-between;
   margin-bottom: 10px;
   font-size: 12px;
-  color: #8b7d70;
+  color: #5e6c58;
 }
 
 /* 评分可点击查看分析 */
@@ -4651,7 +4705,7 @@ body { color: var(--text); }
   gap: 8px;
   margin-bottom: 14px;
   font-size: 12px;
-  color: #a08d7d;
+  color: #8a9984;
 }
 
 /* 提醒弹窗：多日期选择 */
@@ -4700,23 +4754,23 @@ body { color: var(--text); }
 
 .date-tag button:hover { color: #b0402f; }
 
-.date-empty { font-size: 12px; color: #aab2c0; }
+.date-empty { font-size: 12px; color: #b3c0a9; }
 
 .quick-chip {
-  border: 1px solid #e6dbcd;
-  background: #fbf8f4;
-  color: #8b6b52;
+  border: 1px solid #e1e8dc;
+  background: #f7faf3;
+  color: #5e6c58;
   border-radius: 999px;
   padding: 5px 12px;
   font-size: 12px;
   cursor: pointer;
 }
 
-.quick-chip:hover { border-color: #c9a98d; background: #f7eee4; }
+.quick-chip:hover { border-color: #b9caab; background: #eef4e7; }
 
 /* 家人卡片上的「最近记录」可点击 */
 .family-line.clickable { cursor: pointer; }
-.family-line.clickable:hover b { color: #8b4a22; text-decoration: underline; }
+.family-line.clickable:hover b { color: #455c3d; text-decoration: underline; }
 
 /* 家人记录弹窗 */
 .member-record {
@@ -4726,18 +4780,18 @@ body { color: var(--text); }
   padding: 9px 2px;
   border-bottom: 1px dashed #f0e9df;
   font-size: 12px;
-  color: #7a6b5c;
+  color: #6b7a64;
 }
 
-.member-record .date { color: #a08d7d; flex: none; }
-.member-record-empty { font-size: 12px; color: #a08d7d; padding: 8px 0; }
+.member-record .date { color: #8a9984; flex: none; }
+.member-record-empty { font-size: 12px; color: #8a9984; padding: 8px 0; }
 
 /* 评分分析弹窗 */
 .score-modal { max-width: 560px; }
 
 .score-hero { display: flex; align-items: baseline; gap: 6px; margin-bottom: 14px; }
-.score-hero b { font-size: 34px; color: #8b4a22; line-height: 1; }
-.score-hero span { font-size: 13px; color: #a08d7d; }
+.score-hero b { font-size: 34px; color: #455c3d; line-height: 1; }
+.score-hero span { font-size: 13px; color: #8a9984; }
 
 .score-hero em {
   font-style: normal;
@@ -4750,7 +4804,7 @@ body { color: var(--text); }
 }
 
 .score-body p { font-size: 13px; color: #6b5c4c; line-height: 1.9; margin: 6px 0; }
-.score-body h4 { font-size: 13px; color: #4a3525; margin: 14px 0 6px; }
+.score-body h4 { font-size: 13px; color: #1f2a1c; margin: 14px 0 6px; }
 .score-body ul { margin: 6px 0 6px 18px; font-size: 13px; color: #6b5c4c; line-height: 1.9; }
 
 @media (max-width: 700px) {
@@ -4776,7 +4830,7 @@ body { color: var(--text); }
   border: 0;
   border-radius: 10px;
   background: transparent;
-  color: #6b7688;
+  color: #6b7a64;
   font-size: 14px;
   text-align: left;
   transition: background 0.2s, color 0.2s;
@@ -4827,14 +4881,14 @@ body { color: var(--text); }
   gap: 6px;
   font-size: 14px;
   font-weight: 700;
-  color: #433326;
+  color: #1f2a1c;
 }
 
 .vp-title .icon { width: 16px; height: 16px; }
 
 .vp-status {
   font-size: 12px;
-  color: #8b7d70;
+  color: #5e6c58;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -4845,7 +4899,7 @@ body { color: var(--text); }
   min-height: 74px;
   max-height: 160px;
   padding: 10px 12px;
-  border: 1px solid #e6dccf;
+  border: 1px solid #e1e8dc;
   border-radius: 10px;
   background: #fbf8f3;
   color: var(--text);
@@ -4868,7 +4922,7 @@ body { color: var(--text); }
   height: 36px;
   padding: 0 18px;
   border-radius: 10px;
-  border: 1px solid #e6dccf;
+  border: 1px solid #e1e8dc;
   background: #fff;
   color: #6b5a4a;
   font-size: 13px;
@@ -4965,7 +5019,7 @@ body { color: var(--text); }
 .news-source-hint {
   margin-top: 10px;
   font-size: 12px;
-  color: #8b7d70;
+  color: #5e6c58;
 }
 
 .news-source-hint b { color: #5d7a35; font-weight: 600; }
@@ -4979,25 +5033,25 @@ body { color: var(--text); }
 .sleep-bar .em { font-style: normal; font-size: 10px; color: #eadfce; }
 .sleep-bar span { font-size: 10px; color: #d8cbb8; }
 .cycle-forecast { margin-top: 14px; padding: 12px 14px; border-radius: 12px; background: #fff7f4; border: 1px dashed #f0d3c6; font-size: 12.5px; line-height: 1.8; color: #8b6f5e; }
-.cycle-forecast b { color: #a9653a; }
-.cycle-forecast .fc-chip { display: inline-block; margin: 2px 6px 2px 0; padding: 2px 8px; border-radius: 999px; background: #fbe3d8; color: #a9653a; font-size: 11.5px; }
-.side-edit { display: flex; align-items: center; gap: 10px; width: 100%; padding: 11px 12px; border: 0; border-radius: 10px; background: transparent; color: #6b7688; font-size: 14px; text-align: left; }
+.cycle-forecast b { color: #8a5a26; }
+.cycle-forecast .fc-chip { display: inline-block; margin: 2px 6px 2px 0; padding: 2px 8px; border-radius: 999px; background: #fbe3d8; color: #8a5a26; font-size: 11.5px; }
+.side-edit { display: flex; align-items: center; gap: 10px; width: 100%; padding: 11px 12px; border: 0; border-radius: 10px; background: transparent; color: #6b7a64; font-size: 14px; text-align: left; }
 .side-edit:hover { background: #f5f8f7; color: var(--text); }
 .side-edit .icon { opacity: .8; }
-.meal-date-row, .mood-date-row, .sport-date-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 8px 0 12px; font-size: 12.5px; color: #8b7d70; }
-.meal-date-row input[type="date"], .mood-date-row input[type="date"], .sport-date-row input[type="date"] { height: 36px; padding: 0 10px; border: 1px solid #e6dbcd; border-radius: 9px; font-size: 13px; color: #433326; background: #fff; }
+.meal-date-row, .mood-date-row, .sport-date-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 8px 0 12px; font-size: 12.5px; color: #5e6c58; }
+.meal-date-row input[type="date"], .mood-date-row input[type="date"], .sport-date-row input[type="date"] { height: 36px; padding: 0 10px; border: 1px solid #e1e8dc; border-radius: 9px; font-size: 13px; color: #1f2a1c; background: #fff; }
 .recent-advice { margin-top: 10px; padding: 14px 16px; border-radius: 12px; background: #f6f9f2; border: 1px solid #e4edd9; font-size: 13px; line-height: 1.9; color: #5b6b4f; }
 .recent-advice ul { margin: 6px 0 0 18px; }
 .recent-advice li { margin: 2px 0; }
 .recent-advice .ra-head { font-weight: 700; color: #4a5c3c; }
-.recent-advice .ra-empty { color: #8b7d70; }
+.recent-advice .ra-empty { color: #5e6c58; }
 .mini-bar { border: 0; background: none; padding: 0; font: inherit; color: inherit; cursor: pointer; border-radius: 6px; }
-.mini-bar:hover { background: rgba(139, 74, 34, .06); }
-.mini-bar.active { background: rgba(139, 74, 34, .12); }
+.mini-bar:hover { background: rgba(69, 92, 61, .06); }
+.mini-bar.active { background: rgba(69, 92, 61, .12); }
 .day-meal-list { display: flex; flex-direction: column; gap: 8px; }
 .day-meal-item { padding: 9px 12px; border-radius: 10px; background: #faf6f0; border: 1px solid #f0e6d8; font-size: 13px; color: #5d4a3a; display: flex; justify-content: space-between; gap: 10px; }
-.day-meal-item b { color: #8b4a22; white-space: nowrap; }
-.day-meal-empty { padding: 22px 10px; text-align: center; color: #8b7d70; font-size: 13.5px; }
+.day-meal-item b { color: #455c3d; white-space: nowrap; }
+.day-meal-empty { padding: 22px 10px; text-align: center; color: #5e6c58; font-size: 13.5px; }
 .day-meal-total { margin-top: 12px; padding-top: 10px; border-top: 1px dashed #e8dccb; font-size: 13px; color: #6b5645; }
 
 /* ==========================================================
@@ -5006,7 +5060,7 @@ body { color: var(--text); }
 .period-feel { margin-top: 20px; padding-top: 16px; border-top: 1px dashed var(--line); }
 .pf-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
 .pf-head input[type="date"] {
-  height: 34px; padding: 0 10px; border: 1px solid #e6dbcd; border-radius: 9px;
+  height: 34px; padding: 0 10px; border: 1px solid #e1e8dc; border-radius: 9px;
   background: #fff; font-size: 13px; color: var(--text);
 }
 .pf-group { margin-top: 14px; }
@@ -5015,7 +5069,7 @@ body { color: var(--text); }
 .pf-options::-webkit-scrollbar { display: none; }
 .pf-opt {
   flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 6px;
-  padding: 2px; border: 0; background: none; color: #8b7d70; font-size: 12px; line-height: 1.2;
+  padding: 2px; border: 0; background: none; color: #5e6c58; font-size: 12px; line-height: 1.2;
 }
 .pf-dot {
   width: 42px; height: 42px; border-radius: 50%; background: #fde8ef;
@@ -5119,12 +5173,12 @@ body { color: var(--text); }
 }
 
 .admin-head h2 { font-size: 19px; color: #3a2a1d; letter-spacing: 0.5px; }
-.admin-head p { font-size: 12.5px; color: #8b7d70; margin-top: 4px; }
+.admin-head p { font-size: 12.5px; color: #5e6c58; margin-top: 4px; }
 
 .admin-refresh {
   border: 1px solid #e2d6c8;
   background: #fff;
-  color: #8b4a22;
+  color: #455c3d;
   font-size: 13px;
   padding: 8px 14px;
   border-radius: 9px;
@@ -5148,7 +5202,7 @@ body { color: var(--text); }
   box-shadow: var(--shadow);
 }
 
-.admin-kpi span { display: block; font-size: 12px; color: #8b7d70; }
+.admin-kpi span { display: block; font-size: 12px; color: #5e6c58; }
 .admin-kpi b {
   display: block;
   font-size: 22px;
@@ -5180,7 +5234,7 @@ body { color: var(--text); }
   box-shadow: var(--shadow);
 }
 
-.admin-card h3 { font-size: 14px; color: #4a3525; font-weight: 600; margin-bottom: 8px; }
+.admin-card h3 { font-size: 14px; color: #1f2a1c; font-weight: 600; margin-bottom: 8px; }
 .admin-card h3 .admin-log-hint {
   font-size: 11px;
   color: #a89a8b;
@@ -5224,6 +5278,62 @@ body { color: var(--text); }
   .admin-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .admin-grid { grid-template-columns: 1fr; }
 }
+
+/* ==========================================================
+   浅苔绿医疗配色：健康数据页（仅颜色，布局不变）
+   ========================================================== */
+.sidebar { background: #eef2e9; border-right-color: #e0e7da; }
+.side-brand { color: #3d5336; }
+.logo { background: linear-gradient(135deg, #455c3d, #5d7a4f); }
+.side-nav button { color: #5e6c58; }
+.side-nav button:hover { background: #e6eddf; color: #2f4236; }
+.side-nav button.active { background: #dfe9d5; color: #3d5336; }
+.side-nav button.active::before { background: #455c3d; }
+.avatar { background: #e6f0ea; color: #0e7c74; }
+.side-user-name, .onboarding-card h2, .news-title { color: #1f2a1c; }
+
+.heart { color: #455c3d; }
+.fork { color: #0e7c74; }
+
+.hero { background: #ffffff; box-shadow: inset 0 0 0 1px #e1e8dc; }
+.vital { background: #f7faf3; }
+.vital:hover { background: #f1f6ec; }
+.vital .value { color: #1f2a1c; }
+.badge { color: #3d5336; background: #e4edda; }
+.badge.warn { color: #8a5a26; background: #f7ede2; }
+.report-link { color: #455c3d; }
+
+.btn-primary { background: linear-gradient(135deg, #455c3d, #556f4a); box-shadow: 0 6px 14px rgba(69, 92, 61, 0.22); }
+.btn-primary:hover { box-shadow: 0 9px 18px rgba(69, 92, 61, 0.28); }
+.btn-soft { border-color: #cfddc6; color: #455c3d; }
+.btn-soft:hover { background: #f3f7ee; }
+.btn-mini { background: #455c3d; }
+.btn-ghost-sm:hover { border-color: #b9caab; color: #3d5336; }
+
+.card { background: #e2eada; box-shadow: inset 0 0 0 1px #d1dcc6, 0 2px 10px rgba(69, 92, 61, 0.04); }
+.card .card { background: #ffffff; box-shadow: inset 0 0 0 1px #e1e8dc; }
+.card.card-primary { background: #d8e2cd; }
+.card.card-primary.health-card {
+  border-radius: 20px;
+  background-color: #d8e2cd;
+  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='130' viewBox='0 0 220 130'><g fill='%23455C3D'><circle cx='74' cy='13' r='.9' fill-opacity='.34'/><circle cx='96' cy='9' r='1.2' fill-opacity='.26'/><circle cx='119' cy='23' r='.7' fill-opacity='.4'/><circle cx='144' cy='12' r='1.4' fill-opacity='.2'/><circle cx='167' cy='27' r='.9' fill-opacity='.3'/><circle cx='189' cy='15' r='.6' fill-opacity='.42'/><circle cx='208' cy='31' r='1.1' fill-opacity='.24'/><circle cx='81' cy='37' r='1.3' fill-opacity='.22'/><circle cx='105' cy='42' r='.8' fill-opacity='.36'/><circle cx='130' cy='49' r='1' fill-opacity='.28'/><circle cx='153' cy='39' r='.6' fill-opacity='.4'/><circle cx='177' cy='51' r='1.2' fill-opacity='.24'/><circle cx='200' cy='45' r='.9' fill-opacity='.3'/><circle cx='215' cy='59' r='.7' fill-opacity='.34'/><circle cx='89' cy='63' r='1.1' fill-opacity='.26'/><circle cx='113' cy='71' r='.7' fill-opacity='.38'/><circle cx='138' cy='65' r='1.3' fill-opacity='.22'/><circle cx='161' cy='75' r='.9' fill-opacity='.32'/><circle cx='185' cy='67' r='.6' fill-opacity='.4'/><circle cx='207' cy='81' r='1' fill-opacity='.26'/><circle cx='97' cy='91' r='.8' fill-opacity='.34'/><circle cx='121' cy='98' r='1.2' fill-opacity='.24'/><circle cx='146' cy='89' r='.7' fill-opacity='.4'/><circle cx='170' cy='101' r='.9' fill-opacity='.3'/><circle cx='193' cy='93' r='1.3' fill-opacity='.2'/><circle cx='213' cy='105' r='.6' fill-opacity='.36'/><circle cx='105' cy='117' r='.9' fill-opacity='.3'/><circle cx='132' cy='113' r='1.1' fill-opacity='.26'/><circle cx='159' cy='121' r='.7' fill-opacity='.36'/><circle cx='184' cy='115' r='.8' fill-opacity='.3'/><circle cx='206' cy='123' r='.9' fill-opacity='.28'/></g><path d='M4 74 H44 l7 -17 l8 34 l8 -27 l6 8 H120 l5 -5 H164' fill='none' stroke='%23455C3D' stroke-opacity='.3' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/></svg>"),
+    url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='130' viewBox='0 0 220 130'><g fill='%23455C3D'><circle cx='78' cy='118' r='1.1' fill-opacity='.3'/><circle cx='101' cy='124' r='.7' fill-opacity='.4'/><circle cx='124' cy='111' r='1.3' fill-opacity='.22'/><circle cx='149' cy='122' r='.8' fill-opacity='.34'/><circle cx='172' cy='108' r='.6' fill-opacity='.42'/><circle cx='195' cy='120' r='1.2' fill-opacity='.24'/><circle cx='214' cy='104' r='.9' fill-opacity='.3'/><circle cx='85' cy='97' r='.8' fill-opacity='.36'/><circle cx='109' cy='101' r='1.2' fill-opacity='.24'/><circle cx='134' cy='93' r='.7' fill-opacity='.4'/><circle cx='158' cy='96' r='1' fill-opacity='.28'/><circle cx='182' cy='89' r='1.4' fill-opacity='.2'/><circle cx='205' cy='95' r='.6' fill-opacity='.38'/><circle cx='92' cy='79' r='1' fill-opacity='.28'/><circle cx='117' cy='83' r='.7' fill-opacity='.38'/><circle cx='142' cy='77' r='1.1' fill-opacity='.26'/><circle cx='166' cy='80' r='.8' fill-opacity='.34'/><circle cx='191' cy='74' r='.6' fill-opacity='.4'/><circle cx='212' cy='82' r='1.2' fill-opacity='.22'/><circle cx='100' cy='63' r='.9' fill-opacity='.32'/><circle cx='126' cy='68' r='1.3' fill-opacity='.2'/><circle cx='151' cy='61' r='.7' fill-opacity='.4'/><circle cx='176' cy='66' r='1' fill-opacity='.28'/><circle cx='199' cy='59' r='.8' fill-opacity='.34'/><circle cx='108' cy='50' r='1.1' fill-opacity='.24'/><circle cx='135' cy='46' r='.6' fill-opacity='.4'/><circle cx='161' cy='52' r='1.2' fill-opacity='.22'/><circle cx='186' cy='44' r='.9' fill-opacity='.3'/><circle cx='207' cy='48' r='.7' fill-opacity='.36'/></g></svg>"),
+    radial-gradient(120% 95% at 100% 0%, rgba(69, 92, 61, 0.26) 0%, rgba(69, 92, 61, 0.10) 42%, rgba(69, 92, 61, 0) 72%),
+    radial-gradient(120% 95% at 100% 100%, rgba(69, 92, 61, 0.22) 0%, rgba(69, 92, 61, 0.08) 42%, rgba(69, 92, 61, 0) 72%),
+    linear-gradient(150deg, #edf4e7 0%, #dce8cd 46%, #c3d6b0 100%);
+  background-repeat: no-repeat;
+  background-position: right 0 top 0, right 0 bottom 0, 0 0, 0 0, 0 0;
+  background-size: 220px 130px, 220px 130px, 100% 100%, 100% 100%, 100% 100%;
+  box-shadow: inset 0 0 0 1px rgba(69, 92, 61, 0.08), 0 6px 20px rgba(69, 92, 61, 0.06);
+}
+.health-card .vital { background: #ffffff; box-shadow: 0 1px 2px rgba(69, 92, 61, 0.05); }
+.health-card .vital:hover { background: #fbfdf9; }
+.card-title { color: #1f2a1c; }
+
+.login-guest { margin-top: 8px; color: #455c3d; font-weight: 600; }
+.login-guest:hover { color: #3a4f33; }
+
+#page-diet .card + .card { margin-top: 18px; }
 
 </style>
 </head>
@@ -5281,9 +5391,9 @@ body { color: var(--text); }
         <span class="lh-pane"></span>
         <span class="lh-pane"><i class="lh-mark"><svg class="icon"><use href="#i-activity"/></svg></i></span>
       </div>
-      <h2>健康管理系统</h2>
-      <p class="lh-sub">记录每一次数据，连接每一项管理</p>
-      <p class="lh-desc">统一记录、高效查看、持续追踪，让日常管理更清晰</p>
+      <h2>一键读懂体检单</h2>
+      <p class="lh-sub">你的 AI 健康干预教练</p>
+      <p class="lh-desc">上传体检报告，拿到风险提示、今日食谱与运动建议</p>
     </section>
 
     <div class="login-card">
@@ -5314,16 +5424,19 @@ body { color: var(--text); }
 
       <button class="login-switch" type="button" id="authModeSwitch">还没有账号？立即注册</button>
 
+      <button class="login-switch login-guest" type="button" id="guestEnter">免登录体验（示例数据）</button>
+
       <p class="login-tip">登录一次后 30 天内打开本站会自动进入，无需再点登录。</p>
+
 
       <button class="btn-primary login-btn" type="button" id="demoEnter" hidden>进入本地演示（不校验账号）</button>
     </div>
   </div>
 
   <div class="login-chips">
-    <span>记录管理</span>
-    <span>数据看板</span>
-    <span>协同追踪</span>
+    <span>报告解读</span>
+    <span>风险评估</span>
+    <span>行动建议</span>
   </div>
 </div>
 
@@ -5561,7 +5674,7 @@ body { color: var(--text); }
     <div class="avatar" id="sideAvatar"><svg class="icon"><use href="#i-user"/></svg></div>
     <div class="side-user-info">
       <span class="side-user-name" id="sideUserName">未登录</span>
-      <span class="side-user-sub" id="sideUserSub">待完善资料</span>
+      <span class="side-user-sub" id="sideUserSub">AI 健康干预教练</span>
     </div>
     <svg class="icon caret"><use href="#i-chevron"/></svg>
   </div>
@@ -5574,8 +5687,8 @@ body { color: var(--text); }
   <section class="hero">
     <div class="hero-head">
       <div class="hero-title">
-        <h1>科学管理健康</h1>
-        <p>遇见更好的自己</p>
+        <h1>一键读懂体检单</h1>
+        <p>你的 AI 健康干预教练</p>
         <div class="hero-underline"></div>
       </div>
       <p class="hero-hint" id="heroHint">还没有饮食与运动记录：综合评分 = 饮食 40% + 运动 40% + BMI 20%，记录后自动更新。
@@ -5609,6 +5722,12 @@ body { color: var(--text); }
         </div>
       </div>
     </div>
+
+    <div class="hero-state" id="heroState">
+      <span class="state-pill" id="statePill" data-mood="none">待记录</span>
+      <span class="state-dots" id="stateDots"></span>
+      <span class="state-text" id="stateText">今天记录一次，点亮第一颗</span>
+    </div>
   </section>
 
   <div class="content">
@@ -5616,8 +5735,8 @@ body { color: var(--text); }
     <!-- ====================================================
          页面一：健康数据
          ==================================================== -->
-    <section class="page active" id="page-data">
-      <div class="card health-card">
+    <section class="page" id="page-data">
+      <div class="card health-card card-primary">
         <div class="health-main">
           <div class="card-head">
             <div class="card-title">
@@ -5890,7 +6009,7 @@ body { color: var(--text); }
          ==================================================== -->
     <section class="page" id="page-diet">
       <div class="diet-wrap">
-        <div class="card">
+        <div class="card card-primary">
           <div class="card-head">
             <div class="card-title">
               <svg class="icon fork"><use href="#i-fork"/></svg>饮食与营养计算
@@ -5947,6 +6066,14 @@ body { color: var(--text); }
           <h3 class="sub-title">今日营养摄入</h3>
           <div class="nutri-list" id="nutriList"></div>
           <div class="nutri-note" id="nutriNote"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">
+              <svg class="icon fork"><use href="#i-fork"/></svg>饮食分析与识别
+            </div>
+          </div>
 
           <h3 class="sub-title">近两周饮食分析</h3>
           <div class="week-compare" id="weekCompare"></div>
@@ -6005,7 +6132,7 @@ body { color: var(--text); }
          ==================================================== -->
     <section class="page" id="page-sport">
       <div class="exercise-wrap">
-        <div class="card">
+        <div class="card card-primary">
           <div class="card-head">
             <div class="card-title">
               <svg class="icon activity-icon"><use href="#i-activity"/></svg>运动与心理状态
@@ -6066,7 +6193,7 @@ body { color: var(--text); }
                           stroke-width="4" stroke-linecap="round" stroke-dasharray="113.1"
                           stroke-dashoffset="39.6" transform="rotate(-90 22 22)"/>
                   <text id="exPercent" x="22" y="25.5" text-anchor="middle"
-                        font-size="9.5" font-weight="700" fill="#4a5568">65%</text>
+                        font-size="9.5" font-weight="700" fill="#4c5d45">65%</text>
                 </svg>
               </div>
               <div class="label">目标完成率</div>
@@ -7332,16 +7459,12 @@ function showAuthError(id, message) {
 function afterLogin(profile) {
   loginView.hidden = true;
   onboardingView.hidden = true;
-  const hasProfile = !!(profile && profile.height && profile.weight);
-  if (hasProfile || hasAnyRecord()) {
-    enterApp();
-    loadProfileView();
-    renderVitalRanges();
-  } else {
-    onboardingView.hidden = false;
-    window.scrollTo(0, 0);
-    document.getElementById('obName').focus();
-  }
+  // 首屏进入健康数据总览
+  enterApp();
+  loadProfileView();
+  renderVitalRanges();
+  switchPage('data');
+  window.scrollTo(0, 0);
 }
 
 // 刚完成登录：拉取账号信息后决定进入哪个页面
@@ -7463,6 +7586,15 @@ document.getElementById('demoEnter').addEventListener('click', function () {
   document.getElementById('loginError').hidden = true;
   afterLogin(loadData('profile', null));
 });
+
+// 免登录体验：不校验账号，直接进入本地示例数据
+document.getElementById('guestEnter').addEventListener('click', function () {
+  setServerMode(false);
+  document.getElementById('loginError').hidden = true;
+  afterLogin(loadData('profile', null));
+  showToast('免登录体验中，数据只保存在本机');
+});
+
 
 // 已登录会话恢复：先取回账号数据，再决定进入哪个页面并重绘
 async function restoreSession(profile) {
@@ -8003,6 +8135,8 @@ function switchPage(name) {
   pages.forEach(function (page) {
     page.classList.toggle('active', page.id === 'page-' + name);
   });
+  // AI 解读页隐藏通用 Hero，首屏只保留上传区
+  const mainArea = document.querySelector('.main-area');
   // 数据大屏只给管理员看，打开时刷新一次，之后每 20 秒自动更新
   if (name === 'admin') {
     loadAdminDashboard();
@@ -8052,7 +8186,7 @@ function ensureECharts() {
   return window.__hmEChartsLoading;
 }
 
-const ADMIN_CHART_TEXT = { color: '#8b7d70', fontSize: 11 };
+const ADMIN_CHART_TEXT = { color: '#5e6c58', fontSize: 11 };
 
 function adminBaseOption(extra) {
   return Object.assign({
@@ -8106,7 +8240,7 @@ function renderAdminCharts(d) {
   drawAdminChart('adminChartRequests', adminBaseOption({
     xAxis: {
       type: 'category', data: d.hours,
-      axisLine: { lineStyle: { color: '#e6dccf' } }, axisLabel: ADMIN_CHART_TEXT
+      axisLine: { lineStyle: { color: '#e1e8dc' } }, axisLabel: ADMIN_CHART_TEXT
     },
     yAxis: {
       type: 'value', minInterval: 1,
@@ -8121,7 +8255,7 @@ function renderAdminCharts(d) {
   drawAdminChart('adminChartErrors', adminBaseOption({
     xAxis: {
       type: 'category', data: d.hours,
-      axisLine: { lineStyle: { color: '#e6dccf' } }, axisLabel: ADMIN_CHART_TEXT
+      axisLine: { lineStyle: { color: '#e1e8dc' } }, axisLabel: ADMIN_CHART_TEXT
     },
     yAxis: {
       type: 'value', minInterval: 1,
@@ -8139,7 +8273,7 @@ function renderAdminCharts(d) {
   drawAdminChart('adminChartAi', adminBaseOption({
     xAxis: {
       type: 'category', data: aiSeries.map(function (item) { return item.time.slice(6); }),
-      axisLine: { lineStyle: { color: '#e6dccf' } }, axisLabel: ADMIN_CHART_TEXT
+      axisLine: { lineStyle: { color: '#e1e8dc' } }, axisLabel: ADMIN_CHART_TEXT
     },
     yAxis: {
       type: 'value', name: 'ms',
@@ -8153,7 +8287,7 @@ function renderAdminCharts(d) {
           itemStyle: { color: item.ok ? '#5d9c43' : '#d24b4b' }
         };
       }),
-      lineStyle: { color: '#8b4a22', width: 2 }
+      lineStyle: { color: '#455c3d', width: 2 }
     }]
   }));
 
@@ -9189,6 +9323,7 @@ document.getElementById('applyReport').addEventListener('click', async function 
   showToast('体检指标已同步到核心体征并保存');
 });
 
+
 /* ==========================================================
    五、运动页：目标与数据由用户填写，完成度自动计算
    ========================================================== */
@@ -9658,41 +9793,41 @@ const sportBoards = [
 ];
 
 const sportTypes = [
-  { name: '健走', board: '户外运动', cal: '约 280 kcal/小时', color: '#6b8f3f', icon: 'i-footprints', met: 4.3 },
+  { name: '健走', board: '户外运动', cal: '约 280 kcal/小时', color: '#5d7a4f', icon: 'i-footprints', met: 4.3 },
   { name: '快走', board: '户外运动', cal: '约 260 kcal/小时', color: '#7a9b5c', icon: 'i-footprints', met: 4.0 },
-  { name: '慢跑', board: '户外运动', cal: '约 455 kcal/小时', color: '#c08a5a', icon: 'i-run', met: 7.0 },
-  { name: '户外骑行', board: '户外运动', cal: '约 350 kcal/小时', color: '#5f8fae', icon: 'i-bike', met: 6.8 },
-  { name: '徒步', board: '户外运动', cal: '约 320 kcal/小时', color: '#4f7898', icon: 'i-mountain', met: 6.0 },
-  { name: '跑步', board: '户外运动', cal: '约 450 kcal/小时', color: '#b06a3a', icon: 'i-run', met: 8.3 },
-  { name: '登山', board: '户外运动', cal: '约 420 kcal/小时', color: '#6e3a18', icon: 'i-mountain', met: 7.5 },
-  { name: '游泳', board: '户外运动', cal: '约 500 kcal/小时', color: '#4f7898', icon: 'i-swim', met: 7.0 },
-  { name: '轮滑 / 滑板', board: '户外运动', cal: '约 455 kcal/小时', color: '#8b7d70', icon: 'i-activity', met: 7.0 },
-  { name: '飞盘', board: '户外运动', cal: '约 260 kcal/小时', color: '#6b8f3f', icon: 'i-activity', met: 4.0 },
-  { name: '乒乓球', board: '球类运动', cal: '约 360 kcal/小时', color: '#8b4a22', icon: 'i-ball', met: 4.0 },
-  { name: '羽毛球', board: '球类运动', cal: '约 420 kcal/小时', color: '#a9653a', icon: 'i-ball', met: 5.5 },
-  { name: '篮球', board: '球类运动', cal: '约 470 kcal/小时', color: '#b06a3a', icon: 'i-ball', met: 6.5 },
-  { name: '足球', board: '球类运动', cal: '约 500 kcal/小时', color: '#6b8f3f', icon: 'i-ball', met: 7.0 },
+  { name: '慢跑', board: '户外运动', cal: '约 455 kcal/小时', color: '#a05a32', icon: 'i-run', met: 7.0 },
+  { name: '户外骑行', board: '户外运动', cal: '约 350 kcal/小时', color: '#0e7c74', icon: 'i-bike', met: 6.8 },
+  { name: '徒步', board: '户外运动', cal: '约 320 kcal/小时', color: '#0e7c74', icon: 'i-mountain', met: 6.0 },
+  { name: '跑步', board: '户外运动', cal: '约 450 kcal/小时', color: '#a05a32', icon: 'i-run', met: 8.3 },
+  { name: '登山', board: '户外运动', cal: '约 420 kcal/小时', color: '#3d5336', icon: 'i-mountain', met: 7.5 },
+  { name: '游泳', board: '户外运动', cal: '约 500 kcal/小时', color: '#0e7c74', icon: 'i-swim', met: 7.0 },
+  { name: '轮滑 / 滑板', board: '户外运动', cal: '约 455 kcal/小时', color: '#5e6c58', icon: 'i-activity', met: 7.0 },
+  { name: '飞盘', board: '户外运动', cal: '约 260 kcal/小时', color: '#5d7a4f', icon: 'i-activity', met: 4.0 },
+  { name: '乒乓球', board: '球类运动', cal: '约 360 kcal/小时', color: '#455c3d', icon: 'i-ball', met: 4.0 },
+  { name: '羽毛球', board: '球类运动', cal: '约 420 kcal/小时', color: '#8a5a26', icon: 'i-ball', met: 5.5 },
+  { name: '篮球', board: '球类运动', cal: '约 470 kcal/小时', color: '#a05a32', icon: 'i-ball', met: 6.5 },
+  { name: '足球', board: '球类运动', cal: '约 500 kcal/小时', color: '#5d7a4f', icon: 'i-ball', met: 7.0 },
   { name: '网球', board: '球类运动', cal: '约 440 kcal/小时', color: '#7a9b5c', icon: 'i-ball', met: 6.0 },
-  { name: '排球', board: '球类运动', cal: '约 260 kcal/小时', color: '#5f8fae', icon: 'i-ball', met: 4.0 },
+  { name: '排球', board: '球类运动', cal: '约 260 kcal/小时', color: '#0e7c74', icon: 'i-ball', met: 4.0 },
   { name: '匹克球', board: '球类运动', cal: '约 295 kcal/小时', color: '#9c7a4f', icon: 'i-ball', met: 4.5 },
-  { name: '台球', board: '球类运动', cal: '约 165 kcal/小时', color: '#8b7d70', icon: 'i-ball', met: 2.5 },
+  { name: '台球', board: '球类运动', cal: '约 165 kcal/小时', color: '#5e6c58', icon: 'i-ball', met: 2.5 },
   { name: '瑜伽', board: '形体运动', cal: '约 180 kcal/小时', color: '#9c7a4f', icon: 'i-yoga', met: 3.0 },
   { name: '普拉提', board: '形体运动', cal: '约 200 kcal/小时', color: '#9c7a4f', icon: 'i-yoga', met: 3.0 },
-  { name: '健身操', board: '形体运动', cal: '约 300 kcal/小时', color: '#c08a5a', icon: 'i-dumbbell', met: 5.0 },
-  { name: '力量训练', board: '形体运动', cal: '约 330 kcal/小时', color: '#8b4a22', icon: 'i-dumbbell', met: 5.0 },
-  { name: '拉伸放松', board: '形体运动', cal: '约 120 kcal/小时', color: '#8b7d70', icon: 'i-activity', met: 2.3 },
-  { name: '太极', board: '形体运动', cal: '约 195 kcal/小时', color: '#6b8f3f', icon: 'i-yoga', met: 3.0 },
+  { name: '健身操', board: '形体运动', cal: '约 300 kcal/小时', color: '#a05a32', icon: 'i-dumbbell', met: 5.0 },
+  { name: '力量训练', board: '形体运动', cal: '约 330 kcal/小时', color: '#455c3d', icon: 'i-dumbbell', met: 5.0 },
+  { name: '拉伸放松', board: '形体运动', cal: '约 120 kcal/小时', color: '#5e6c58', icon: 'i-activity', met: 2.3 },
+  { name: '太极', board: '形体运动', cal: '约 195 kcal/小时', color: '#5d7a4f', icon: 'i-yoga', met: 3.0 },
   { name: '八段锦', board: '形体运动', cal: '约 165 kcal/小时', color: '#7a9b5c', icon: 'i-yoga', met: 2.5 },
-  { name: '舞蹈', board: '形体运动', cal: '约 325 kcal/小时', color: '#c08a5a', icon: 'i-activity', met: 5.0 },
-  { name: '爬楼梯', board: '碎片化运动', cal: '约 500 kcal/小时', color: '#6e3a18', icon: 'i-mountain', met: 8.8 },
-  { name: '快走 10 分钟', board: '碎片化运动', cal: '约 280 kcal/小时', color: '#6b8f3f', icon: 'i-footprints', met: 4.3 },
-  { name: '跳绳', board: '碎片化运动', cal: '约 600 kcal/小时', color: '#a9653a', icon: 'i-activity', met: 10.0 },
-  { name: '开合跳', board: '碎片化运动', cal: '约 480 kcal/小时', color: '#b06a3a', icon: 'i-activity', met: 8.0 },
-  { name: '深蹲', board: '碎片化运动', cal: '约 325 kcal/小时', color: '#8b4a22', icon: 'i-dumbbell', met: 5.0 },
+  { name: '舞蹈', board: '形体运动', cal: '约 325 kcal/小时', color: '#a05a32', icon: 'i-activity', met: 5.0 },
+  { name: '爬楼梯', board: '碎片化运动', cal: '约 500 kcal/小时', color: '#3d5336', icon: 'i-mountain', met: 8.8 },
+  { name: '快走 10 分钟', board: '碎片化运动', cal: '约 280 kcal/小时', color: '#5d7a4f', icon: 'i-footprints', met: 4.3 },
+  { name: '跳绳', board: '碎片化运动', cal: '约 600 kcal/小时', color: '#8a5a26', icon: 'i-activity', met: 10.0 },
+  { name: '开合跳', board: '碎片化运动', cal: '约 480 kcal/小时', color: '#a05a32', icon: 'i-activity', met: 8.0 },
+  { name: '深蹲', board: '碎片化运动', cal: '约 325 kcal/小时', color: '#455c3d', icon: 'i-dumbbell', met: 5.0 },
   { name: '平板支撑', board: '碎片化运动', cal: '约 245 kcal/小时', color: '#9c7a4f', icon: 'i-activity', met: 3.8 },
-  { name: '原地高抬腿', board: '碎片化运动', cal: '约 520 kcal/小时', color: '#b06a3a', icon: 'i-run', met: 8.0 },
+  { name: '原地高抬腿', board: '碎片化运动', cal: '约 520 kcal/小时', color: '#a05a32', icon: 'i-run', met: 8.0 },
   { name: '靠墙静蹲', board: '碎片化运动', cal: '约 195 kcal/小时', color: '#7a9b5c', icon: 'i-dumbbell', met: 3.0 },
-  { name: '工间操', board: '碎片化运动', cal: '约 210 kcal/小时', color: '#8b7d70', icon: 'i-activity', met: 3.5 }
+  { name: '工间操', board: '碎片化运动', cal: '约 210 kcal/小时', color: '#5e6c58', icon: 'i-activity', met: 3.5 }
 ];
 
 const sportMask = document.getElementById('sportMask');
@@ -10222,7 +10357,7 @@ function renderCycle() {
   if (box) {
     box.innerHTML = '<b>经期预测</b>　' + stage +
       '<div style="margin-top:6px">未来 3 次预计开始：' + forecast.join('') + '</div>' +
-      '<div style="margin-top:4px;color:#a08d7d">预测仅作参考，实际日期会受作息、压力等因素影响。</div>';
+      '<div style="margin-top:4px;color:#8a9984">预测仅作参考，实际日期会受作息、压力等因素影响。</div>';
   }
 }
 
@@ -11925,12 +12060,12 @@ function renderWeightChart() {
         return xFor(index).toFixed(1) + ',' + yFor(item.weight).toFixed(1);
       }).join(' ');
 
-      svg += '<polyline points="' + points + '" fill="none" stroke="#8b4a22" stroke-width="2" ' +
+      svg += '<polyline points="' + points + '" fill="none" stroke="#455c3d" stroke-width="2" ' +
         'stroke-linejoin="round" stroke-linecap="round"/>';
 
       data.forEach(function (item, index) {
         svg += '<circle cx="' + xFor(index).toFixed(1) + '" cy="' + yFor(item.weight).toFixed(1) +
-          '" r="3" fill="#fff" stroke="#8b4a22" stroke-width="1.6"/>';
+          '" r="3" fill="#fff" stroke="#455c3d" stroke-width="1.6"/>';
       });
 
       // 每个折点下方标注对应日期（旋转 45°，避免重叠）
@@ -11939,7 +12074,7 @@ function renderWeightChart() {
         const labelY = height - 30;
         svg += '<text x="' + cx.toFixed(1) + '" y="' + labelY +
           '" text-anchor="end" transform="rotate(-45 ' + cx.toFixed(1) + ' ' + labelY + ')" ' +
-          'font-size="8" fill="#a08d7d">' + item.date.slice(5) + '</text>';
+          'font-size="8" fill="#8a9984">' + item.date.slice(5) + '</text>';
       });
       svg += '</svg>';
 
@@ -12459,9 +12594,9 @@ function setScore(id, value, hasData) {
   const barEl = document.getElementById(id + 'Bar');
   const denEl = textEl && textEl.parentNode
     ? textEl.parentNode.querySelector('.score-den') : null;
-  // 没有记录时不显示 0 分，显示「待完善」，避免新用户一进来就被低分劝退
+  // 没有记录时不显示 0 分，显示占位符，避免新用户一进来就被低分劝退
   if (textEl) {
-    textEl.textContent = hasData ? num : '待完善';
+    textEl.textContent = hasData ? num : '—';
     textEl.classList.toggle('is-empty', !hasData);
   }
   if (denEl) denEl.hidden = !hasData;
@@ -12480,6 +12615,8 @@ function updateScores() {
   setScore('scoreDiet', diet, diet > 0);
   setScore('scoreSport', sport, sport > 0);
   setScore('scoreTotal', total, hasRecord);
+  applyScoreMood(total, hasRecord);
+  updateRecordStreak();
 
   // 新用户还没有任何记录时，解释评分为什么偏低，而不是只给一个红色的 20/100
   const hint = document.getElementById('heroHint');
@@ -12493,6 +12630,60 @@ function updateScores() {
     const circumference = 2 * Math.PI * 52;
     ringArc.setAttribute('stroke-dashoffset',
       (circumference * (1 - (hasRecord ? total : 0) / 100)).toFixed(1));
+  }
+}
+
+// ---------- 评分的视觉人格：疲惫 / 平稳 / 活力 + 近 7 天点亮 ----------
+function scoreMoodOf(value) {
+  if (value >= 85) return { key: 'vital', text: '活力' };
+  if (value >= 60) return { key: 'steady', text: '平稳' };
+  return { key: 'tired', text: '疲惫' };
+}
+
+function applyScoreMood(total, hasRecord) {
+  const card = document.querySelector('.score-total');
+  const pill = document.getElementById('statePill');
+  if (!card || !pill) return;
+
+  if (!hasRecord) {
+    card.removeAttribute('data-mood');
+    pill.setAttribute('data-mood', 'none');
+    pill.textContent = '待记录';
+    return;
+  }
+
+  const mood = scoreMoodOf(total);
+  card.setAttribute('data-mood', mood.key);
+  pill.setAttribute('data-mood', mood.key);
+  pill.textContent = mood.text;
+}
+
+// 连续记录：近 7 天里有饮食、运动或体重记录就点亮一颗，今天那颗带呼吸动画
+function updateRecordStreak() {
+  const box = document.getElementById('stateDots');
+  if (!box) return;
+
+  const today = new Date();
+  let html = '';
+  let lit = 0;
+
+  for (let offset = 6; offset >= 0; offset -= 1) {
+    const key = toISODate(addDays(today, -offset));
+    const hasMeal = dateRangeSum(key, key).days > 0;
+    const entry = sportState.history[key];
+    const hasSport = !!(entry && (entry.kcal || entry.steps || entry.minutes));
+    const hasWeight = weightHistory.some(function (item) { return item.date === key; });
+    const on = hasMeal || hasSport || hasWeight;
+    if (on) lit += 1;
+    html += '<i class="' + (on ? 'on ' : '') + (offset === 0 ? 'today' : '') + '"></i>';
+  }
+
+  box.innerHTML = html;
+  const text = document.getElementById('stateText');
+  if (text) {
+    text.textContent = lit
+      ? '近 7 天记录 ' + lit + ' 天，状态会随记录持续变化'
+      : '今天记录一次，点亮第一颗';
   }
 }
 
