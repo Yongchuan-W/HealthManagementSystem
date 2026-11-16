@@ -477,6 +477,13 @@ a { text-decoration: none; }
   letter-spacing: 0.3px;
 }
 
+.score .score-num b.is-empty {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #9a8a7c;
+  letter-spacing: 0;
+}
+
 .bar {
   height: 6px;
   border-radius: 99px;
@@ -5554,7 +5561,7 @@ body { color: var(--text); }
     <div class="avatar" id="sideAvatar"><svg class="icon"><use href="#i-user"/></svg></div>
     <div class="side-user-info">
       <span class="side-user-name" id="sideUserName">未登录</span>
-      <span class="side-user-sub" id="sideUserSub">女 · 165cm</span>
+      <span class="side-user-sub" id="sideUserSub">待完善资料</span>
     </div>
     <svg class="icon caret"><use href="#i-chevron"/></svg>
   </div>
@@ -12452,8 +12459,11 @@ function setScore(id, value, hasData) {
   const barEl = document.getElementById(id + 'Bar');
   const denEl = textEl && textEl.parentNode
     ? textEl.parentNode.querySelector('.score-den') : null;
-  // 没有记录时不显示 0 分，改为「—」，避免新用户一进来就被低分劝退
-  if (textEl) textEl.textContent = hasData ? num : '—';
+  // 没有记录时不显示 0 分，显示「待完善」，避免新用户一进来就被低分劝退
+  if (textEl) {
+    textEl.textContent = hasData ? num : '待完善';
+    textEl.classList.toggle('is-empty', !hasData);
+  }
   if (denEl) denEl.hidden = !hasData;
   if (barEl) barEl.style.width = (hasData ? num : 0) + '%';
 }
@@ -13544,18 +13554,19 @@ function newsCoverPick(key) {
 }
 
 // 科普封面：本站封面图，加载完成才淡入；加载慢或失败时保留下面的渐变图标
-function newsCoverHtml(key, color, icon) {
+function newsCoverHtml(key, color, icon, title) {
   const pick = newsCoverPick(key);
+  const altText = String(title || '科普资讯封面').replace(/["<>&]/g, '');
   return '<div class="news-img ' + color + '">' +
     '<svg class="icon"><use href="#' + icon + '"/></svg>' +
-    '<img src="/assets/news/' + pick + '.jpg" alt="" loading="lazy" ' +
+    '<img src="/assets/news/' + pick + '.jpg" alt="' + altText + '" loading="lazy" ' +
     'onload="this.classList.add(\'is-ready\')" onerror="this.remove()">' +
     '</div>';
 }
 
 function newsCardHtml(key, article, keyword) {
   return '<article class="news-card" data-article="' + key + '">' +
-    newsCoverHtml(key, article.color, article.icon) +
+    newsCoverHtml(key, article.color, article.icon, article.title) +
     '<div class="news-body">' +
       '<div class="news-cat ' + article.color + '">' + escapeNewsHtml(article.cat) + '</div>' +
       '<div class="news-title">' + highlightNewsTitle(article.title, keyword) + '</div>' +
