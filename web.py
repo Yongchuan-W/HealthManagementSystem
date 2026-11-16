@@ -14907,11 +14907,12 @@ def build_ssl_context():
     """ai_local.env 里配置了 HM_TLS_CERT / HM_TLS_KEY 时启用 HTTPS。"""
     if not auth.tls_enabled():
         return None
+    cert = os.environ.get("HM_TLS_CERT", "").strip()
+    key = os.environ.get("HM_TLS_KEY", "").strip()
+    if not cert or not key:
+        return None
     context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-    context.load_cert_chain(
-        os.environ["HM_TLS_CERT"].strip(),
-        os.environ["HM_TLS_KEY"].strip(),
-    )
+    context.load_cert_chain(cert, key)
     return context
 
 

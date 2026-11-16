@@ -112,32 +112,39 @@ def create_session(conn, user_id):
 
 
 def tls_enabled():
-    """判断当前是否通过 HTTPS 提供服务（用于给 Cookie 加 Secure 标记）。
+    """配置了可用的 TLS 证书时返回 True。
 
-    满足任一条件即可：显式设置 HM_COOKIE_SECURE、HM_PUBLIC_URL 为 https 地址，
-    或配置了可用的 TLS 证书。本地 http 调试默认不加 Secure，避免登录态失效。
+    只用于判断「本进程是否直接用 HTTPS 监听」，不要掺杂反向代理场景，
+    否则 web.py 会误以为有证书而加载失败。
     """
-    flag = os.environ.get("HM_COOKIE_SECURE", "").strip().lower()
-    if flag in ("1", "true", "yes", "on"):
-        return True
-
-    public_url = os.environ.get("HM_PUBLIC_URL", "").strip().lower()
-    if public_url.startswith("https://"):
-        return True
-
     cert = os.environ.get("HM_TLS_CERT", "").strip()
     key = os.environ.get("HM_TLS_KEY", "").strip()
     return bool(cert and key and os.path.isfile(cert) and os.path.isfile(key))
 
 
+def cookie_secure():
+    """是否给 Cookie 加 Secure 标记。
+
+    反向代理终止 HTTPS（站点是 https，本机仍是 http）时也要加，
+    因此除了本地证书，还认 HM_COOKIE_SECURE 与 HM_PUBLIC_URL。
+    """
+    flag = os.environ.get("HM_COOKIE_SECURE", "").strip().lower()
+    if flag in ("1", "true", "yes", "on"):
+        return True
+    public_url = os.environ.get("HM_PUBLIC_URL", "").strip().lower()
+    if public_url.startswith("https://"):
+        return True
+    return tls_enabled()
+
+
 def cookie_header(token):
-    secure = "; Secure" if tls_enabled() else ""
+    secure = "; Secure" if cookie_secure() else ""
     return "%s=%s; Path=/; Max-Age=%d; HttpOnly; SameSite=Lax%s" % (
         TOKEN_COOKIE, token, SESSION_DAYS * 86400, secure)
 
 
 def clear_cookie_header():
-    secure = "; Secure" if tls_enabled() else ""
+    secure = "; Secure" if cookie_secure() else ""
     return "%s=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax%s" % (TOKEN_COOKIE, secure)
 
 
