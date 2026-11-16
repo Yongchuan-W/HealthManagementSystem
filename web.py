@@ -34,7 +34,7 @@ PAGE_HTML = r"""<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI 健康干预教练 · 一键读懂体检单</title>
+<title>健康管理系统 · 健康数据总览</title>
 <style>
 /* ==========================================================
    1. 全局基础样式
@@ -2033,9 +2033,11 @@ a { text-decoration: none; }
   justify-content: flex-start;
   padding: 40px 24px 56px;
   background:
-    radial-gradient(70% 55% at 14% 16%, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0) 62%),
-    radial-gradient(58% 46% at 90% 84%, rgba(232, 246, 228, 0.92), rgba(232, 246, 228, 0) 70%),
-    linear-gradient(135deg, #e6f4e2 0%, #f3fbf0 36%, #edf8f3 66%, #f8fcf5 100%);
+    radial-gradient(46% 40% at 12% 14%, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0) 66%),
+    radial-gradient(42% 38% at 88% 12%, rgba(197, 224, 214, 0.55), rgba(197, 224, 214, 0) 70%),
+    radial-gradient(50% 44% at 84% 90%, rgba(214, 228, 191, 0.7), rgba(214, 228, 191, 0) 72%),
+    radial-gradient(40% 34% at 10% 88%, rgba(226, 213, 189, 0.5), rgba(226, 213, 189, 0) 70%),
+    linear-gradient(150deg, #f2f7ec 0%, #f5f8ef 42%, #eef5f1 72%, #f6f9f0 100%);
 }
 
 /* 背景装饰：心电曲线（上）与柱状图（左下） */
@@ -2047,8 +2049,8 @@ a { text-decoration: none; }
   top: 50%;
   height: 130px;
   transform: translateY(-50%);
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpolyline points='0,70 150,70 175,70 195,30 215,96 235,70 380,70 405,70 425,52 445,86 465,70 620,70 640,70 660,24 680,100 700,70 860,70 885,70 905,54 925,84 945,70 1200,70' fill='none' stroke='%23a9cfb4' stroke-width='2' stroke-linejoin='round'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
-  opacity: 0.5;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpolyline points='0,70 150,70 175,70 195,30 215,96 235,70 380,70 405,70 425,52 445,86 465,70 620,70 640,70 660,24 680,100 700,70 860,70 885,70 905,54 925,84 945,70 1200,70' fill='none' stroke='%23455c3d' stroke-width='2' stroke-linejoin='round'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+  opacity: 0.22;
   pointer-events: none;
 }
 
@@ -2059,7 +2061,7 @@ a { text-decoration: none; }
   bottom: 0;
   width: 44%;
   height: 46%;
-  background-image: repeating-linear-gradient(90deg, rgba(150, 200, 160, 0.26) 0 12px, transparent 12px 30px);
+  background-image: repeating-linear-gradient(90deg, rgba(69, 92, 61, 0.14) 0 12px, transparent 12px 30px);
   -webkit-mask-image: linear-gradient(to top, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0));
   mask-image: linear-gradient(to top, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0));
   opacity: 0.65;
@@ -2098,9 +2100,9 @@ a { text-decoration: none; }
   flex: 1;
   height: 88px;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.66);
-  border: 1px solid rgba(255, 255, 255, 0.92);
-  box-shadow: 0 12px 26px rgba(118, 158, 128, 0.14);
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(209, 220, 198, 0.9);
+  box-shadow: 0 12px 26px rgba(69, 92, 61, 0.1);
   position: relative;
   overflow: hidden;
 }
@@ -2113,7 +2115,7 @@ a { text-decoration: none; }
   top: 9px;
   height: 5px;
   border-radius: 3px;
-  background: rgba(157, 194, 166, 0.42);
+  background: rgba(69, 92, 61, 0.3);
 }
 
 .lh-pane::after {
@@ -2124,8 +2126,13 @@ a { text-decoration: none; }
   top: 24px;
   bottom: 12px;
   border-radius: 4px;
-  background: repeating-linear-gradient(180deg, rgba(167, 200, 174, 0.28) 0 5px, transparent 5px 13px);
+  background: repeating-linear-gradient(180deg, rgba(120, 148, 106, 0.22) 0 5px, transparent 5px 13px);
 }
+
+/* 三块小窗各带一点辅助色：青、沙、苔 */
+.lh-pane:nth-child(1)::before { background: rgba(14, 124, 116, 0.34); }
+.lh-pane:nth-child(2)::before { background: rgba(176, 142, 92, 0.34); }
+.lh-pane:nth-child(3)::before { background: rgba(69, 92, 61, 0.4); }
 
 .lh-pane:nth-child(2) { height: 96px; }
 .lh-pane:nth-child(3) { height: 104px; }
@@ -2137,7 +2144,7 @@ a { text-decoration: none; }
   width: 30px;
   height: 30px;
   border-radius: 9px;
-  background: #9db9a8;
+  background: #455c3d;
   color: #fff;
   display: flex;
   align-items: center;
@@ -2151,21 +2158,21 @@ a { text-decoration: none; }
   font-size: 30px;
   font-weight: 800;
   letter-spacing: 1px;
-  color: #33402f;
+  color: #1f2a1c;
 }
 
 .login-hero .lh-sub {
   margin-top: 14px;
   font-size: 15px;
   font-weight: 600;
-  color: #43523d;
+  color: #0e7c74;
 }
 
 .login-hero .lh-desc {
   margin-top: 7px;
   font-size: 12.5px;
   line-height: 1.7;
-  color: #7b8a76;
+  color: #5e6c58;
 }
 
 .login-chips {
@@ -2190,20 +2197,34 @@ a { text-decoration: none; }
 }
 
 .login-card {
+  position: relative;
   width: 380px;
   max-width: 100%;
   background: #fff;
-  border-radius: 12px;
+  border-radius: 16px;
   padding: 34px 32px 28px;
-  border: 1px solid #eef2ee;
-  box-shadow: 0 22px 54px rgba(84, 108, 88, 0.16);
+  border: 1px solid #e1e8dc;
+  box-shadow: 0 22px 54px rgba(69, 92, 61, 0.14);
+  overflow: hidden;
 }
 
-.login-card h1 { font-size: 22px; color: #1f2d3d; font-weight: 700; }
+/* 卡片顶部一条极细的苔绿→青→沙渐变色带 */
+.login-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #455c3d 0%, #0e7c74 46%, #c3a06a 100%);
+  opacity: 0.85;
+}
+
+.login-card h1 { font-size: 22px; color: #1f2a1c; font-weight: 700; }
 
 .login-sub {
   font-size: 13px;
-  color: #8a9984;
+  color: #5e6c58;
   margin: 8px 0 22px;
 }
 
@@ -2227,12 +2248,12 @@ a { text-decoration: none; }
 .login-field input {
   width: 100%;
   height: 44px;
-  border: 1px solid #e2e7e4;
-  border-radius: 8px;
-  background: #fbfcfb;
+  border: 1px solid #e1e8dc;
+  border-radius: 9px;
+  background: #f8faf5;
   padding: 0 14px;
   font-size: 14px;
-  color: #2f4237;
+  color: #1f2a1c;
   outline: none;
   transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
 }
@@ -2240,7 +2261,7 @@ a { text-decoration: none; }
 .login-field input:focus {
   background: #fff;
   border-color: #b9caab;
-  box-shadow: 0 0 0 3px #f7ece2;
+  box-shadow: 0 0 0 3px rgba(69, 92, 61, 0.1);
 }
 
 .login-error {
@@ -2404,7 +2425,7 @@ a { text-decoration: none; }
   padding: 0 12px;
   border: 0;
   border-radius: 9px;
-  background: linear-gradient(135deg, #a2652f, #455c3d);
+  background: linear-gradient(135deg, #55704a, #3d5336);
   color: #fff;
   font-size: 15px;
   font-weight: 600;
@@ -3604,21 +3625,15 @@ body { color: var(--text); }
 .tag-menu h4 { color: #5e6c58; }
 
 /* 登录与资料填写 */
-.auth-layer {
-  background:
-    radial-gradient(circle at 12% 18%, rgba(201, 227, 167, 0.45), transparent 42%),
-    radial-gradient(circle at 88% 24%, rgba(147, 189, 224, 0.35), transparent 40%),
-    #eef6ef;
-}
 .login-brand { color: #3d5336; }
-.login-card { box-shadow: 0 20px 50px rgba(31, 42, 28, 0.12); }
+.login-card { box-shadow: 0 22px 54px rgba(69, 92, 61, 0.14); }
 .login-card h1 { color: #1f2a1c; }
 .login-field input:focus {
   border-color: #b9caab;
-  box-shadow: 0 0 0 3px #f3e8dd;
+  box-shadow: 0 0 0 3px rgba(69, 92, 61, 0.1);
 }
 .login-error { color: #b3482f; }
-.login-notice { background: #edf2e8; color: #3d5336; }
+.login-notice { background: #eef4e7; color: #3d5336; }
 .login-notice.is-warn { background: #fdf2f3; color: #a94442; }
 .pref-chip { background: #f7faf3; border-color: #e1e8dc; color: #5e6c58; }
 .pref-chip.selected { background: #dfe9d5; border-color: #b9caab; color: #3d5336; }
@@ -5391,9 +5406,9 @@ body { color: var(--text); }
         <span class="lh-pane"></span>
         <span class="lh-pane"><i class="lh-mark"><svg class="icon"><use href="#i-activity"/></svg></i></span>
       </div>
-      <h2>一键读懂体检单</h2>
-      <p class="lh-sub">你的 AI 健康干预教练</p>
-      <p class="lh-desc">上传体检报告，拿到风险提示、今日食谱与运动建议</p>
+      <h2>每天的健康，一处看清</h2>
+      <p class="lh-sub">饮食 · 运动 · 睡眠 · 体征 · 家人</p>
+      <p class="lh-desc">记录一次，自动生成评分与趋势；体检报告拍照即可回填体征</p>
     </section>
 
     <div class="login-card">
@@ -5674,7 +5689,7 @@ body { color: var(--text); }
     <div class="avatar" id="sideAvatar"><svg class="icon"><use href="#i-user"/></svg></div>
     <div class="side-user-info">
       <span class="side-user-name" id="sideUserName">未登录</span>
-      <span class="side-user-sub" id="sideUserSub">AI 健康干预教练</span>
+      <span class="side-user-sub" id="sideUserSub">健康数据总览</span>
     </div>
     <svg class="icon caret"><use href="#i-chevron"/></svg>
   </div>
@@ -5687,8 +5702,8 @@ body { color: var(--text); }
   <section class="hero">
     <div class="hero-head">
       <div class="hero-title">
-        <h1>一键读懂体检单</h1>
-        <p>你的 AI 健康干预教练</p>
+        <h1>把每天的健康，一处看清</h1>
+        <p>饮食 · 运动 · 睡眠 · 体征 · 家人</p>
         <div class="hero-underline"></div>
       </div>
       <p class="hero-hint" id="heroHint">还没有饮食与运动记录：综合评分 = 饮食 40% + 运动 40% + BMI 20%，记录后自动更新。
