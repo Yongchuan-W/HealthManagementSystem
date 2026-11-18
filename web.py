@@ -1302,6 +1302,28 @@ a { text-decoration: none; }
   line-height: 1.8;
 }
 
+/* 不在经期时间内：今日状态与经期感受整体置灰，不可操作 */
+.status-card.is-locked,
+.period-feel.is-locked { opacity: .55; }
+
+.status-card.is-locked .tags,
+.status-card.is-locked .tag-menu,
+.period-feel.is-locked .pf-options { pointer-events: none; }
+
+.status-card.is-locked .tag.add { cursor: not-allowed; }
+
+.period-feel.is-locked .pf-opt { cursor: not-allowed; }
+
+.pf-locked {
+  margin-top: 12px;
+  padding: 14px 12px;
+  border-radius: 10px;
+  background: #fdeef5;
+  color: #a06c82;
+  font-size: 13px;
+  text-align: center;
+}
+
 /* 可自由选择的周期字段（下拉框伪装成普通文字） */
 .f-item select {
   border: 0;
@@ -10356,11 +10378,16 @@ function renderCycle() {
       empty.innerHTML = '<b>经期预测</b>　还没有记录最近一次经期，' +
         '点上方「记录经期」填写后会自动计算下次经期、排卵日与易孕期。';
     }
+    refreshFemaleRecordLock();
     return;
   }
 
+  // 未记录结束日期时：还在经期内显示「进行中」，已超出经期长度则显示已结束
+  const rangeEnd = lastPeriodEnd
+    ? formatMD(lastPeriodEnd)
+    : (inPeriodToday() ? '进行中' : '已结束（未记录结束日期）');
   document.getElementById('lastPeriodRange').textContent =
-    formatMD(lastPeriodStart) + ' - ' + (lastPeriodEnd ? formatMD(lastPeriodEnd) : '进行中');
+    formatMD(lastPeriodStart) + ' - ' + rangeEnd;
 
   // 下次经期：从最近一次经期开始按周期长度往后推，直到不早于今天
   const today = new Date();
@@ -10406,6 +10433,8 @@ function renderCycle() {
       '<div style="margin-top:6px">未来 3 次预计开始：' + forecast.join('') + '</div>' +
       '<div style="margin-top:4px;color:#8a9984">预测仅作参考，实际日期会受作息、压力等因素影响。</div>';
   }
+
+  refreshFemaleRecordLock();
 }
 
 fillSelect(periodDaysSelect, 3, 10, '天', periodDays);
@@ -10497,6 +10526,47 @@ function todayStart() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   return today;
+}
+
+// 经期窗口：已记录结束日期时以结束日期为准，未记录时按经期长度推算
+function femalePeriodEnd() {
+  if (!lastPeriodStart) return null;
+  return lastPeriodEnd || addDays(lastPeriodStart, periodDays - 1);
+}
+
+// 今天是否处于经期时间内，用于控制「今日状态」与「经期感受」能否记录
+function inPeriodToday() {
+  const end = femalePeriodEnd();
+  if (!lastPeriodStart || !end) return false;
+  const today = todayStart();
+  return today >= lastPeriodStart && today <= end;
+}
+
+// 不在经期时间内：两块记录入口置灰并给出提示，直到设置新的经期开始日期
+function refreshFemaleRecordLock() {
+  const locked = !inPeriodToday();
+  const statusCard = document.querySelector('#femaleHealthSection .status-card');
+  const feelCard = document.getElementById('periodFeel');
+
+  if (statusCard) statusCard.classList.toggle('is-locked', locked);
+  if (feelCard) feelCard.classList.toggle('is-locked', locked);
+
+  const addBtn = document.getElementById('femaleAddTag');
+  if (addBtn) addBtn.disabled = locked;
+
+  const statusTip = document.getElementById('statusTip');
+  if (statusTip) {
+    if (locked) {
+      statusTip.textContent = '不在经期时间内，设置新的经期开始日期后可继续记录。';
+    } else {
+      updateStatusTip(todayFemaleTags());
+    }
+  }
+
+  const feelDate = document.getElementById('feelDate');
+  if (feelDate) feelDate.disabled = locked;
+
+  if (document.getElementById('periodFeelOptions')) renderPeriodFeel();
 }
 
 document.getElementById('openPeriod').addEventListener('click', function () {
@@ -10717,6 +10787,7 @@ function createTagEditor(config) {
 // 今日状态标签按日期保存，便于跨设备查看当天记录
 // 同一天的「流量/颜色/痛经」也存放在这条记录里，更新标签时不能把它们覆盖掉
 function saveFemaleStatus(tags) {
+  if (!inPeriodToday()) return;
   const map = loadData('femaleStatus', {}) || {};
   const today = toISODate(new Date());
   const entry = map[today] || {};
@@ -10781,11 +10852,22 @@ function feelMap() {
 }
 
 function renderPeriodFeel() {
-  if (!feelDateInput || !feelOptionsBox) return;
-  const date = feelDateInput.value || toISODate(new Date());
+  const dateInput = document.getElementById('feelDate');
+  const optionsBox = document.getElementById('periodFeelOptions');
+  const tip = document.getElementById('feelTip');
+  if (!dateInput || !optionsBox) return;
+
+  // 经期结束后不再允许记录经期感受，直到设置新的经期开始日期
+  if (!inPeriodToday()) {
+    optionsBox.innerHTML = '<div class="pf-locked">不在经期时间内，设置新的经期开始日期后可继续记录。</div>';
+    if (tip) tip.textContent = '不在经期时间内，暂不可记录经期感受。';
+    return;
+  }
+
+  const date = dateInput.value || toISODate(new Date());
   const entry = feelMap()[date] || {};
 
-  feelOptionsBox.innerHTML = FEEL_GROUPS.map(function (group) {
+  optionsBox.innerHTML = FEEL_GROUPS.map(function (group) {
     const options = group.options.map(function (option) {
       const dot = group.key === 'flow'
         ? '<span class="pf-dot"><i style="height:' + option.fill + '%"></i></span>'
@@ -10803,13 +10885,18 @@ function renderPeriodFeel() {
   if (entry.flow) parts.push('流量：' + entry.flow);
   if (entry.color) parts.push('颜色：' + entry.color);
   if (entry.pain) parts.push('痛经：' + entry.pain);
-  const tip = document.getElementById('feelTip');
-  tip.textContent = parts.length
-    ? formatMD(parseISODate(date)) + ' 已记录 · ' + parts.join(' · ') + '（再点一次可取消）'
-    : '选择后会按日期自动保存，可左右滑动查看全部选项。';
+  if (tip) {
+    tip.textContent = parts.length
+      ? formatMD(parseISODate(date)) + ' 已记录 · ' + parts.join(' · ') + '（再点一次可取消）'
+      : '选择后会按日期自动保存，可左右滑动查看全部选项。';
+  }
 }
 
 function saveFeel(key, value) {
+  if (!inPeriodToday()) {
+    showToast('不在经期时间内，设置新的经期开始日期后可继续记录');
+    return;
+  }
   const date = feelDateInput.value || toISODate(new Date());
   const map = feelMap();
   const entry = map[date] || { tags: [], note: '' };
