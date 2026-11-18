@@ -20,3 +20,6 @@ ai_local.env
 
 # 提交材料（技术文档、提交清单、测试账号）只本地保存，不入库
 提交文档/
+spec.md
+tasks.md
+index.html
