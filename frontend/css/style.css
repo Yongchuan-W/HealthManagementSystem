@@ -278,67 +278,47 @@ img { display: block; max-width: 100%; }
    ========================================================================== */
 .hero {
   position: relative;
-  isolation: isolate;
   margin-top: 22px;
-  padding: 28px 32px 22px;
   border-radius: var(--r-xl);
-  color: #fff;
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 16px 30px;
+  align-items: stretch;
   overflow: hidden;
-  background:
-    /* 右上暖橘晨光 */
-    radial-gradient(46% 120% at 92% -18%, rgba(233, 176, 122, 0.52), rgba(233, 176, 122, 0) 58%),
-    /* 左下蜜金光 */
-    radial-gradient(52% 120% at -6% 118%, rgba(217, 169, 79, 0.3), rgba(217, 169, 79, 0) 56%),
-    /* 顶部暖白柔光 */
-    radial-gradient(60% 100% at 46% -40%, rgba(255, 248, 236, 0.22), rgba(255, 248, 236, 0) 62%),
-    /* 主渐变：松针 → 苔藓 → 森绿 */
-    linear-gradient(120deg, #24392b 0%, #35513d 40%, #4a7c59 78%, #557f5e 100%);
-  box-shadow:
-    0 22px 46px rgba(53, 81, 61, 0.34),
-    inset 0 1px 0 rgba(255, 255, 255, 0.18),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.12);
+  background: linear-gradient(180deg, #fffdf6 0%, #faf6ea 100%);
+  border: 1px solid var(--line);
+  box-shadow: 0 16px 38px rgba(37, 48, 39, 0.09);
 }
 
-/* 纸张细纹 + 有机暖光斑 */
-.hero::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background-image:
-    radial-gradient(38% 60% at 78% 26%, rgba(255, 250, 240, 0.16), rgba(255, 250, 240, 0) 70%),
-    radial-gradient(30% 46% at 18% 84%, rgba(233, 176, 122, 0.16), rgba(233, 176, 122, 0) 70%),
-    repeating-linear-gradient(45deg, rgba(255, 250, 240, 0.035) 0 1px, transparent 1px 7px);
-  opacity: 0.75;
-}
-
-/* 右下叶脉弧线，替代通用 AI 的点阵与心电 */
-.hero::after {
-  content: '';
-  position: absolute;
-  right: -60px;
-  bottom: -96px;
-  width: 540px;
-  height: 380px;
-  z-index: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(circle at 70% 38%, rgba(255, 250, 240, 0.1) 0 104px, rgba(255, 250, 240, 0) 105px),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 440 320'%3E%3Cg fill='none' stroke='%23fff5e6' stroke-opacity='.30' stroke-width='1.4'%3E%3Cpath d='M30 280 C 140 258, 260 196, 410 92'/%3E%3Cpath d='M30 280 C 120 220, 236 158, 392 66'/%3E%3Cpath d='M30 280 C 96 182, 208 132, 372 46'/%3E%3Cpath d='M30 280 C 168 246, 300 206, 428 128'/%3E%3C/g%3E%3C/svg%3E") right bottom / 500px 340px no-repeat;
-  opacity: 0.7;
-}
-
+/* 左侧深绿标题面板 */
 .hero-head {
   position: relative;
   z-index: 2;
-  flex: 0 1 auto;
-  min-width: 240px;
+  flex: 1 1 42%;
+  min-width: 300px;
+  padding: 30px 32px 28px;
+  overflow: hidden;
+  color: #fff;
+  background:
+    radial-gradient(70% 120% at 100% 0%, rgba(233, 176, 122, 0.42), rgba(233, 176, 122, 0) 62%),
+    radial-gradient(60% 110% at -10% 110%, rgba(217, 169, 79, 0.22), rgba(217, 169, 79, 0) 56%),
+    linear-gradient(152deg, #24392b 0%, #35513d 52%, #4a7c59 100%);
 }
+
+/* 叶脉弧线（只在绿色面板内） */
+.hero-head::after {
+  content: '';
+  position: absolute;
+  right: -40px;
+  bottom: -70px;
+  width: 320px;
+  height: 260px;
+  z-index: 0;
+  pointer-events: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 360 280'%3E%3Cg fill='none' stroke='%23fff5e6' stroke-opacity='.28' stroke-width='1.4'%3E%3Cpath d='M20 250 C 110 232, 220 178, 344 88'/%3E%3Cpath d='M20 250 C 96 198, 196 142, 330 62'/%3E%3Cpath d='M20 250 C 76 168, 172 118, 312 40'/%3E%3C/g%3E%3C/svg%3E") right bottom / 300px 240px no-repeat;
+  opacity: 0.8;
+}
+
+.hero-head > * { position: relative; z-index: 1; }
 
 /* 标题上方的主题小标签 */
 .hero-eyebrow {
@@ -363,12 +343,11 @@ img { display: block; max-width: 100%; }
 /* 标题用宋体：温润、有人情味，与通用的无衬线 AI 界面区分开 */
 .hero-title h1 {
   font-family: "Songti SC", "Noto Serif SC", "STSong", "SimSun", "Source Han Serif SC", serif;
-  font-size: 29px;
+  font-size: 28px;
   font-weight: 700;
-  letter-spacing: 2px;
+  letter-spacing: 1.5px;
   color: #fffdf6;
-  line-height: 1.28;
-  white-space: nowrap;
+  line-height: 1.32;
   text-shadow: 0 2px 14px rgba(0, 30, 18, 0.32);
 }
 
@@ -413,16 +392,17 @@ img { display: block; max-width: 100%; }
 
 .vitals-tip { margin-top: 8px; font-size: 12px; color: var(--muted); }
 
-/* 三条评分 */
+/* 三条评分（右侧暖纸底） */
 .score-group {
   position: relative;
   z-index: 2;
-  flex: 1;
-  min-width: 0;
+  flex: 1 1 58%;
+  min-width: 300px;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-content: center;
   gap: 12px;
-  margin-top: 16px;
+  padding: 28px;
 }
 
 .score {
@@ -432,16 +412,17 @@ img { display: block; max-width: 100%; }
   gap: 10px;
   padding: 13px 15px;
   border-radius: 14px;
-  background: #fffdf8;
-  border: 1px solid rgba(255, 248, 236, 0.7);
-  box-shadow: 0 6px 16px rgba(53, 81, 61, 0.24);
+  background: #ffffff;
+  border: 1px solid var(--line);
+  box-shadow: 0 6px 16px rgba(37, 48, 39, 0.1);
   cursor: pointer;
-  transition: transform 0.18s var(--ease), box-shadow 0.18s var(--ease);
+  transition: transform 0.18s var(--ease), box-shadow 0.18s var(--ease), border-color 0.18s;
 }
 
 .score:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 24px rgba(53, 81, 61, 0.3);
+  box-shadow: 0 12px 24px rgba(37, 48, 39, 0.16);
+  border-color: var(--primary-soft);
 }
 
 .score-main { min-width: 0; }
@@ -531,14 +512,14 @@ img { display: block; max-width: 100%; }
 .hero-state {
   position: relative;
   z-index: 2;
+  flex: 1 1 100%;
   display: flex;
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
-  width: 100%;
-  margin-top: 14px;
+  padding: 0 28px 22px;
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.92);
+  color: var(--muted);
 }
 
 .state-text { font-size: 12px; }
@@ -547,14 +528,15 @@ img { display: block; max-width: 100%; }
   padding: 3px 11px;
   border-radius: 99px;
   font-weight: 700;
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--card);
+  border: 1px solid var(--line);
   color: var(--muted);
-  transition: background 0.3s, color 0.3s;
+  transition: background 0.3s, color 0.3s, border-color 0.3s;
 }
 
-.state-pill[data-mood="tired"] { background: #fff1f2; color: #e11d48; }
-.state-pill[data-mood="steady"] { background: #fefce8; color: #ca8a04; }
-.state-pill[data-mood="vital"] { background: #eaf3e6; color: #4f7d52; }
+.state-pill[data-mood="tired"] { background: #fff1f2; border-color: #fecdd3; color: #e11d48; }
+.state-pill[data-mood="steady"] { background: #fefce8; border-color: #fde68a; color: #ca8a04; }
+.state-pill[data-mood="vital"] { background: #eaf3e6; border-color: #c9dbc4; color: #4f7d52; }
 
 .state-dots { display: flex; gap: 5px; }
 
@@ -562,13 +544,13 @@ img { display: block; max-width: 100%; }
   width: 9px;
   height: 9px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.35);
+  background: rgba(37, 48, 39, 0.15);
   transition: background 0.35s, box-shadow 0.35s;
 }
 
 .state-dots i.on {
-  background: #fff;
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.28);
+  background: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-soft);
 }
 
 .state-dots i.today { animation: stateDotPulse 2.2s ease-in-out infinite; }
@@ -4142,8 +4124,9 @@ body:has(.mask.open) .fab { opacity: 0; pointer-events: none; }
   .health-card { flex-direction: column; }
   .vital-side { width: 100%; flex: none; }
   .report-link { align-self: flex-end; }
-  .hero { gap: 14px; padding: 16px 18px; }
-  .score-group { gap: 8px; }
+  .hero { flex-direction: column; }
+  .hero-head { flex: 1 1 auto; min-width: 0; padding: 24px 22px 22px; border-radius: 0; }
+  .score-group { flex: 1 1 auto; min-width: 0; gap: 8px; padding: 18px 20px; }
   .vitals { grid-template-columns: repeat(2, 1fr); }
   .report-grid { grid-template-columns: repeat(2, 1fr); }
   .sport-modal { width: 100%; }
@@ -4238,7 +4221,7 @@ body:has(.mask.open) .fab { opacity: 0; pointer-events: none; }
 }
 
 @media (max-width: 700px) {
-  .hero { flex-direction: column; align-items: stretch; gap: 10px; padding: 16px; }
+  .hero { flex-direction: column; }
   .score-group { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .sport-inputs { grid-template-columns: 1fr; }
   .plan-day { grid-template-columns: 22px 36px 1fr; }
@@ -4256,12 +4239,13 @@ body:has(.mask.open) .fab { opacity: 0; pointer-events: none; }
 
 @media (max-width: 560px) {
   .container { padding: 0 16px; }
-  .hero { padding: 12px 14px; flex-direction: column; align-items: stretch; gap: 8px; }
+  .hero { flex-direction: column; }
+  .hero-head { padding: 20px 18px 18px; }
   .hero-title h1 { font-size: 19px; letter-spacing: 1px; }
   .hero-title p { font-size: 11.5px; margin-top: 2px; }
   .hero-underline { width: 34px; height: 2px; margin-top: 4px; }
   .hero-hint { margin-top: 4px; font-size: 10.5px; }
-  .score-group { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+  .score-group { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; padding: 14px; }
   .score { grid-template-columns: minmax(0, 1fr); padding: 8px 9px; gap: 0; }
   .score .score-ico { display: none; }
   .score .row { font-size: 10.5px; margin-bottom: 4px; gap: 2px; }
