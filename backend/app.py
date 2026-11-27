@@ -1,7 +1,7 @@
-"""HTTP 服务：把页面、上传文件与 /api/* 接口合并到一个处理器。
+"""HTTP 服务：把前端页面、静态资源、上传文件与 /api/* 接口合并到一个处理器。
 
-由 web.py 启动时注入页面 HTML（已替换 AI 图标 data URI），
-因此 `python web.py` 仍然是唯一入口，无需安装任何依赖。
+前端（frontend/index.html + css/js/图片）与后端接口彻底分离，
+由本模块按路径提供；`python web.py` 仍然是唯一入口，无需安装任何依赖。
 """
 
 from __future__ import annotations
@@ -22,6 +22,28 @@ from .errors import ApiError
 MAX_BODY_BYTES = 14 * 1024 * 1024
 API_PREFIX = "/api"
 
+# 前端资源目录（HTML/CSS/JS/图片），与后端彻底分离，便于独立维护
+FRONTEND_DIR = os.path.join(db.BASE_DIR, "frontend")
+
+# 静态文件内存缓存：CSS / JS 在一次运行期间只读一次
+_STATIC_CACHE = {}
+
+
+def _read_frontend_file(rel_path):
+    """按 frontend/ 下的相对路径读取文本文件。"""
+    full = os.path.join(FRONTEND_DIR, rel_path)
+    with open(full, "r", encoding="utf-8") as handle:
+        return handle.read()
+
+
+def _read_static_bytes(rel_path):
+    """读取并缓存静态文件字节。"""
+    if rel_path not in _STATIC_CACHE:
+        full = os.path.join(FRONTEND_DIR, rel_path)
+        with open(full, "rb") as handle:
+            _STATIC_CACHE[rel_path] = handle.read()
+    return _STATIC_CACHE[rel_path]
+
 
 class HealthAppHandler(BaseHTTPRequestHandler):
     """页面 + 静态上传资源 + JSON 接口。"""
@@ -29,8 +51,7 @@ class HealthAppHandler(BaseHTTPRequestHandler):
     server_version = "HealthSystem/2.0"
     protocol_version = "HTTP/1.1"
 
-    # 由 web.py 在启动前写入
-    page_html = ""
+    # 由 web.py 在启动前写入（页面里展示的「手机访问」地址）
     mobile_url = "http://127.0.0.1:8000/"
 
     # ---------- 各 HTTP 方法 ----------
@@ -65,6 +86,10 @@ class HealthAppHandler(BaseHTTPRequestHandler):
             self._serve_page()
         elif path == "/favicon.ico":
             self._send_body(204, b"", "image/x-icon")
+        elif path == "/css/style.css":
+            self._serve_static("css/style.css", "text/css; charset=utf-8")
+        elif path == "/js/app.js":
+            self._serve_static("js/app.js", "application/javascript; charset=utf-8")
         elif path == "/api/ai/report-plan/stream" and method == "POST":
             self._handle_report_stream()
         elif path.startswith("/uploads/"):
@@ -77,7 +102,7 @@ class HealthAppHandler(BaseHTTPRequestHandler):
             self._send_json(404, {"ok": False, "error": "页面不存在", "code": "not_found"})
 
     def _serve_page(self):
-        html = self.page_html.replace("__MOBILE_URL__", self.mobile_url)
+        html = _read_frontend_file("index.html").replace("__MOBILE_URL__", self.mobile_url)
         body = html.encode("utf-8")
         # 整页 400KB+，用 ETag 让浏览器复用时只做一次校验，不必重复下载
         etag = '"%s"' % hashlib.md5(body).hexdigest()
@@ -91,15 +116,35 @@ class HealthAppHandler(BaseHTTPRequestHandler):
         self._send_body(200, body, "text/html; charset=utf-8",
                         extra=[("Cache-Control", "no-cache"), ("ETag", etag)])
 
+    def _serve_static(self, rel_path, content_type):
+        """提供分离出的前端静态资源（CSS / JS），带 ETag 缓存。"""
+        body = _read_static_bytes(rel_path)
+        etag = '"%s"' % hashlib.md5(body).hexdigest()
+        if (self.headers.get("If-None-Match") or "").strip() == etag:
+            self.send_response(304)
+            self.send_header("ETag", etag)
+            self.send_header("Cache-Control", "no-cache")
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+            return
+        self._send_body(200, body, content_type,
+                        extra=[("Cache-Control", "no-cache"), ("ETag", etag)])
+
     def _serve_asset(self, path):
-        """科普资讯封面等静态图片：公开访问，浏览器缓存一周。"""
-        name = os.path.basename(path[len("/assets/"):])
+        """静态图片：优先前端自带资源（AI 头像），再回退科普资讯封面。公开访问，浏览器缓存一周。"""
+        rel = path[len("/assets/"):]
+        name = os.path.basename(rel)
         if not name or name.startswith("."):
             self._send_json(404, {"ok": False, "error": "文件不存在", "code": "not_found"})
             return
 
-        file_path = os.path.join(db.BASE_DIR, "assets", "news", name)
-        if not os.path.isfile(file_path):
+        candidates = (
+            os.path.join(FRONTEND_DIR, "assets", name),
+            os.path.join(db.BASE_DIR, "assets", "news", name),
+            os.path.join(db.BASE_DIR, "assets", name),
+        )
+        file_path = next((c for c in candidates if os.path.isfile(c)), None)
+        if file_path is None:
             self._send_json(404, {"ok": False, "error": "文件不存在", "code": "not_found"})
             return
 

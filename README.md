@@ -34,7 +34,7 @@
 Python 标准库 ThreadingHTTPServer
   web.py 服务入口 / 静态资源 / ETag
   backend/app.py 请求处理
-  backend/routes.py 路由与业务（40+ 接口）
+  backend/routes.py 路由与业务（79 个接口，56 条路径）
   backend/auth.py PBKDF2 + 会话 + Cookie
   backend/db.py SQLite（WAL，23 张表，参数化查询，用户数据隔离）
   backend/ai.py OpenAI 兼容模型客户端（服务端保管 API 密钥，前端不接触密钥）
