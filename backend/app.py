@@ -58,6 +58,11 @@ class HealthAppHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self._handle("GET")
 
+    def do_HEAD(self):
+        # HEAD 与 GET 走同一套路由（Content-Length 等响应头一致），只是不发送响应体。
+        # 这样 curl -I / 监控探活可以直接用，不必再遇到 501。
+        self._handle("GET")
+
     def do_POST(self):
         self._handle("POST")
 
@@ -377,7 +382,8 @@ class HealthAppHandler(BaseHTTPRequestHandler):
         for key, value in (extra or []):
             self.send_header(key, value)
         self.end_headers()
-        if body:
+        # HEAD 只返回响应头，不写响应体（Content-Length 仍按 GET 的实际长度给出）
+        if body and self.command != "HEAD":
             self.wfile.write(body)
 
     def log_message(self, fmt, *args):
