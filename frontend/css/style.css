@@ -3867,76 +3867,101 @@ body:has(.mask.open) .fab { opacity: 0; pointer-events: none; }
    17. 睡眠板块
    ========================================================================== */
 .sleep-inline { margin-top: 20px; }
-.sleep-inline .sleep-card { padding: 34px 32px 32px; }
+.sleep-inline .sleep-card { padding: 30px 32px 28px; }
 .sleep-wrap { max-width: 620px; margin: 0 auto; }
 
+/* 睡眠：白卡 + 极淡夜色光晕，克制、不刺眼 */
 .sleep-card {
-  background: linear-gradient(135deg, #1e1b4b, #312e81 55%, #4338ca);
+  position: relative;
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid var(--line);
   border-radius: var(--r-lg);
-  padding: 46px 32px 42px;
+  padding: 30px 32px 28px;
   text-align: center;
-  color: #fff;
-  box-shadow: 0 18px 40px rgba(49, 46, 129, 0.32);
+  color: var(--ink);
+  box-shadow: var(--shadow-sm);
 }
 
+.sleep-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(70% 46% at 50% -6%, rgba(124, 134, 196, 0.1), rgba(124, 134, 196, 0) 70%),
+    radial-gradient(46% 40% at 92% 6%, rgba(201, 128, 83, 0.06), rgba(201, 128, 83, 0) 72%);
+}
+
+.sleep-card > * { position: relative; z-index: 1; }
+
+/* 月亮图标：浅紫灰圆底 */
 .sleep-icon {
-  width: 64px;
-  height: 64px;
-  margin: 0 auto 20px;
+  width: 58px;
+  height: 58px;
+  margin: 0 auto 16px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  color: #c4b5fd;
+  background: linear-gradient(135deg, #eef0f8, #e3e6f3);
+  color: #6b74a8;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.sleep-icon .icon { width: 32px; height: 32px; }
-.sleep-card h2 { font-size: 24px; letter-spacing: 1px; }
-.sleep-card p { font-size: 13px; color: #c7d2fe; margin-top: 12px; line-height: 1.8; }
+.sleep-icon .icon { width: 28px; height: 28px; }
+
+.sleep-card h2 { font-size: 21px; letter-spacing: 0.5px; color: var(--ink); }
+.sleep-card p { font-size: 13px; color: var(--muted); margin-top: 10px; line-height: 1.8; }
 
 .btn-sleep {
-  margin-top: 26px;
-  background: #818cf8;
+  margin-top: 0;
+  background: #6b74a8;
   color: #fff;
   border: 0;
   border-radius: 99px;
-  padding: 12px 28px;
+  padding: 11px 26px;
   font-size: 13px;
   transition: background 0.2s, transform 0.15s;
 }
 
-.btn-sleep:hover { background: #a5b4fc; transform: translateY(-1px); }
+.btn-sleep:hover { background: #5a6396; transform: translateY(-1px); }
 
-.sleep-form { margin-top: 22px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+.sleep-form { margin-top: 20px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
 
 .sleep-time { display: flex; align-items: center; justify-content: center; gap: 6px; }
 
 .sleep-form input, .sleep-form select {
-  height: 40px;
+  height: 42px;
   padding: 0 16px;
   border-radius: 99px;
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
+  border: 1px solid var(--line);
+  background: #f7f4ec;
+  color: var(--ink);
   font-size: 13px;
   outline: none;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
 }
 
-.sleep-form input { width: 180px; }
-.sleep-form .sleep-time input { width: 84px; padding: 0 12px; text-align: center; }
-.sleep-time span { font-size: 12px; color: #c7d2fe; }
-.sleep-form input::placeholder { color: rgba(255, 255, 255, 0.72); }
+.sleep-form input { width: 150px; }
+.sleep-form .sleep-time input { width: 78px; padding: 0 12px; text-align: center; }
+.sleep-time span { font-size: 12px; color: var(--muted); }
+.sleep-form input::placeholder { color: var(--muted-2); }
 .sleep-form select option { color: var(--ink); }
 .sleep-form .btn-sleep { margin-top: 0; }
 
-.sleep-today { margin-top: 16px; min-height: 18px; font-size: 12.5px; color: #c7d2fe; }
+.sleep-form input:focus, .sleep-form select:focus {
+  background: #fff;
+  border-color: #8a92c0;
+  box-shadow: 0 0 0 3px rgba(124, 134, 196, 0.14);
+}
 
-.sleep-bars { display: flex; align-items: flex-end; gap: 8px; height: 86px; margin-top: 12px; }
+.sleep-today { margin-top: 16px; min-height: 18px; font-size: 12.5px; color: var(--muted); }
+
+.sleep-bars { display: flex; align-items: flex-end; gap: 8px; height: 86px; margin-top: 14px; }
 .sleep-bar { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 4px; text-align: center; height: 100%; }
-.sleep-bar i { display: block; border-radius: 5px 5px 0 0; background: linear-gradient(180deg, #c4b5fd, #818cf8); min-height: 4px; }
-.sleep-bar .em { font-style: normal; font-size: 10px; color: #c7d2fe; }
-.sleep-bar span { font-size: 10px; color: #a5b4fc; }
+.sleep-bar i { display: block; border-radius: 5px 5px 0 0; background: linear-gradient(180deg, #c7cdec, #8a92c0); min-height: 4px; }
+.sleep-bar .em { font-style: normal; font-size: 10px; color: var(--muted-2); }
+.sleep-bar span { font-size: 10px; color: var(--muted-2); }
 
 /* ==========================================================================
    18. 语音输入入口与面板
