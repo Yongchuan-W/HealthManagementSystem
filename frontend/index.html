@@ -1,0 +1,1773 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>健康管理系统 · 健康数据总览</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ========================================================
+     SVG 图标库：集中定义，页面中通过 <use href="#id"> 引用
+     ======================================================== -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <symbol id="i-pulse" viewBox="0 0 24 24"><path d="M3 12h4l2.5-6 4 12L16 12h5"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 1 0-7.8 7.8L12 21l8.9-8.7a5.5 5.5 0 0 0-.1-7.7z"/></symbol>
+  <symbol id="i-fork" viewBox="0 0 24 24"><path d="M7 3v8a2 2 0 0 0 4 0V3M9 11v10"/><path d="M17 3c-1.6 1.4-2.5 3.6-2.5 6.5 0 2.2 1 3.5 2.5 3.5V3z"/><path d="M17 13v8"/></symbol>
+  <symbol id="i-dumbbell" viewBox="0 0 24 24"><path d="M6.5 6.5v11M3.5 9v6M17.5 6.5v11M20.5 9v6M6.5 12h11"/></symbol>
+  <symbol id="i-activity" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></symbol>
+  <symbol id="i-female" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="4.5"/><path d="M12 13v8M9 18h6"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><line x1="16" y1="3" x2="16" y2="7"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="3" y1="11" x2="21" y2="11"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.5 15a9 9 0 1 1-2.1-9.4L23 10"/></symbol>
+  <symbol id="i-droplet" viewBox="0 0 24 24"><path d="M12 2.7 6.5 9.2a7 7 0 1 0 11 0L12 2.7z"/></symbol>
+  <symbol id="i-flame" viewBox="0 0 24 24"><path d="M12 2c3 4 6 6.5 6 10a6 6 0 0 1-12 0c0-2 1-3.5 2.5-5C9.5 8 10 6 12 2z"/></symbol>
+  <symbol id="i-footprints" viewBox="0 0 24 24"><path d="M8.5 3.5c1.6 0 2.6 1.4 2.6 3.1 0 1.3-.5 2.1-.4 3 .1 1-.4 1.8-1.4 1.8H8c-1 0-1.6-.8-1.5-1.8.1-.9-.4-1.7-.4-3C6.1 4.9 7 3.5 8.5 3.5z"/><path d="M15.5 11c1.6 0 2.6 1.4 2.6 3.1 0 1.3-.5 2.1-.4 3 .1 1-.4 1.8-1.4 1.8H15c-1 0-1.6-.8-1.5-1.8.1-.9-.4-1.7-.4-3 0-1.7.9-3.1 2.4-3.1z"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><polygon points="8 5 19 12 8 19 8 5"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3M9 21h6"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z"/><path d="M19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8L19 16z"/></symbol>
+  <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></symbol>
+  <symbol id="i-smile" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-3.9-.9L3 21l1.9-5a8.4 8.4 0 0 1-.9-3.9 8.4 8.4 0 0 1 8.4-8.4 8.4 8.4 0 0 1 8.6 8.3z"/><line x1="8" y1="12" x2="8.01" y2="12"/><line x1="12" y1="12" x2="12.01" y2="12"/><line x1="16" y1="12" x2="16.01" y2="12"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></symbol>
+  <symbol id="i-ball" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.2l3 2.2-1.1 3.4h-3.8L9 9.4l3-2.2z"/><path d="M12 3.2v4M4.3 9.6l4.7 1.6M19.7 9.6L15 11.2M7.2 20.1l2-4.3M16.8 20.1l-2-4.3"/></symbol>
+  <symbol id="i-bike" viewBox="0 0 24 24"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M5.5 17.5h5l3-7h-3M14.5 17.5l-2-7M12 7h3M15 6l3.5 11.5"/></symbol>
+  <symbol id="i-run" viewBox="0 0 24 24"><circle cx="15" cy="4.5" r="2"/><path d="M13 8l-3 5 4 2 1 6M10 13l-4 3M14 15l4 2M9 21l2-6"/></symbol>
+  <symbol id="i-swim" viewBox="0 0 24 24"><circle cx="7" cy="8" r="2"/><path d="M9 10l5 2 3-2M3 17c2-1.5 4-1.5 6 0s4 1.5 6 0 4-1.5 6 0"/><path d="M3 21c2-1.5 4-1.5 6 0s4 1.5 6 0 4-1.5 6 0"/></symbol>
+  <symbol id="i-yoga" viewBox="0 0 24 24"><circle cx="12" cy="4.5" r="2"/><path d="M12 7v5M12 12l-5 3M12 12l5 3M7 21l5-6M17 21l-5-6"/></symbol>
+  <symbol id="i-mountain" viewBox="0 0 24 24"><path d="M3 20l6-11 4 6 3-4 5 9H3z"/><circle cx="18" cy="5" r="2"/></symbol>
+  <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M20 4c-8 0-14 5-14 11 0 2 1 4 3 5 6 0 11-6 11-16z"/><path d="M4 21c2-5 6-9 11-12"/></symbol>
+</svg>
+
+<!-- ========================================================
+     登录界面
+     ======================================================== -->
+<div class="auth-layer" id="loginView">
+  <div class="login-shell">
+    <section class="login-hero">
+      <div class="lh-panes">
+        <span class="lh-pane"></span>
+        <span class="lh-pane"></span>
+        <span class="lh-pane"><i class="lh-mark"><svg class="icon"><use href="#i-activity"/></svg></i></span>
+      </div>
+      <h2>每天的健康，一处看清</h2>
+      <p class="lh-sub">饮食 · 运动 · 睡眠 · 体征 · 家人</p>
+      <p class="lh-desc">记录一次，自动生成评分与趋势；体检报告拍照即可回填体征</p>
+    </section>
+
+    <div class="login-card">
+      <h1 id="authTitle">欢迎回来</h1>
+      <p class="login-sub" id="authSub">登录你的账户，继续管理数据记录</p>
+
+      <div class="login-notice" id="loginNotice" hidden></div>
+
+      <form id="loginForm" novalidate>
+        <div class="login-field">
+          <label for="loginAccount">账号</label>
+          <input id="loginAccount" type="text" autocomplete="username" placeholder="请输入账号">
+        </div>
+        <div class="login-field">
+          <label for="loginPassword">密码</label>
+          <input id="loginPassword" type="password" autocomplete="current-password" placeholder="请输入密码">
+        </div>
+        <div class="login-forgot-row">
+          <button class="login-forgot" type="button" id="forgotBtn">忘记密码？</button>
+        </div>
+        <div class="login-field" id="loginNicknameField" hidden>
+          <label for="loginNickname">昵称（可选）</label>
+          <input id="loginNickname" type="text" autocomplete="nickname" placeholder="不填则默认使用账号名">
+        </div>
+        <div class="login-error" id="loginError" hidden></div>
+        <button class="btn-primary login-btn" type="submit" id="loginSubmit">登录</button>
+      </form>
+
+      <button class="login-switch" type="button" id="authModeSwitch">还没有账号？立即注册</button>
+
+      <button class="login-switch login-guest" type="button" id="guestEnter">免登录体验（示例数据）</button>
+
+      <p class="login-tip">登录一次后 30 天内打开本站会自动进入，无需再点登录。</p>
+
+
+      <button class="btn-primary login-btn" type="button" id="demoEnter" hidden>进入本地演示（不校验账号）</button>
+    </div>
+  </div>
+
+  <div class="login-chips">
+    <span>报告解读</span>
+    <span>风险评估</span>
+    <span>行动建议</span>
+  </div>
+</div>
+
+<!-- ========================================================
+     忘记密码弹窗（邮箱验证码）
+     ======================================================== -->
+<div class="reset-layer" id="resetLayer" hidden>
+  <div class="reset-card">
+    <h2>重置密码</h2>
+    <p class="reset-sub">输入登录账号（不是昵称），验证码会发送到该账号绑定的 QQ 邮箱。没收到请检查垃圾邮件。</p>
+    <div class="reset-field">
+      <label for="resetAccount">账号（登录用的账号，不是昵称）</label>
+      <input id="resetAccount" type="text" autocomplete="username" placeholder="请输入登录账号">
+    </div>
+    <div class="reset-field">
+      <label for="resetCode">验证码</label>
+      <div class="reset-code-row">
+        <input id="resetCode" type="text" inputmode="numeric" maxlength="6" placeholder="6 位数字">
+        <button type="button" id="resetSendCode">发送验证码</button>
+      </div>
+    </div>
+    <div class="reset-field">
+      <label for="resetPassword">新密码</label>
+      <input id="resetPassword" type="password" autocomplete="new-password" placeholder="至少 6 位">
+    </div>
+    <div class="reset-error" id="resetError" hidden></div>
+    <div class="reset-actions">
+      <button class="btn-cancel" type="button" id="resetCancel">取消</button>
+      <button class="btn-primary" type="button" id="resetSubmit">重置密码</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================
+     登录后的基本信息填写
+     ======================================================== -->
+<div class="auth-layer" id="onboardingView" hidden>
+  <div class="onboarding-wrap">
+    <div class="onboarding-head">
+      <div>
+        <h1>完善你的健康信息</h1>
+        <p>填写后，我们会为你生成更贴合的健康建议与运动计划。</p>
+      </div>
+    </div>
+
+    <form id="onboardingForm">
+      <div class="onboarding-grid">
+
+        <!-- 基本信息 -->
+        <section class="onboarding-card">
+          <h2><svg class="icon"><use href="#i-user"/></svg>基本信息</h2>
+          <div class="ob-field">
+            <label for="obName">昵称</label>
+            <input id="obName" type="text" placeholder="例如 小美">
+          </div>
+          <div class="ob-field">
+            <label for="obEmail">QQ 邮箱（忘记密码时接收验证码）</label>
+            <input id="obEmail" type="email" placeholder="例如 12345678@qq.com">
+          </div>
+          <div class="ob-row">
+            <div class="ob-field">
+              <label for="obGender">性别</label>
+              <select id="obGender">
+                <option value="女" selected>女</option>
+                <option value="男">男</option>
+              </select>
+            </div>
+            <div class="ob-field">
+              <label for="obAge">年龄</label>
+              <input id="obAge" type="number" placeholder="28" min="1" max="120">
+            </div>
+          </div>
+          <div class="ob-row">
+            <div class="ob-field">
+              <label for="obHeight">身高（cm）</label>
+              <input id="obHeight" type="number" placeholder="165">
+            </div>
+            <div class="ob-field">
+              <label for="obWeight">体重（kg）</label>
+              <input id="obWeight" type="number" step="0.1" placeholder="60.0">
+            </div>
+          </div>
+        </section>
+
+        <!-- 健康情况 -->
+        <section class="onboarding-card">
+          <h2><svg class="icon"><use href="#i-heart"/></svg>健康情况</h2>
+          <div class="ob-field">
+            <label for="obSleep">睡眠质量</label>
+            <select id="obSleep">
+              <option>良好</option>
+              <option selected>一般</option>
+              <option>较差</option>
+            </select>
+          </div>
+          <div class="ob-field">
+            <label for="obExercise">运动频率</label>
+            <select id="obExercise">
+              <option>很少运动</option>
+              <option selected>每周 1-2 次</option>
+              <option>每周 3-4 次</option>
+              <option>几乎每天</option>
+            </select>
+          </div>
+          <div class="ob-field">
+            <label for="obGoal">健康目标</label>
+            <select id="obGoal">
+              <option selected>减脂塑形</option>
+              <option>增肌紧致</option>
+              <option>保持健康</option>
+              <option>改善睡眠</option>
+              <option>改善体态</option>
+            </select>
+          </div>
+          <div class="ob-field">
+            <label>健康情况（可多选）</label>
+            <div class="pref-chips" id="obConditions">
+              <button type="button" class="pref-chip selected" data-value="无">无</button>
+              <button type="button" class="pref-chip" data-value="高血压">高血压</button>
+              <button type="button" class="pref-chip" data-value="高血脂">高血脂</button>
+              <button type="button" class="pref-chip" data-value="糖尿病">糖尿病</button>
+              <button type="button" class="pref-chip" data-value="脂肪肝">脂肪肝</button>
+              <button type="button" class="pref-chip" data-value="胃病">胃病</button>
+              <button type="button" class="pref-chip" data-value="贫血">贫血</button>
+              <button type="button" class="pref-chip" data-value="甲状腺问题">甲状腺问题</button>
+              <button type="button" class="pref-chip" data-value="过敏体质">过敏体质</button>
+              <button type="button" class="pref-chip" data-value="颈椎不适">颈椎不适</button>
+              <button type="button" class="pref-chip" data-value="关节不适">关节不适</button>
+              <button type="button" class="pref-chip" data-value="睡眠不佳">睡眠不佳</button>
+              <button type="button" class="pref-chip" data-value="月经不调">月经不调</button>
+              <button type="button" class="pref-chip" data-value="焦虑情绪">焦虑情绪</button>
+            </div>
+            <div class="pref-custom-row">
+              <input class="pref-custom-input" data-group="obConditions" placeholder="其他健康情况，输入后按回车添加">
+            </div>
+          </div>
+        </section>
+
+        <!-- 饮食偏好 -->
+        <section class="onboarding-card">
+          <h2><svg class="icon"><use href="#i-fork"/></svg>饮食偏好</h2>
+          <div class="ob-row">
+            <div class="ob-field">
+              <label for="obTaste">口味</label>
+              <select id="obTaste">
+                <option selected>清淡</option>
+                <option>适中</option>
+                <option>重口</option>
+              </select>
+            </div>
+            <div class="ob-field">
+              <label for="obDietType">饮食类型</label>
+              <select id="obDietType">
+                <option selected>均衡饮食</option>
+                <option>素食</option>
+                <option>低糖</option>
+                <option>高蛋白</option>
+              </select>
+            </div>
+          </div>
+          <div class="ob-field">
+            <label for="obMeals">每日餐数</label>
+            <select id="obMeals">
+              <option>2 餐</option>
+              <option selected>3 餐</option>
+              <option>3 餐 + 加餐</option>
+            </select>
+          </div>
+          <div class="ob-field">
+            <label>忌口 / 过敏（可多选）</label>
+            <div class="pref-chips" id="obRestrictions">
+              <button type="button" class="pref-chip selected" data-value="无">无</button>
+              <button type="button" class="pref-chip" data-value="辛辣">辛辣</button>
+              <button type="button" class="pref-chip" data-value="海鲜">海鲜</button>
+              <button type="button" class="pref-chip" data-value="花生">花生</button>
+              <button type="button" class="pref-chip" data-value="坚果">坚果</button>
+              <button type="button" class="pref-chip" data-value="乳制品">乳制品</button>
+              <button type="button" class="pref-chip" data-value="鸡蛋">鸡蛋</button>
+              <button type="button" class="pref-chip" data-value="牛肉">牛肉</button>
+              <button type="button" class="pref-chip" data-value="大豆">大豆</button>
+              <button type="button" class="pref-chip" data-value="麸质">麸质</button>
+              <button type="button" class="pref-chip" data-value="酒精">酒精</button>
+              <button type="button" class="pref-chip" data-value="咖啡因">咖啡因</button>
+              <button type="button" class="pref-chip" data-value="高糖">高糖</button>
+            </div>
+            <div class="pref-custom-row">
+              <input class="pref-custom-input" data-group="obRestrictions" placeholder="其他忌口，输入后按回车添加">
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="onboarding-actions">
+        <button type="button" class="link-skip" id="skipOnboarding">稍后完善</button>
+        <button type="submit" class="btn-primary">保存并进入系统</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ========================================================
+     主应用（登录并完善信息后显示）
+     ======================================================== -->
+<div id="appShell" hidden>
+
+<!-- ========================================================
+     侧边导航
+     ======================================================== -->
+<aside class="sidebar">
+  <div class="side-brand">
+    <div class="logo"><svg class="icon"><use href="#i-pulse"/></svg></div>
+    <span>健康管理系统</span>
+  </div>
+
+  <nav class="side-nav" id="nav">
+    <button class="active" data-page="data"><svg class="icon"><use href="#i-pulse"/></svg>健康数据</button>
+    <button data-page="diet"><svg class="icon"><use href="#i-fork"/></svg>饮食</button>
+    <button data-page="sport"><svg class="icon"><use href="#i-dumbbell"/></svg>运动</button>
+    <button data-page="family"><svg class="icon"><use href="#i-heart"/></svg>家人健康</button>
+    <button data-page="assistant"><svg class="icon"><use href="#i-chat"/></svg>健康小管家</button>
+    <button data-page="news"><svg class="icon"><use href="#i-book"/></svg>科普资讯</button>
+    <button data-page="admin" id="navAdmin" hidden><svg class="icon"><use href="#i-activity"/></svg>数据大屏</button>
+  </nav>
+
+  <button class="voice-fab" id="voiceFab" type="button" aria-label="语音输入">
+    <svg class="icon"><use href="#i-mic"/></svg>
+    <span id="voiceFabText">语音输入</span>
+  </button>
+
+  <button class="side-edit" id="editBasicBtn" type="button">
+    <svg class="icon"><use href="#i-user"/></svg>修改基本信息
+  </button>
+
+  <div class="side-user" id="userBtn" title="个人信息">
+    <div class="avatar" id="sideAvatar"><svg class="icon"><use href="#i-user"/></svg></div>
+    <div class="side-user-info">
+      <span class="side-user-name" id="sideUserName">未登录</span>
+      <span class="side-user-sub" id="sideUserSub">健康数据总览</span>
+    </div>
+    <svg class="icon caret"><use href="#i-chevron"/></svg>
+  </div>
+</aside>
+
+<div class="main-area">
+<main class="container">
+
+  <!-- 所有页面共用的顶部横幅（紧凑版：标题 + 三评分同一行） -->
+  <section class="hero">
+    <div class="hero-head">
+      <div class="hero-title">
+        <h1>把每天的健康，一处看清</h1>
+        <p>饮食 · 运动 · 睡眠 · 体征 · 家人</p>
+        <div class="hero-underline"></div>
+      </div>
+      <p class="hero-hint" id="heroHint">还没有饮食与运动记录：综合评分 = 饮食 40% + 运动 40% + BMI 20%，记录后自动更新。
+        <button type="button" class="hint-link" data-goto="diet">记录饮食</button>
+        <button type="button" class="hint-link" data-goto="sport">记录运动</button>
+      </p>
+    </div>
+
+    <div class="score-group">
+      <div class="score score-total" data-score="total" title="点击查看分析">
+        <span class="score-ico"><svg class="icon"><use href="#i-heart"/></svg></span>
+        <div class="score-main">
+          <div class="row"><span>综合健康评分</span><span class="score-num"><b id="scoreTotal">—</b><span class="score-den" hidden>/100</span></span></div>
+          <div class="bar"><i id="scoreTotalBar"></i></div>
+        </div>
+      </div>
+
+      <div class="score score-diet" data-score="diet" title="点击查看分析">
+        <span class="score-ico"><svg class="icon"><use href="#i-leaf"/></svg></span>
+        <div class="score-main">
+          <div class="row"><span>饮食健康评分</span><span class="score-num"><b id="scoreDiet">—</b><span class="score-den" hidden>/100</span></span></div>
+          <div class="bar"><i id="scoreDietBar"></i></div>
+        </div>
+      </div>
+
+      <div class="score score-sport" data-score="sport" title="点击查看分析">
+        <span class="score-ico"><svg class="icon"><use href="#i-run"/></svg></span>
+        <div class="score-main">
+          <div class="row"><span>运动完成评分</span><span class="score-num"><b id="scoreSport">—</b><span class="score-den" hidden>/100</span></span></div>
+          <div class="bar"><i id="scoreSportBar"></i></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-state" id="heroState">
+      <span class="state-pill" id="statePill" data-mood="none">待记录</span>
+      <span class="state-dots" id="stateDots"></span>
+      <span class="state-text" id="stateText">今天记录一次，点亮第一颗</span>
+    </div>
+  </section>
+
+  <div class="content">
+
+    <!-- ====================================================
+         页面一：健康数据
+         ==================================================== -->
+    <section class="page" id="page-data">
+      <div class="card health-card card-primary">
+        <div class="health-main">
+          <div class="card-head">
+            <div class="card-title">
+              <svg class="icon heart"><use href="#i-heart"/></svg>核心体征
+            </div>
+          </div>
+
+          <div class="vitals">
+            <div class="vital">
+              <div class="vital-head">
+                <div class="label">体重</div>
+                <button class="vital-edit" type="button" data-vital="weight">修改</button>
+              </div>
+              <div class="value"><span id="weightValue">—</span><span class="unit">kg</span></div>
+            </div>
+            <div class="vital">
+              <div class="vital-head">
+                <div class="label">体脂率</div>
+                <button class="vital-edit" type="button" data-vital="fat">修改</button>
+              </div>
+              <div class="value"><span id="fatValue">—</span><span class="unit">%</span></div>
+            </div>
+            <div class="vital">
+              <div class="vital-head">
+                <div class="label">BMI</div>
+                <button class="vital-edit" type="button" data-vital="bmi">修改</button>
+              </div>
+              <div class="value">
+                <span id="bmiValue">—</span>
+                <span class="badge" id="bmiBadge" hidden></span>
+              </div>
+            </div>
+            <div class="vital">
+              <div class="vital-head">
+                <div class="label">血压</div>
+                <button class="vital-edit" type="button" data-vital="bp">修改</button>
+              </div>
+              <div class="value"><span id="bpValue">—</span><span class="unit">mmHg</span></div>
+            </div>
+            <div class="vital">
+              <div class="vital-head">
+                <div class="label">血糖（空腹）</div>
+                <button class="vital-edit" type="button" data-vital="glucose">修改</button>
+              </div>
+              <div class="value"><span id="glucoseValue">—</span><span class="unit">mmol/L</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 右侧：正常值范围、异常提醒与 BMI 公式 -->
+        <div class="vital-side">
+          <div class="range-head">
+            <span>正常值范围</span>
+            <button class="report-link" id="quickReportUpload">上传体检报告 ›</button>
+          </div>
+
+          <div class="range-list">
+            <div class="range-row">
+              <span class="rr-name">体重</span>
+              <span class="rr-ref" id="refWeight">—</span>
+              <span class="rr-state muted" id="stateWeight">—</span>
+            </div>
+            <div class="range-row">
+              <span class="rr-name">BMI</span>
+              <span class="rr-ref">18.5–23.9</span>
+              <span class="rr-state muted" id="stateBmi">—</span>
+            </div>
+            <div class="range-row">
+              <span class="rr-name">体脂率</span>
+              <span class="rr-ref" id="refFat">女 20%–30%</span>
+              <span class="rr-state muted" id="stateFat">—</span>
+            </div>
+            <div class="range-row">
+              <span class="rr-name">血压</span>
+              <span class="rr-ref">＜120/80 mmHg</span>
+              <span class="rr-state muted" id="stateBp">—</span>
+            </div>
+            <div class="range-row">
+              <span class="rr-name">空腹血糖</span>
+              <span class="rr-ref">3.9–6.1 mmol/L</span>
+              <span class="rr-state muted" id="stateGlucose">—</span>
+            </div>
+          </div>
+
+          <div class="abnormal-box ok" id="abnormalBox">
+            <b>异常提醒</b>
+            <ul id="abnormalList"><li>尚未记录体征数据，点击各指标右侧「修改」即可录入并自动判断。</li></ul>
+          </div>
+
+          <div class="bmi-formula">
+            <b>BMI 计算公式</b><br>
+            <span class="formula-line">BMI = 体重（kg）÷ 身高（m）²</span><br>
+            <span id="bmiFormulaValue">填写身高体重后自动计算</span><br>
+            <span>参考标准：中国成人 BMI 18.5–23.9 为正常（WS/T 428-2013）；血压、血糖参考《中国高血压防治指南》《中国 2 型糖尿病防治指南》。异常结果请以医院检查为准。</span>
+          </div>
+
+          <p class="vitals-tip" id="vitalsTip" hidden>还没填写身高，BMI 与体重参考范围要等身高补充后才能计算。
+            <button type="button" class="hint-link" id="vitalsTipBtn">去填写身高</button>
+          </p>
+        </div>
+      </div>
+
+      <!-- 体检报告分析：上传图片并识别关键指标 -->
+      <div class="card report-card" id="reportCard">
+        <div class="card-head">
+          <div class="card-title">
+            <svg class="icon"><use href="#i-book"/></svg>体检报告分析
+          </div>
+          <span class="report-sub">上传报告图片，自动识别关键指标</span>
+        </div>
+
+        <div class="upload-box" id="reportUploadBox">
+          <input type="file" id="reportImageInput" accept="image/*" hidden>
+
+          <div class="upload-empty" id="reportUploadEmpty">
+            <svg class="icon"><use href="#i-image"/></svg>
+            <p>上传体检报告照片，识别体重、体脂、BMI、血压、血糖等指标</p>
+            <button class="btn-soft" type="button" id="reportChooseBtn">选择图片</button>
+          </div>
+
+          <div class="upload-preview" id="reportPreview" hidden>
+            <img id="reportPreviewImg" alt="体检报告照片">
+            <div class="upload-info">
+              <div class="upload-file" id="reportFileName"></div>
+              <div class="upload-status" id="reportStatus"></div>
+              <div class="upload-actions">
+                <button class="btn-ghost-sm" type="button" id="reportReselect">重新上传</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="report-result" id="reportResult" hidden>
+          <div class="report-meta">识别结果 · 报告日期 <span id="reportDateText">—</span></div>
+          <div class="report-grid">
+            <div class="report-item">
+              <div class="label">体重</div>
+              <div class="value"><span id="reportWeight">—</span><span class="unit">kg</span></div>
+            </div>
+            <div class="report-item">
+              <div class="label">体脂率</div>
+              <div class="value"><span id="reportFat">—</span><span class="unit">%</span></div>
+            </div>
+            <div class="report-item">
+              <div class="label">BMI</div>
+              <div class="value" id="reportBmi">—</div>
+            </div>
+            <div class="report-item">
+              <div class="label">血压</div>
+              <div class="value"><span id="reportBp">—</span><span class="unit">mmHg</span></div>
+            </div>
+            <div class="report-item">
+              <div class="label">血糖</div>
+              <div class="value"><span id="reportGlucose">—</span><span class="unit">mmol/L</span></div>
+            </div>
+          </div>
+          <div class="report-items" id="reportItems" hidden></div>
+          <div class="report-summary" id="reportSummary"></div>
+          <div class="report-actions">
+            <button class="btn-primary" id="applyReport">同步到核心体征</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 睡眠板块（并入健康数据） -->
+      <div class="sleep-inline" id="sleepSection">
+        <div class="sleep-card">
+          <div class="sleep-icon"><svg class="icon"><use href="#i-moon"/></svg></div>
+          <h2>优质睡眠，恢复活力</h2>
+          <p>记录昨晚的睡眠时长与质量，数据会保存在你的健康档案里。</p>
+          <form class="sleep-form" id="sleepForm">
+            <div class="sleep-time">
+              <input id="sleepHour" type="number" step="1" min="0" max="24" placeholder="7">
+              <span>小时</span>
+              <input id="sleepMinute" type="number" step="1" min="0" max="59" placeholder="30">
+              <span>分钟</span>
+            </div>
+            <select id="sleepQuality" aria-label="睡眠质量">
+              <option>良好</option>
+              <option selected>一般</option>
+              <option>较差</option>
+            </select>
+            <button class="btn-sleep" type="submit">保存睡眠记录</button>
+          </form>
+          <div class="sleep-today" id="sleepToday"></div>
+          <div class="sleep-week" id="sleepWeek"></div>
+        </div>
+      </div>
+
+      <!-- 女性用户专属：女性健康档案（男性用户会自动隐藏） -->
+      <div class="female-health" id="femaleHealthSection">
+        <div class="female-card">
+          <div class="female-head">
+            <div class="female-title">
+              <svg class="icon"><use href="#i-droplet"/></svg>女性健康档案
+            </div>
+            <button class="btn-soft" id="openPeriod">记录生理期</button>
+          </div>
+
+          <div class="female-grid">
+            <!-- 左侧：周期数据（长度可自由选择） -->
+            <div>
+              <div class="f-item">
+                <span class="left"><svg class="icon"><use href="#i-calendar"/></svg>经期长度</span>
+                <select id="periodDays" aria-label="经期长度"></select>
+              </div>
+              <div class="f-item">
+                <span class="left"><svg class="icon"><use href="#i-refresh"/></svg>周期长度</span>
+                <select id="cycleDaysMain" aria-label="周期长度"></select>
+              </div>
+              <div class="f-item">
+                <span class="left"><svg class="icon"><use href="#i-droplet"/></svg>排卵日预测</span>
+                <b id="ovulationDate">—</b>
+              </div>
+              <div class="f-item">
+                <span class="left"><svg class="icon"><use href="#i-calendar"/></svg>最近一次经期</span>
+                <b id="lastPeriodRange">—</b>
+              </div>
+              <div class="f-item">
+                <span class="left"><svg class="icon"><use href="#i-droplet"/></svg>易孕期</span>
+                <b id="fertileWindow">—</b>
+              </div>
+              <div class="f-item">
+                <span class="left"><svg class="icon"><use href="#i-calendar"/></svg>下次预计经期</span>
+                <b id="nextPeriodDate">—</b>
+              </div>
+              <div class="f-item">
+                <span class="left"><svg class="icon"><use href="#i-calendar"/></svg>距离下次经期</span>
+                <b id="daysToPeriod">—</b>
+              </div>
+              <div class="cycle-forecast" id="cycleForecast"></div>
+            </div>
+
+            <!-- 右侧：今日状态（从预设选项中多选） -->
+            <div class="status-card">
+              <div class="status-title">
+                <svg class="icon"><use href="#i-calendar"/></svg>今日状态记录
+              </div>
+              <div class="tags" id="femaleTags">
+                <button class="tag add" id="femaleAddTag" type="button">+ 添加标签</button>
+              </div>
+              <div class="tag-menu" id="femaleTagMenu">
+                <h4>选择今日状态（可多选）</h4>
+                <div class="tag-options" id="femaleTagOptions"></div>
+                <div class="tag-menu-foot">
+                  <button class="btn-mini" type="button" data-close-tag>确定</button>
+                </div>
+              </div>
+              <div class="tip-pink" id="statusTip">科学建议：记录今日状态后，这里会给出对应的护理建议。</div>
+            </div>
+          </div>
+
+          <!-- 经期感受：流量 / 颜色 / 痛经，按日期记录 -->
+          <div class="period-feel" id="periodFeel">
+            <div class="pf-head">
+              <div class="status-title">
+                <svg class="icon"><use href="#i-droplet"/></svg>经期感受记录
+              </div>
+              <input type="date" id="feelDate" aria-label="记录日期">
+            </div>
+            <div id="periodFeelOptions"></div>
+            <div class="tip-pink" id="feelTip">选择后会按日期自动保存，可左右滑动查看全部选项。</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================
+         页面二：饮食
+         ==================================================== -->
+    <section class="page" id="page-diet">
+      <div class="diet-wrap">
+        <div class="card card-primary">
+          <div class="card-head">
+            <div class="card-title">
+              <svg class="icon fork"><use href="#i-fork"/></svg>饮食与营养计算
+            </div>
+          </div>
+
+          <!-- 每日营养目标：数值由 JavaScript 根据个人资料自动计算 -->
+          <div class="macros">
+            <div class="macro"><div class="label">蛋白质</div><div class="value" id="macroProtein">0g</div></div>
+            <div class="macro"><div class="label">碳水</div><div class="value" id="macroCarb">0g</div></div>
+            <div class="macro"><div class="label">纤维素</div><div class="value" id="macroFiber">0g</div></div>
+            <div class="macro"><div class="label">脂肪</div><div class="value" id="macroFat">0g</div></div>
+            <div class="macro"><div class="label">总热量</div><div class="value" id="macroKcal">0k</div></div>
+          </div>
+
+          <!-- 活动水平由用户选择，避免系统凭空猜测运动量 -->
+          <div class="field" style="margin-top:16px;max-width:340px">
+            <label for="dietActivity">日常活动水平（决定热量目标）</label>
+            <select id="dietActivity">
+              <option value="1.2">久坐为主 · 几乎不运动</option>
+              <option value="1.375" selected>轻度活动 · 每周 1-3 次</option>
+              <option value="1.55">中度活动 · 每周 3-5 次</option>
+              <option value="1.725">高强度 · 每周 6-7 次</option>
+            </select>
+          </div>
+
+          <h3 class="sub-title" id="mealLogTitle">今日饮食记录</h3>
+          <div class="meal-date-row">
+            <label for="mealDate">记录日期</label>
+            <input id="mealDate" type="date">
+            <span>可切换到前几日补记饮食</span>
+          </div>
+
+          <!-- 回车或点击「记录」即可记录一条饮食 -->
+          <div class="meal">
+            <span class="meal-tag morning">早</span>
+            <input data-meal="早餐" placeholder="例如：一杯牛奶，两片全麦面包...">
+            <button class="meal-btn" type="button" data-meal-btn="早餐">记录</button>
+          </div>
+          <div class="meal">
+            <span class="meal-tag noon">中</span>
+            <input data-meal="午餐" placeholder="记录午餐...">
+            <button class="meal-btn" type="button" data-meal-btn="午餐">记录</button>
+          </div>
+          <div class="meal">
+            <span class="meal-tag night">晚</span>
+            <input data-meal="晚餐" placeholder="记录晚餐...">
+            <button class="meal-btn" type="button" data-meal-btn="晚餐">记录</button>
+          </div>
+
+          <!-- 今日已记录的食物，可单条删除 -->
+          <div class="meal-log" id="mealLog"></div>
+
+          <h3 class="sub-title">今日营养摄入</h3>
+          <div class="nutri-list" id="nutriList"></div>
+          <div class="nutri-note" id="nutriNote"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">
+              <svg class="icon fork"><use href="#i-fork"/></svg>饮食分析与识别
+            </div>
+          </div>
+
+          <h3 class="sub-title">近两周饮食分析</h3>
+          <div class="week-compare" id="weekCompare"></div>
+
+          <h3 class="sub-title">综合饮食建议</h3>
+          <div class="recent-advice" id="recentDietAdvice"></div>
+
+          <h3 class="sub-title">餐食图片识别</h3>
+
+          <!-- 上传餐食照片，识别食物与热量 -->
+          <div class="upload-box" id="dietUploadBox">
+            <input type="file" id="dietImageInput" accept="image/*" hidden>
+
+            <div class="upload-empty" id="dietUploadEmpty">
+              <svg class="icon"><use href="#i-image"/></svg>
+              <p>上传餐食照片，自动识别食物种类与大致热量</p>
+              <button class="btn-soft" type="button" id="dietChooseBtn">选择图片</button>
+            </div>
+
+            <div class="upload-preview" id="dietPreview" hidden>
+              <img id="dietPreviewImg" alt="餐食照片">
+              <div class="upload-info">
+                <div class="upload-file" id="dietFileName"></div>
+                <div class="upload-status" id="dietStatus"></div>
+                <div class="upload-result" id="dietResult" hidden></div>
+                <div class="upload-meal" id="dietMealRow" hidden>
+                  <label for="dietMealType">记录到</label>
+                  <select id="dietMealType">
+                    <option value="早餐">早餐</option>
+                    <option value="午餐" selected>午餐</option>
+                    <option value="晚餐">晚餐</option>
+                    <option value="加餐">加餐</option>
+                  </select>
+                </div>
+                <div class="upload-actions">
+                  <button class="btn-ghost-sm" type="button" id="dietReselect">重新上传</button>
+                  <button class="btn-ghost-sm" type="button" id="dietFillMeal" hidden>加入今日饮食</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tip-card">
+            <svg class="icon"><use href="#i-spark"/></svg>
+            <div>
+              <b>推荐补充</b>
+              <p id="dietTipText">今日蛋白质摄入略低，晚餐可增加一份鸡胸肉、鸡蛋或豆制品，帮助肌肉修复与饱腹感提升。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================
+         页面三：运动
+         ==================================================== -->
+    <section class="page" id="page-sport">
+      <div class="exercise-wrap">
+        <div class="card card-primary">
+          <div class="card-head">
+            <div class="card-title">
+              <svg class="icon activity-icon"><use href="#i-activity"/></svg>运动与心理状态
+            </div>
+            <button class="btn-primary" id="startSport">
+              <svg class="icon"><use href="#i-play"/></svg>开始运动
+            </button>
+          </div>
+
+          <!-- 当前正在进行的运动 -->
+          <div class="active-sport" id="activeSport" hidden>
+            <svg class="icon"><use href="#i-activity"/></svg>
+            <span>当前运动：<b id="activeSportName"></b></span>
+            <span class="timer" id="sportTimer">00:00</span>
+            <button class="end" type="button" id="stopSport">结束</button>
+          </div>
+
+          <!-- 运动元素：点击任意分类可直接开始该运动 -->
+          <div class="sport-strip">
+            <span class="sport-pill" data-sport="球类运动"><svg class="icon"><use href="#i-ball"/></svg>球类</span>
+            <span class="sport-pill" data-sport="户外骑行"><svg class="icon"><use href="#i-bike"/></svg>骑行</span>
+            <span class="sport-pill" data-sport="跑步"><svg class="icon"><use href="#i-run"/></svg>跑步</span>
+            <span class="sport-pill" data-sport="游泳"><svg class="icon"><use href="#i-swim"/></svg>游泳</span>
+            <span class="sport-pill" data-sport="登山"><svg class="icon"><use href="#i-mountain"/></svg>登山</span>
+            <span class="sport-pill" data-sport="瑜伽"><svg class="icon"><use href="#i-yoga"/></svg>瑜伽</span>
+          </div>
+
+          <!-- 今日 / 近 7 天 数据切换 -->
+          <div class="tabs" id="sportTabs">
+            <button class="active" data-tab="today">今日运动</button>
+            <button data-tab="week">近 7 天</button>
+          </div>
+
+          <div class="ex-stats" id="todayStats">
+            <div class="ex-stat" data-field="kcal" title="点击修改已消耗热量">
+              <div class="ico ico-flame"><svg class="icon"><use href="#i-flame"/></svg></div>
+              <div class="value"><span id="exKcal">320</span> <span class="unit">kcal</span></div>
+              <div class="label">已消耗</div>
+              <div class="hint">点击填写</div>
+            </div>
+            <div class="ex-stat" data-field="steps" title="点击修改今日步数">
+              <div class="ico ico-step"><svg class="icon"><use href="#i-footprints"/></svg></div>
+              <div class="value"><span id="exSteps">6,540</span> <span class="unit">步</span></div>
+              <div class="label">今日步数</div>
+              <div class="hint">点击填写</div>
+            </div>
+            <div class="ex-stat" data-field="minutes" title="点击修改活动时长">
+              <div class="ico ico-clock"><svg class="icon"><use href="#i-clock"/></svg></div>
+              <div class="value"><span id="exMinutes">45</span> <span class="unit">分钟</span></div>
+              <div class="label">活动时长</div>
+              <div class="hint">点击填写</div>
+            </div>
+            <div class="ex-stat">
+              <div class="ico">
+                <svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true">
+                  <circle cx="22" cy="22" r="18" fill="none" stroke="#e8eaf2" stroke-width="4"/>
+                  <circle id="exGaugeArc" cx="22" cy="22" r="18" fill="none" stroke="#7f74e8"
+                          stroke-width="4" stroke-linecap="round" stroke-dasharray="113.1"
+                          stroke-dashoffset="39.6" transform="rotate(-90 22 22)"/>
+                  <text id="exPercent" x="22" y="25.5" text-anchor="middle"
+                        font-size="9.5" font-weight="700" fill="#4c5d45">65%</text>
+                </svg>
+              </div>
+              <div class="label">目标完成率</div>
+            </div>
+          </div>
+
+          <!-- 本周统计：日期 + 图标，点击查看当天详情 -->
+          <div class="week-panel" id="weekPanel"></div>
+
+          <!-- 目标设置 -->
+          <h3 class="sub-title">目标设置</h3>
+          <div class="sport-inputs">
+            <div class="field">
+              <label for="goalKcal">每日热量目标（kcal）</label>
+              <input id="goalKcal" type="number" min="50" max="3000" step="10" value="500">
+            </div>
+            <div class="field">
+              <label for="goalSteps">每日步数目标</label>
+              <input id="goalSteps" type="number" min="1000" max="50000" step="100" value="8000">
+            </div>
+            <div class="field">
+              <label for="goalMinutes">每日运动时长（分钟）</label>
+              <input id="goalMinutes" type="number" min="5" max="300" step="5" value="60">
+            </div>
+          </div>
+          <div class="sport-actions">
+            <button class="btn-soft" type="button" id="saveSportGoal">保存目标</button>
+          </div>
+
+          <!-- 每日心情 -->
+          <div class="mood">
+            <div class="mood-title">
+              <svg class="icon"><use href="#i-smile"/></svg>每日心情
+            </div>
+            <div class="mood-date-row">
+              <label for="moodDate">记录日期</label>
+              <input id="moodDate" type="date">
+              <span>可选择前几日补记心情</span>
+            </div>
+            <div class="mood-picker" id="moodPicker">
+              <button class="mood-opt" type="button" data-mood="开心">😄 开心</button>
+              <button class="mood-opt" type="button" data-mood="平静">🙂 平静</button>
+              <button class="mood-opt" type="button" data-mood="疲惫">😴 疲惫</button>
+              <button class="mood-opt" type="button" data-mood="焦虑">😰 焦虑</button>
+              <button class="mood-opt" type="button" data-mood="低落">😔 低落</button>
+            </div>
+            <textarea id="moodNote" placeholder="今天心情怎么样？发生了什么？记录一下吧..."></textarea>
+            <div class="sport-actions">
+              <button class="btn-soft" type="button" id="saveMood">保存今日心情</button>
+            </div>
+            <div class="mood-tip" id="moodTip">选择今天的心情后，这里会给出对应的小贴士。</div>
+            <div class="mood-week" id="moodWeek"></div>
+          </div>
+        </div>
+
+        <!-- 运动计划：目标与训练安排 -->
+        <div class="card beauty-card">
+          <div class="card-head">
+            <div class="card-title">
+              <svg class="icon"><use href="#i-spark"/></svg>运动计划
+            </div>
+            <span class="beauty-sub">目标 · 训练安排</span>
+          </div>
+
+          <div class="beauty-body">
+            <!-- 目标设置 -->
+            <div class="beauty-form">
+              <div class="field">
+                <label for="beautyType">计划类型</label>
+                <select id="beautyType">
+                  <option>健身减脂</option>
+                  <option>增肌塑形</option>
+                  <option>体态改善</option>
+                  <option>提升体能</option>
+                  <option>缓解压力</option>
+                  <option>改善睡眠</option>
+                  <option>经期舒缓</option>
+                </select>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label for="beautyTarget">目标体重（kg）</label>
+                  <input id="beautyTarget" type="number" step="0.1" value="58">
+                </div>
+                <div class="field">
+                  <label for="beautyWeeks">目标周期（周）</label>
+                  <input id="beautyWeeks" type="number" value="12" min="2" max="52">
+                </div>
+              </div>
+              <div class="field">
+                <label for="beautyTimes">每周运动次数</label>
+                <select id="beautyTimes">
+                  <option value="2">2 次</option>
+                  <option value="3">3 次</option>
+                  <option value="4" selected>4 次</option>
+                  <option value="5">5 次</option>
+                  <option value="6">6 次</option>
+                  <option value="7">7 次</option>
+                </select>
+              </div>
+              <button class="btn-primary" id="generatePlan" type="button">生成运动计划</button>
+            </div>
+
+            <!-- 计划结果 -->
+            <div class="beauty-result">
+              <div class="beauty-empty" id="beautyEmpty">
+                设置目标体重与周期后，<br>这里会生成属于你的运动计划。
+              </div>
+
+              <div id="beautyResultBody" hidden>
+                <div class="goal-stats">
+                  <div class="goal-stat">
+                    <div class="label">当前 → 目标</div>
+                    <div class="value"><span id="beautyCurrent">—</span> → <span id="beautyTargetText">—</span><span class="unit">kg</span></div>
+                  </div>
+                  <div class="goal-stat">
+                    <div class="label">每周变化</div>
+                    <div class="value"><span id="beautyWeekly">—</span><span class="unit">kg/周</span></div>
+                  </div>
+                  <div class="goal-stat">
+                    <div class="label">每日热量</div>
+                    <div class="value"><span id="beautyDeficit">—</span><span class="unit">kcal/天</span></div>
+                  </div>
+                </div>
+
+                <div class="progress-wrap">
+                  <div class="progress-label"><span>目标进度</span><b id="beautyProgressText">0%</b></div>
+                  <div class="progress-bar"><i id="beautyProgress"></i></div>
+                </div>
+
+                <!-- 体重变化曲线：每次记录体重后自动重绘 -->
+                <div class="weight-chart" id="weightChart"></div>
+
+                <div class="plan-summary" id="beautySummary"></div>
+                <div class="plan-week" id="beautyWeek"></div>
+
+                <!-- 按计划类型推荐的饮食种类 -->
+                <div class="beauty-diet" id="beautyDietTip" hidden></div>
+
+                <div class="weight-log">
+                  <label for="beautyWeightNow">记录当前体重</label>
+                  <input id="beautyWeightNow" type="number" step="0.1" placeholder="">
+                  <button class="btn-ghost-sm" type="button" id="logBeautyWeight">记录</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================
+         页面四：家人健康
+         ==================================================== -->
+    <section class="page" id="page-family">
+      <div class="family-wrap">
+
+        <!-- 关怀提醒：提醒用户主动关照家人 -->
+        <div class="reminder-card">
+          <div class="female-head">
+            <div class="female-title family-title">
+              <svg class="icon"><use href="#i-bell"/></svg>关怀提醒
+              <span class="reminder-count" id="reminderCount">0 条待办</span>
+            </div>
+            <button class="btn-soft" id="openReminder">添加提醒</button>
+          </div>
+
+          <!-- 常用提醒：点击后自动带入标题，直接选日期保存；支持自定义并长期保留 -->
+          <div class="quick-reminders" id="quickReminderBox">
+            <span>常用提醒</span>
+          </div>
+
+          <div class="reminder-list" id="reminderList"></div>
+        </div>
+
+        <!-- 家人档案：支持添加家人与健康记录 -->
+        <div class="family-card">
+          <div class="female-head">
+            <div class="female-title family-title">
+              <svg class="icon"><use href="#i-heart"/></svg>家人健康档案
+            </div>
+            <div class="head-actions">
+              <button class="btn-soft btn-small" id="openFamilyRecord">添加记录</button>
+              <button class="btn-soft btn-small" id="openMember">添加家人</button>
+            </div>
+          </div>
+
+          <!-- 家人卡片由 JavaScript 根据数据动态生成，点击「最近记录」查看该家人全部记录 -->
+          <div class="family-grid" id="familyGrid"></div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ====================================================
+         页面五：科普资讯
+         ==================================================== -->
+    <section class="page" id="page-news">
+      <!-- 资讯搜索：按标题、摘要和正文关键词过滤 -->
+      <div class="news-toolbar">
+        <label class="news-search">
+          <svg class="icon"><use href="#i-search"/></svg>
+          <input id="newsSearch" type="search" placeholder="搜索科普内容，例如：睡眠、血压、拉伸、蛋白质">
+        </label>
+        <span class="news-count" id="newsCount"></span>
+        <button class="news-refresh" id="newsRefresh" type="button">
+          <svg class="icon"><use href="#i-refresh"/></svg>刷新
+        </button>
+      </div>
+      <div class="news-tags" id="newsTags">
+        <span>热门：</span>
+        <button class="news-tag" type="button" data-tag="失眠">失眠</button>
+        <button class="news-tag" type="button" data-tag="减肥">减肥</button>
+        <button class="news-tag" type="button" data-tag="颈椎">颈椎</button>
+        <button class="news-tag" type="button" data-tag="早餐">早餐</button>
+        <button class="news-tag" type="button" data-tag="血压">血压</button>
+        <button class="news-tag" type="button" data-tag="护眼">护眼</button>
+      </div>
+      <div class="news-empty" id="newsEmpty" hidden>没有找到相关内容，换个关键词试试。</div>
+      <div class="news-source-hint" id="newsSourceHint" hidden></div>
+
+      <div class="news-grid">
+        <article class="news-card" data-article="diet">
+          <div class="news-img green"><svg class="icon"><use href="#i-fork"/></svg></div>
+          <div class="news-body">
+            <div class="news-cat green">饮食营养</div>
+            <div class="news-title">如何科学搭配三餐饮食？</div>
+            <p class="news-desc">合理的饮食搭配不仅能提供充足的能量，还能帮助预防慢性疾病，让身体保持良好状态。</p>
+            <button type="button" class="read-more">在浏览器中查看全文 ›</button>
+            <span class="news-quick" data-quick="1">速读摘要</span>
+          </div>
+        </article>
+
+        <article class="news-card" data-article="stretch">
+          <div class="news-img blue"><svg class="icon"><use href="#i-dumbbell"/></svg></div>
+          <div class="news-body">
+            <div class="news-cat blue">运动指南</div>
+            <div class="news-title">久坐族的5分钟拉伸指南</div>
+            <p class="news-desc">长时间面对电脑工作，肩颈酸痛？这几个动作帮你缓解疲劳，恢复身体活力。</p>
+            <button type="button" class="read-more">在浏览器中查看全文 ›</button>
+            <span class="news-quick" data-quick="1">速读摘要</span>
+          </div>
+        </article>
+
+        <article class="news-card" data-article="sleep">
+          <div class="news-img purple"><svg class="icon"><use href="#i-moon"/></svg></div>
+          <div class="news-body">
+            <div class="news-cat purple">睡眠健康</div>
+            <div class="news-title">为什么你总是睡不够？</div>
+            <p class="news-desc">了解深度睡眠的重要性，以及如何通过改善卧室环境提升睡眠质量，找回好状态。</p>
+            <button type="button" class="read-more">在浏览器中查看全文 ›</button>
+            <span class="news-quick" data-quick="1">速读摘要</span>
+          </div>
+        </article>
+
+        <article class="news-card" data-article="bp">
+          <div class="news-img green"><svg class="icon"><use href="#i-heart"/></svg></div>
+          <div class="news-body">
+            <div class="news-cat green">慢病管理</div>
+            <div class="news-title">血压血糖，家庭自测怎么做才准？</div>
+            <p class="news-desc">测压姿势、测量时间、记录方式都会影响结果，掌握几个细节让数据更可信。</p>
+            <button type="button" class="read-more">在浏览器中查看全文 ›</button>
+            <span class="news-quick" data-quick="1">速读摘要</span>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ====================================================
+         健康小管家：整页聊天，与悬浮窗共用同一份对话记录
+         ==================================================== -->
+    <section class="page" id="page-assistant">
+      <div class="card assistant-card">
+        <div class="card-head">
+          <div class="card-title">
+            <span class="assistant-ico"><img src="assets/ai-logo.png" alt="AI 健康小管家"></span>
+            AI 健康小管家
+          </div>
+          <div class="assistant-actions">
+            <button class="assistant-new" id="assistantHistory" type="button">历史对话</button>
+            <button class="assistant-new" id="assistantNew" type="button">开启新对话</button>
+          </div>
+        </div>
+        <p class="assistant-tip">对话记录会自动保存，换个设备登录同一账号也能接着聊。AI 内容仅供参考，不构成医疗建议。</p>
+        <div class="assistant-quick" id="assistantQuick">
+          <button type="button" data-question="这个网页怎么用？请按模块简单说明。">这个网页怎么用</button>
+          <button type="button" data-question="怎么用语音输入？">怎么用语音输入</button>
+          <button type="button" data-question="我现在要开始跑步，帮我记录一下">开始跑步并记录</button>
+          <button type="button" data-question="我今天吃了一碗米饭和一份青菜，帮我填入今日饮食的午餐部分">语音式记录饮食</button>
+        </div>
+        <div class="assistant-hist" id="assistantHistPanel" hidden>
+          <div class="assistant-hist-empty" id="assistantHistEmpty" hidden>还没有历史对话</div>
+          <div class="assistant-hist-list" id="assistantHistList"></div>
+        </div>
+        <div class="assistant-log" id="assistantLog"></div>
+        <div class="assistant-input">
+          <input id="assistantInput" type="text" placeholder="输入你想咨询的健康问题...">
+          <button class="assistant-send" id="assistantSend" type="button" aria-label="发送">
+            <svg class="icon"><use href="#i-send"/></svg>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 管理员数据大屏：终端日志 / 接口请求 / 模型调用可视化 -->
+    <section class="page" id="page-admin">
+      <div class="admin-head">
+        <div>
+          <h2>数据大屏</h2>
+          <p>管理员视图 · 与服务器终端同源的运行状态、接口请求、报错与模型调用</p>
+        </div>
+        <button class="admin-refresh" id="adminRefresh" type="button">刷新数据</button>
+      </div>
+
+      <div class="admin-kpis" id="adminKpis"></div>
+
+      <div class="admin-grid">
+        <div class="admin-card">
+          <h3>近 12 小时接口请求</h3>
+          <div class="admin-chart" id="adminChartRequests"></div>
+        </div>
+        <div class="admin-card">
+          <h3>近 12 小时报错数量</h3>
+          <div class="admin-chart" id="adminChartErrors"></div>
+        </div>
+        <div class="admin-card">
+          <h3>模型响应耗时（最近 20 次）</h3>
+          <div class="admin-chart" id="adminChartAi"></div>
+        </div>
+        <div class="admin-card">
+          <h3>数据量分布</h3>
+          <div class="admin-chart" id="adminChartData"></div>
+        </div>
+      </div>
+
+      <div class="admin-card admin-logs-card">
+        <h3>终端日志<span class="admin-log-hint">就是服务器上打印的那部分内容</span></h3>
+        <div class="admin-logs" id="adminLogs"></div>
+      </div>
+    </section>
+
+  </div>
+</main>
+</div>
+</div>
+
+<!-- ========================================================
+     个人信息档案弹窗
+     ======================================================== -->
+<div class="mask" id="profileMask">
+  <div class="modal">
+    <div class="modal-head">
+      <svg class="icon"><use href="#i-user"/></svg>个人信息档案
+      <button class="modal-close" id="profileClose" aria-label="关闭">
+        <svg class="icon"><use href="#i-close"/></svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="field">
+        <label>头像</label>
+        <div class="avatar-picker" id="avatarPicker"></div>
+        <input type="file" id="avatarUploadInput" accept="image/*" hidden>
+      </div>
+      <div class="field">
+        <label for="pAccount">账号（登录用，找回密码时要填的就是它）</label>
+        <input id="pAccount" type="text" readonly placeholder="登录账号">
+      </div>
+      <div class="field">
+        <label for="pNickname">昵称（显示名称，不是账号）</label>
+        <input id="pNickname" type="text" placeholder="给自己取个昵称，仅用于展示">
+      </div>
+      <div class="field">
+        <label for="pName">姓名（选填）</label>
+        <input id="pName" type="text" placeholder="可不填，仅用于档案归档">
+      </div>
+      <div class="field">
+        <label for="pEmail">QQ 邮箱（用于找回密码）</label>
+        <input id="pEmail" type="email" placeholder="例如 12345678@qq.com">
+      </div>
+      <div class="field">
+        <label for="pGender">性别</label>
+        <select id="pGender">
+          <option value="女" selected>女</option>
+          <option value="男">男</option>
+        </select>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="pHeight">身高（cm）</label>
+          <input id="pHeight" type="number" placeholder="如 165">
+        </div>
+        <div class="field">
+          <label for="pWeight">体重（kg）</label>
+          <input id="pWeight" type="number" step="0.1" value="60.0">
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-foot">
+      <button class="btn-delete-account" id="deleteAccountBtn" hidden>注销账号</button>
+      <button class="btn-logout" id="logoutBtn" hidden>退出登录</button>
+      <button class="btn-save" id="saveProfile">保存修改</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================
+     头像裁剪弹窗：拖拽移动 + 滑块缩放
+     ======================================================== -->
+<div class="mask" id="cropMask">
+  <div class="modal crop-modal">
+    <div class="modal-head">
+      <svg class="icon"><use href="#i-image"/></svg>裁剪头像
+      <button class="modal-close" id="cropClose" aria-label="关闭">
+        <svg class="icon"><use href="#i-close"/></svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="crop-stage" id="cropStage">
+        <img id="cropImage" alt="待裁剪头像">
+        <div class="crop-overlay"></div>
+      </div>
+      <div class="crop-hint">拖动图片调整位置，滑动缩放，圆形区域为最终头像</div>
+      <div class="crop-zoom">
+        <span>缩放</span>
+        <input type="range" id="cropZoom" min="100" max="300" value="100">
+      </div>
+    </div>
+
+    <div class="modal-foot">
+      <button class="btn-cancel" id="cropCancel">取消</button>
+      <button class="btn-save" id="cropSave">使用这张头像</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================
+     生理期记录弹窗：可选择开始/结束日期与周期长度
+     ======================================================== -->
+<div class="mask" id="periodMask">
+  <div class="modal period-modal">
+    <div class="modal-head">
+      <svg class="icon"><use href="#i-calendar"/></svg>记录生理期
+      <button class="modal-close" id="periodClose" aria-label="关闭">
+        <svg class="icon"><use href="#i-close"/></svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="period-tip">
+        <svg class="icon"><use href="#i-droplet"/></svg>
+        <span>经期还没结束？先只记录开始日期，等结束后再回来补记结束日期。</span>
+      </div>
+
+      <div class="period-dates">
+        <div class="period-date-field">
+          <label for="periodStart">开始日期</label>
+          <input id="periodStart" type="date">
+          <button type="button" class="btn-soft period-act" id="savePeriodStart">记录开始日期</button>
+        </div>
+        <div class="period-arrow">
+          <svg class="icon"><use href="#i-refresh"/></svg>
+        </div>
+        <div class="period-date-field">
+          <label for="periodEnd">结束日期（可稍后再填）</label>
+          <input id="periodEnd" type="date">
+          <button type="button" class="btn-soft period-act" id="savePeriodEnd">记录结束日期</button>
+        </div>
+      </div>
+
+      <div class="period-hint">只记录开始日期时，经期长度会显示「进行中」，下次经期预测仍按周期长度估算。</div>
+
+      <div class="field">
+        <label for="cycleDaysInput">周期长度</label>
+        <select id="cycleDaysInput"></select>
+      </div>
+
+      <div class="period-preview">
+        <div class="pp-item">
+          <span>经期长度</span>
+          <b id="periodPreviewDays">5 天</b>
+        </div>
+        <div class="pp-item">
+          <span>排卵日预测</span>
+          <b id="periodPreviewOvulation">—</b>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-foot">
+      <button class="btn-cancel" id="periodCancel">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================
+     家人记录弹窗（男性视图）
+     ======================================================== -->
+<div class="mask" id="familyMask">
+  <div class="modal">
+    <div class="modal-head">
+      <svg class="icon"><use href="#i-heart"/></svg>添加家人记录
+      <button class="modal-close" id="familyClose" aria-label="关闭">
+        <svg class="icon"><use href="#i-close"/></svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="field-row">
+        <div class="field">
+          <label for="familyPerson">关怀对象</label>
+          <select id="familyPerson">
+            <option value="母亲">母亲</option>
+            <option value="爱人">爱人</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="familyType">记录类型</label>
+          <select id="familyType">
+            <option value="体检">体检</option>
+            <option value="用药">用药</option>
+            <option value="生理期">生理期</option>
+            <option value="其他">其他</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label for="familyDate">日期</label>
+        <input id="familyDate" type="date">
+      </div>
+      <div class="field">
+        <label for="familyContent">记录内容</label>
+        <input id="familyContent" type="text" placeholder="例如：血压 135/85，每日服用降压药">
+      </div>
+    </div>
+
+    <div class="modal-foot">
+      <button class="btn-cancel" id="familyCancel">取消</button>
+      <button class="btn-save" id="familySave">保存记录</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================
+     添加家人信息弹窗
+     ======================================================== -->
+<div class="mask" id="memberMask">
+  <div class="modal">
+    <div class="modal-head">
+      <svg class="icon"><use href="#i-user"/></svg>添加家人信息
+      <button class="modal-close" id="memberClose" aria-label="关闭">
+        <svg class="icon"><use href="#i-close"/></svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="field-row">
+        <div class="field">
+          <label for="memberRelation">称呼 / 关系</label>
+          <input id="memberRelation" type="text" placeholder="如：母亲、父亲、爱人">
+        </div>
+        <div class="field">
+          <label for="memberAge">年龄</label>
+          <input id="memberAge" type="number" placeholder="如：58">
+        </div>
+      </div>
+      <div class="field">
+        <label for="memberName">姓名（选填）</label>
+        <input id="memberName" type="text" placeholder="如：李秀兰">
+      </div>
+      <div class="field">
+        <label for="memberConditions">基础病史</label>
+        <input id="memberConditions" type="text" placeholder="如：高血压、糖尿病（没有可填“无”）">
+      </div>
+      <div class="field">
+        <label for="memberMedications">常用药物</label>
+        <input id="memberMedications" type="text" placeholder="如：降压药 每日 1 片">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="memberEmergencyName">紧急联系人</label>
+          <input id="memberEmergencyName" type="text" placeholder="如：王小明（儿子）">
+        </div>
+        <div class="field">
+          <label for="memberEmergencyPhone">联系电话</label>
+          <input id="memberEmergencyPhone" type="tel" placeholder="如：13800000000">
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-foot">
+      <button class="btn-cancel" id="memberCancel">取消</button>
+      <button class="btn-save" id="memberSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================
+     添加关怀提醒弹窗
+     ======================================================== -->
+<div class="mask" id="reminderMask">
+  <div class="modal">
+    <div class="modal-head">
+      <svg class="icon"><use href="#i-bell"/></svg>添加关怀提醒
+      <button class="modal-close" id="reminderClose" aria-label="关闭">
+        <svg class="icon"><use href="#i-close"/></svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="field">
+        <label for="reminderMember">提醒家人</label>
+        <select id="reminderMember"></select>
+      </div>
+      <div class="field">
+        <label for="reminderTitle">提醒内容</label>
+        <input id="reminderTitle" type="text" placeholder="如：提醒母亲测量血压">
+      </div>
+      <div class="field">
+        <label>提醒日期（可一次多选）</label>
+        <div class="date-quick">
+          <button class="quick-chip date-chip" type="button" data-day="0">今天</button>
+          <button class="quick-chip date-chip" type="button" data-day="1">明天</button>
+          <button class="quick-chip date-chip" type="button" data-day="3">3 天后</button>
+          <button class="quick-chip date-chip" type="button" data-day="7">一周后</button>
+          <button class="quick-chip date-chip" type="button" data-day="14">两周后</button>
+        </div>
+        <div class="date-add">
+          <input id="reminderDate" type="date">
+          <button class="btn-soft" type="button" id="reminderDateAdd">添加日期</button>
+        </div>
+        <div class="date-selected" id="reminderDateList"></div>
+      </div>
+    </div>
+
+    <div class="modal-foot">
+      <button class="btn-cancel" id="reminderCancel">取消</button>
+      <button class="btn-save" id="reminderSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================
+     家人健康记录弹窗：点击家人卡片的「最近记录」查看
+     ======================================================== -->
+<div class="mask" id="memberRecordsMask">
+  <div class="modal">
+    <div class="modal-head">
+      <svg class="icon"><use href="#i-heart"/></svg><span id="memberRecordsTitle">家人健康记录</span>
+      <button class="modal-close" id="memberRecordsClose" aria-label="关闭">
+        <svg class="icon"><use href="#i-close"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div id="memberDetailBody"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================
+     健康评分分析弹窗：点击顶部任一评分打开
+     ======================================================== -->
+<div class="mask" id="scoreMask">
+  <div class="modal score-modal">
+    <div class="modal-head">
+      <svg class="icon"><use href="#i-spark"/></svg><span id="scoreModalTitle">健康评分分析</span>
+      <button class="modal-close" id="scoreClose" aria-label="关闭">
+        <svg class="icon"><use href="#i-close"/></svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="score-hero">
+        <b id="scoreModalValue">0</b><span>/100</span>
+        <em id="scoreModalLevel">—</em>
+      </div>
+      <div class="score-body" id="scoreModalBody"></div>
+      <p class="form-hint">分析基于你填写的饮食、运动、体重与心情数据自动生成，数据越完整结论越准确。</p>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================
+     核心数据修改弹窗：输入新值并查看近一个月记录
+     ======================================================== -->
+<div class="mask" id="vitalMask">
+  <div class="modal">
+    <div class="modal-head">
+      <svg class="icon"><use href="#i-heart"/></svg><span id="vitalTitle">修改核心数据</span>
+      <button class="modal-close" id="vitalClose" aria-label="关闭">
+        <svg class="icon"><use href="#i-close"/></svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div id="vitalFields"></div>
+
+      <h4 class="vital-history-title">近一个月记录</h4>
+      <div class="vital-history" id="vitalHistory"></div>
+    </div>
+
+    <div class="modal-foot">
+      <button class="btn-cancel" id="vitalCancel">取消</button>
+      <button class="btn-save" id="vitalSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================
+     食物分量参考弹窗：输入食物后弹出，按份数换算营养
+     ======================================================== -->
+<div class="mask" id="foodMask">
+  <div class="modal food-modal">
+    <div class="modal-head">
+      <svg class="icon"><use href="#i-fork"/></svg>食物分量参考
+      <button class="modal-close" id="foodClose" aria-label="关闭">
+        <svg class="icon"><use href="#i-close"/></svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="food-summary" id="foodSummary"></div>
+
+      <div class="food-portions" id="foodPortions"></div>
+
+      <div class="field">
+        <label for="foodCount">食用份数</label>
+        <input id="foodCount" type="number" min="0.25" max="10" step="0.25" value="1">
+      </div>
+      <p class="form-hint">支持 0.25～10 份，例如半碗填 0.5，两杯填 2。</p>
+      <p class="form-hint">热量与营养素参照《中国食物成分表（第6版）》与 USDA FoodData Central 的常见一人份数值，同一食物重复记录结果一致。</p>
+
+      <div class="food-total" id="foodTotal"></div>
+    </div>
+
+    <div class="modal-foot">
+      <button class="btn-cancel" id="foodCancel">取消</button>
+      <button class="btn-save" id="foodSave">记录</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================
+     运动类型选择弹窗
+     ======================================================== -->
+<div class="mask" id="sportMask">
+  <div class="modal sport-modal">
+    <div class="modal-head">
+      <svg class="icon"><use href="#i-dumbbell"/></svg>选择运动类型
+      <button class="modal-close" id="sportClose" aria-label="关闭">
+        <svg class="icon"><use href="#i-close"/></svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="sport-boards" id="sportBoards"></div>
+      <div class="sport-board-head" id="sportBoardHead" hidden>
+        <button class="btn-ghost-sm" type="button" id="sportBack">‹ 返回板块</button>
+        <span id="sportBoardName"></span>
+      </div>
+      <div class="sport-grid" id="sportGrid" hidden></div>
+    </div>
+
+    <div class="modal-foot">
+      <button class="btn-cancel" id="sportCancel">取消</button>
+      <button class="btn-save" id="sportConfirm">开始运动</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================
+     运动数据填写弹窗：点击运动数据卡片后打开
+     ======================================================== -->
+<div class="mask" id="sportDataMask">
+  <div class="modal">
+    <div class="modal-head">
+      <svg class="icon"><use href="#i-activity"/></svg><span id="sdTitle">填写今日运动数据</span>
+      <button class="modal-close" id="sdClose" aria-label="关闭">
+        <svg class="icon"><use href="#i-close"/></svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="sport-date-row">
+        <label for="sdDate">记录日期</label>
+        <input id="sdDate" type="date">
+        <span>可选择前几日补记运动</span>
+      </div>
+      <div class="field">
+        <label for="sdKcal">已消耗热量（kcal）</label>
+        <input id="sdKcal" type="number" min="0" max="5000" step="10">
+      </div>
+      <div class="field">
+        <label for="sdSteps">今日步数</label>
+        <input id="sdSteps" type="number" min="0" max="80000" step="100">
+      </div>
+      <div class="field">
+        <label for="sdMinutes">活动时长（分钟）</label>
+        <input id="sdMinutes" type="number" min="0" max="600" step="5">
+      </div>
+    </div>
+
+    <div class="modal-foot">
+      <button class="btn-cancel" id="sdCancel">取消</button>
+      <button class="btn-save" id="sdSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================
+     某天饮食记录弹窗：点击热量柱形图后打开
+     ======================================================== -->
+<div class="mask" id="dayMealMask">
+  <div class="modal">
+    <div class="modal-head">
+      <svg class="icon"><use href="#i-fork"/></svg><span id="dayMealTitle">当天饮食记录</span>
+      <button class="modal-close" id="dayMealClose" aria-label="关闭">
+        <svg class="icon"><use href="#i-close"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="day-meal-list" id="dayMealBody"></div>
+      <div class="day-meal-total" id="dayMealTotal"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-cancel" id="dayMealCancel">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================
+     科普资讯详情弹窗：点击资讯卡片后展示正文
+     ======================================================== -->
+<div class="mask" id="newsMask">
+  <div class="modal news-detail">
+    <div class="modal-head">
+      <svg class="icon"><use href="#i-book"/></svg><span id="newsTitle">科普详情</span>
+      <button class="modal-close" id="newsClose" aria-label="关闭">
+        <svg class="icon"><use href="#i-close"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="news-article" id="newsBody"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================
+     悬浮客服按钮与 AI 聊天窗口
+     ======================================================== -->
+<!-- 语音输入面板：实时显示识别内容，确认后再填入 -->
+<div class="voice-panel" id="voicePanel" hidden>
+  <div class="vp-head">
+    <span class="vp-title"><svg class="icon"><use href="#i-mic"/></svg>语音输入</span>
+    <span class="vp-status" id="voiceStatus">正在听，请说话…</span>
+  </div>
+  <textarea id="voiceText" rows="3" placeholder="说的话会实时显示在这里，也可以直接修改"></textarea>
+  <div class="vp-actions">
+    <button type="button" class="vp-cancel" id="voiceCancel">取消</button>
+    <button type="button" class="vp-ok" id="voiceOk">✓ 填入</button>
+  </div>
+</div>
+
+<button class="fab" id="fab" aria-label="打开 AI 健康小管家">
+  <span class="ai-run">
+    <img src="assets/ai-logo.png" alt="AI 健康小管家">
+    <span class="ai-tag">AI</span>
+  </span>
+  <span class="dot" id="fabDot"></span>
+</button>
+
+<div class="chat" id="chat">
+  <div class="chat-head">
+    <div class="ico"><img src="assets/ai-logo.png" alt="AI 健康小管家"></div>
+    <div>
+      <div class="t">健康小管家 (AI)</div>
+      <div class="s">随时随地问答健康问题</div>
+    </div>
+    <button class="chat-close" id="chatClose" aria-label="关闭聊天">
+      <svg class="icon"><use href="#i-close"/></svg>
+    </button>
+  </div>
+
+  <div class="chat-body" id="chatBody">
+    <div class="msg bot">你好！我是你的专属 AI 健康助理。请问今天有什么我可以帮你的？关于饮食计算、运动建议或是生理期护理，都可以问我。</div>
+  </div>
+
+  <div class="chat-note">AI 生成内容仅供参考，不构成医疗建议</div>
+
+  <div class="chat-input">
+    <button class="chat-mic" id="chatVoice" type="button" aria-label="语音输入">
+      <svg class="icon"><use href="#i-mic"/></svg>
+    </button>
+    <input id="chatInput" type="text" placeholder="输入你想咨询的健康问题...">
+    <button class="chat-send" id="chatSend" aria-label="发送">
+      <svg class="icon"><use href="#i-send"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- 轻提示 -->
+<div class="toast" id="toast"></div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
