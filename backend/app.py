@@ -95,6 +95,8 @@ class HealthAppHandler(BaseHTTPRequestHandler):
             self._serve_static("css/style.css", "text/css; charset=utf-8")
         elif path == "/js/app.js":
             self._serve_static("js/app.js", "application/javascript; charset=utf-8")
+        elif path == "/js/chronic.js":
+            self._serve_static("js/chronic.js", "application/javascript; charset=utf-8")
         elif path == "/api/ai/report-plan/stream" and method == "POST":
             self._handle_report_stream()
         elif path.startswith("/uploads/"):

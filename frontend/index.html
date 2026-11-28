@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>健康管理系统 · 健康数据总览</title>
-<link rel="stylesheet" href="css/style.css?v=20261128c">
+<link rel="stylesheet" href="css/style.css?v=20261128d">
 </head>
 <body>
 
@@ -359,13 +359,25 @@
 <div class="main-area">
 <main class="container">
 
+  <!-- 演示模式提示条（免登录体验时显示） -->
+  <div class="guest-demo-bar" id="guestDemoBar" hidden>
+    <span><strong class="demo-dot">●</strong> 当前为「异地慢病家庭（林同学 &amp; 62岁高血压父亲）」14 天演示档案 · 数据仅保存在本机</span>
+    <button type="button" class="demo-reset-btn" id="resetGuestDemoBtn">重置示例数据</button>
+  </div>
+
   <!-- 所有页面共用的顶部横幅（紧凑版：标题 + 三评分同一行） -->
   <section class="hero">
     <div class="hero-head">
+      <div class="hero-top-row">
+        <span class="hero-eyebrow"><svg class="icon"><use href="#i-pulse"/></svg>异地家庭慢病照护 · 监测与协同</span>
+        <div class="view-mode-switch" role="group" aria-label="录入视图切换">
+          <button type="button" class="mode-pill active" data-view-mode="standard">标准视图</button>
+          <button type="button" class="mode-pill" data-view-mode="elder">长辈极简录入</button>
+        </div>
+      </div>
       <div class="hero-title">
-        <span class="hero-eyebrow"><svg class="icon"><use href="#i-pulse"/></svg>家庭健康 · 慢病管理</span>
-        <h1>把每天的健康，一处看清</h1>
-        <p>饮食 · 运动 · 睡眠 · 体征 · 家人</p>
+        <h1>把家人的慢病监测，一处看清</h1>
+        <p>血压趋势 · 极简录入 · 防误写校验 · 异地协同 · 可溯源建议</p>
         <div class="hero-underline"></div>
       </div>
       <p class="hero-hint" id="heroHint">还没有饮食与运动记录：综合评分 = 饮食 40% + 运动 40% + BMI 20%，记录后自动更新。
@@ -413,6 +425,84 @@
          页面一：健康数据
          ==================================================== -->
     <section class="page" id="page-data">
+      <!-- 长辈极简录入大字模式（点击顶部“长辈极简录入”展开） -->
+      <div class="card elder-panel" id="elderModePanel" hidden>
+        <div class="elder-head">
+          <div>
+            <h2>长辈极简录入（大字防误触模式）</h2>
+            <p>不填复杂表单：拍血压计、说一句话或拍体检单，语音播报听清后再保存</p>
+          </div>
+          <button type="button" class="elder-exit-btn" id="exitElderBtn">返回标准视图</button>
+        </div>
+        <div class="elder-actions">
+          <button type="button" class="elder-btn elder-btn-bp" id="elderBpPhotoBtn">
+            <span class="elder-ico">📷</span>
+            <strong>拍血压计自动读数</strong>
+            <span>上传屏幕照片 · 质量门控 + 基线校验</span>
+          </button>
+          <button type="button" class="elder-btn elder-btn-voice" id="elderVoiceBpBtn">
+            <span class="elder-ico">🎙️</span>
+            <strong>一句话记血压与服药</strong>
+            <span>支持语音/口语解析 · 语音播报确认</span>
+          </button>
+          <button type="button" class="elder-btn elder-btn-report" id="elderReportBtn">
+            <span class="elder-ico">🩺</span>
+            <strong>拍体检报告解读</strong>
+            <span>提取关键异常指标 · 标注指南出处</span>
+          </button>
+        </div>
+        <input type="file" id="bpMeterFileInput" accept="image/*" hidden>
+        <div class="elder-quick-bar">
+          <input type="text" id="elderQuickInput" placeholder="例如：爸爸早上测血压 152/94，忘吃氨氯地平，有点头晕">
+          <button type="button" class="btn-primary" id="elderQuickParseBtn">识别并校验</button>
+        </div>
+        <div class="elder-demo-strip">
+          <span>评审一键模拟血压计拍照：</span>
+          <button type="button" class="chip-demo" id="demoBpClearBtn">清晰血压计（148/92 · 触发协同）</button>
+          <button type="button" class="chip-demo" id="demoBpGlareBtn">反光倾斜屏幕（触发重拍与核对门控）</button>
+          <button type="button" class="chip-demo" id="demoBpSpikeBtn">基线突变测试（174/106 · 触发二次确认）</button>
+        </div>
+      </div>
+
+      <!-- 异地家庭慢病协同核心看板（首页第一视角） -->
+      <div class="card chronic-collab-card" id="chronicCollabCard">
+        <div class="chronic-head">
+          <div>
+            <div class="card-title"><svg class="icon heart"><use href="#i-heart"/></svg>异地家庭慢病协同看板</div>
+            <p class="chronic-sub" id="chronicMemberMeta">正在关注：爸爸 · 62 岁 · 原发性高血压 · 氨氯地平 5mg/日</p>
+          </div>
+          <div class="chronic-tools">
+            <select id="chronicMemberSelect" aria-label="选择关注家庭成员"></select>
+            <button type="button" class="btn-soft" id="openBpDraftBtn">+ 拍照/快速记血压</button>
+            <button type="button" class="btn-soft" id="openWeeklyReportBtn">生成家庭周报</button>
+          </div>
+        </div>
+
+        <div class="chronic-grid">
+          <div class="chronic-trend-box">
+            <div class="chronic-kpis">
+              <div class="ckpi"><span>近 7 次均值</span><b id="ckpiMeanBp">—</b></div>
+              <div class="ckpi"><span>家庭达标率（&lt;135/85）</span><b id="ckpiPassRate">—</b></div>
+              <div class="ckpi"><span>近 14 天记录依从性</span><b id="ckpiAdherence">—</b></div>
+            </div>
+            <div class="bp-chart-wrap" id="chronicBpChart"></div>
+            <div class="bp-chart-legend">
+              <span><i class="lg-sys"></i>收缩压（高压）</span>
+              <span><i class="lg-dia"></i>舒张压（低压）</span>
+              <span><i class="lg-ref"></i>家庭自测警戒线 135/85 mmHg</span>
+            </div>
+          </div>
+
+          <div class="chronic-tasks-box">
+            <div class="ctask-head">
+              <strong>异地协同任务流转 <span class="ctask-badge" id="collabPendingCount">0 待处理</span></strong>
+              <button type="button" class="link-mini" id="addCollabTaskBtn">+ 新建任务</button>
+            </div>
+            <div class="ctask-list" id="collabTaskList"></div>
+          </div>
+        </div>
+      </div>
+
       <div class="card health-card card-primary">
         <div class="health-main">
           <div class="card-head">
@@ -1773,9 +1863,136 @@
   </div>
 </div>
 
+<!-- 血压结构化草稿确认 + 历史基线校验 + 语音播报回放弹窗 -->
+<div class="mask" id="bpDraftMask">
+  <div class="modal bp-draft-modal">
+    <div class="modal-head">
+      <h3 id="bpDraftTitle">血压录入草稿确认（写前安全校验）</h3>
+      <button type="button" class="modal-close" id="bpDraftClose" aria-label="关闭"><svg class="icon"><use href="#i-close"/></svg></button>
+    </div>
+    <div class="bp-draft-body">
+      <div class="bp-source-row">
+        <span class="bp-source-tag" id="bpDraftSourceTag">录入来源：快速录入</span>
+        <button type="button" class="btn-soft btn-xs" id="bpDraftPhotoTrigger">📷 上传血压计照片</button>
+      </div>
+      <div class="bp-validation-box ok" id="bpValidationBox">
+        <strong>写前校验状态</strong>
+        <p id="bpValidationText">请输入收缩压与舒张压，系统将自动进行生理边界与近 7 天历史基线校验。</p>
+      </div>
+      <div class="bp-form-grid">
+        <label>归属成员
+          <select id="bpDraftMember"></select>
+        </label>
+        <label>测量时段
+          <select id="bpDraftPeriod">
+            <option value="晨起">晨起（起床后 1h 内）</option>
+            <option value="午后">午后</option>
+            <option value="晚间">晚间（睡前）</option>
+            <option value="未知">其他时段</option>
+          </select>
+        </label>
+        <label>收缩压 / 高压（mmHg）
+          <input type="number" id="bpDraftSys" placeholder="例如 138" min="40" max="300">
+        </label>
+        <label>舒张压 / 低压（mmHg）
+          <input type="number" id="bpDraftDia" placeholder="例如 86" min="20" max="200">
+        </label>
+        <label>心率（次/分，选填）
+          <input type="number" id="bpDraftPulse" placeholder="例如 74" min="30" max="220">
+        </label>
+        <label>降压药服药状态
+          <select id="bpDraftMed">
+            <option value="已服药">已按时服药</option>
+            <option value="未服药/漏服">未服药 / 疑似漏服</option>
+            <option value="未说明">未说明 / 无需服药</option>
+          </select>
+        </label>
+      </div>
+      <label class="bp-full-label">症状或备注（选填）
+        <input type="text" id="bpDraftNote" placeholder="例如：昨晚没睡好、略微头晕、静坐 5 分钟后复测">
+      </label>
+      <div class="bp-double-confirm" id="bpDoubleConfirmRow" hidden>
+        <label><input type="checkbox" id="bpDoubleConfirmCheck"> 我已人工核对数值无误（已知晓基线波动或拍摄质量提醒）</label>
+      </div>
+    </div>
+    <div class="modal-foot bp-draft-foot">
+      <button type="button" class="btn-soft" id="bpSpeakBtn">🔊 语音播报核对</button>
+      <div class="bp-foot-right">
+        <button type="button" class="btn-cancel" id="bpDraftCancel">取消</button>
+        <button type="button" class="btn-primary" id="bpDraftSave">确认写入档案</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 异地家庭慢病异步周报弹窗 -->
+<div class="mask" id="weeklyReportMask">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>异地家庭慢病异步周报</h3>
+      <button type="button" class="modal-close" id="weeklyReportClose" aria-label="关闭"><svg class="icon"><use href="#i-close"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <p class="report-modal-tip">自动汇总近 7 天家庭血压趋势、记录依从性与待办协同状态，可直接复制到微信发给父母或复诊医生参考。</p>
+      <textarea id="weeklyReportText" rows="12" readonly></textarea>
+    </div>
+    <div class="modal-foot">
+      <button type="button" class="btn-cancel" id="weeklyReportCancel">关闭</button>
+      <button type="button" class="btn-primary" id="copyWeeklyReportBtn">一键复制到微信</button>
+    </div>
+  </div>
+</div>
+
+<!-- 协同任务新建 / 状态反馈弹窗 -->
+<div class="mask" id="collabTaskMask">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="collabModalTitle">登记协同任务反馈</h3>
+      <button type="button" class="modal-close" id="collabTaskClose" aria-label="关闭"><svg class="icon"><use href="#i-close"/></svg></button>
+    </div>
+    <div class="modal-body collab-form">
+      <label>关联成员
+        <select id="collabMember"></select>
+      </label>
+      <label>协同事项标题
+        <input type="text" id="collabTitle" placeholder="例如：电话核实爸爸晨起血压偏高与服药情况">
+      </label>
+      <div class="bp-form-grid">
+        <label>任务类型
+          <select id="collabCategory">
+            <option value="异常复核">异常复核</option>
+            <option value="用药提醒">用药提醒</option>
+            <option value="复诊准备">复诊准备</option>
+            <option value="生活关怀">生活关怀</option>
+          </select>
+        </label>
+        <label>当前状态
+          <select id="collabStatus">
+            <option value="pending_confirm">待确认</option>
+            <option value="pending_remind">待提醒</option>
+            <option value="pending_call">待沟通</option>
+            <option value="done">已完成</option>
+          </select>
+        </label>
+      </div>
+      <label>负责人
+        <input type="text" id="collabAssignee" value="子女（林同学）" placeholder="例如：子女（林同学）">
+      </label>
+      <label>处理反馈 / 沟通记录
+        <textarea id="collabFeedback" rows="3" placeholder="例如：已通电话，爸爸早饭后忘吃氨氯地平，已提醒补测晚间血压"></textarea>
+      </label>
+    </div>
+    <div class="modal-foot">
+      <button type="button" class="btn-cancel" id="collabTaskCancel">取消</button>
+      <button type="button" class="btn-primary" id="collabTaskSave">保存协同状态</button>
+    </div>
+  </div>
+</div>
+
 <!-- 轻提示 -->
 <div class="toast" id="toast"></div>
 
-<script src="js/app.js?v=20261128c"></script>
+<script src="js/app.js?v=20261128d"></script>
+<script src="js/chronic.js?v=20261128d"></script>
 </body>
 </html>

@@ -18,7 +18,7 @@ import urllib.request
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta
 
-from . import ai, asr, auth, db, mailer, telemetry
+from . import ai, asr, auth, db, guidelines, mailer, telemetry, validator
 from .errors import ApiError
 
 # ==========================================================
@@ -1676,6 +1676,42 @@ def health_summary(conn, uid):
         parts.append("最近心情：%s %s%s" % (row["date"][5:10], row["mood"] or "",
                                           ("（%s）" % row["note"]) if row["note"] else ""))
 
+    bp_rows = conn.execute(
+        "SELECT date, text FROM vital_records WHERE user_id = ? AND type = 'bp' ORDER BY date DESC LIMIT 5",
+        (uid,),
+    ).fetchall()
+    if bp_rows:
+        bp_text = "、".join("%s %s" % (str(r["date"])[5:10], r["text"] or "") for r in reversed(bp_rows))
+        parts.append("本人最近血压：" + bp_text)
+
+    fam_members = conn.execute(
+        "SELECT id, relation, name, age, conditions, medications FROM family_members WHERE user_id = ?",
+        (uid,),
+    ).fetchall()
+    if fam_members:
+        m_items = []
+        for m in fam_members[:4]:
+            desc = m["relation"] or m["name"] or "家人"
+            if m["age"]:
+                desc += "(%s岁)" % m["age"]
+            if m["conditions"]:
+                desc += " 慢病:%s" % m["conditions"]
+            if m["medications"]:
+                desc += " 用药:%s" % m["medications"]
+            m_items.append(desc)
+        parts.append("家庭成员慢病档案：" + "；".join(m_items))
+
+    fam_rec = conn.execute(
+        "SELECT r.date, r.type, r.content, m.relation FROM family_records r "
+        "LEFT JOIN family_members m ON r.member_id = m.id AND r.user_id = m.user_id "
+        "WHERE r.user_id = ? ORDER BY r.date DESC, r.created_at DESC LIMIT 5",
+        (uid,),
+    ).fetchall()
+    if fam_rec:
+        fr_items = ["%s %s(%s):%s" % (str(r["date"])[5:10], r["relation"] or "家人", r["type"], r["content"] or "")
+                    for r in reversed(fam_rec)]
+        parts.append("家庭成员近期慢病记录：" + "；".join(fr_items))
+
     return "\n".join(parts) if parts else "暂无健康记录。"
 
 
@@ -1798,37 +1834,39 @@ def ai_chat(ctx):
     ).fetchall()
     history = [{"role": row["role"], "content": row["content"]} for row in reversed(rows)]
 
-    reply, meta = ai.generate_reply(message, history=history,
-                                    context=health_summary(ctx.conn, ctx.user_id))
+    summary = health_summary(ctx.conn, ctx.user_id)
+    record_refs = guidelines.collect_record_refs(ctx.conn, ctx.user_id)
+    matched_guidelines = guidelines.retrieve_guidelines(message, summary, top_k=3)
 
-    # 识别「开始跑步」「吃了…帮我记到晚餐」这类指令，附带可执行动作
+    reply, meta = ai.generate_reply(
+        message,
+        history=history,
+        context=summary,
+        guideline_items=matched_guidelines,
+        record_refs=record_refs,
+    )
+
+    # 识别「测了血压 148/92」「开始跑步」「吃了…帮我记到晚餐」等受限动作
     action = ai.detect_action(message)
-    if action and action.get("type") == "meal_add":
+    if action and action.get("type") == "bp_record":
+        recent_bp = _recent_bp_for_member(ctx.conn, ctx.user_id, action.get("member"))
+        action["validation"] = validator.validate_bp(
+            action.get("systolic"),
+            action.get("diastolic"),
+            pulse=action.get("pulse"),
+            recent_readings=recent_bp,
+        )
+    elif action and action.get("type") == "meal_add":
         try:
             data, _meta = ai.estimate_food(action.get("text") or message)
         except ai.AiError:
             data = {}
-        foods = []
-        for item in (data.get("foods") or []):
-            if not isinstance(item, dict) or not item.get("name"):
-                continue
-            foods.append({
-                "name": str(item.get("name"))[:30],
-                "portion": str(item.get("portion") or "1 份")[:30],
-                "kcal": max(0, round(float(item.get("kcal") or 0))),
-                "protein": max(0, round(float(item.get("protein") or 0), 1)),
-                "carb": max(0, round(float(item.get("carb") or 0), 1)),
-                "fat": max(0, round(float(item.get("fat") or 0), 1)),
-                "fiber": max(0, round(float(item.get("fiber") or 0), 1)),
-            })
-            if len(foods) >= 8:
-                break
-        if foods:
-            action["foods"] = foods
-            action["total"] = {
-                key: round(sum(food[key] for food in foods), 1)
-                for key in ("kcal", "protein", "carb", "fat", "fiber")
-            }
+        clamped = validator.clamp_meal_items(data.get("foods") or [], max_items=8)
+        if clamped["foods"]:
+            action["foods"] = clamped["foods"]
+            action["total"] = clamped["total"]
+            action["clampedCount"] = clamped["clampedCount"]
+            action["droppedCount"] = clamped["droppedCount"]
 
     now = db.now()
     ctx.conn.execute(
@@ -1849,6 +1887,14 @@ def ai_chat(ctx):
         "reply": reply,
         "conversationId": cid,
         "action": action,
+        "citations": {
+            "records": record_refs[:4],
+            "guidelines": [
+                {"id": g["id"], "source": g["source"], "title": g["title"], "summary": g["summary"]}
+                for g in matched_guidelines
+            ],
+            "safetyNotice": "本建议仅用于家庭健康监测与科普参考，不构成医疗诊断。",
+        },
         "configured": meta["configured"],
         "degraded": meta["degraded"],
         "provider": meta["provider"],
@@ -1962,11 +2008,48 @@ def normalize_report_result(raw):
     }
 
 
+def _recent_bp_for_member(conn, uid, member_hint=None):
+    """提取本人或指定家庭成员近 7 条血压记录，用于历史基线一致性校验。"""
+    readings = []
+    if member_hint and member_hint != "本人":
+        rows = conn.execute(
+            "SELECT r.content FROM family_records r "
+            "LEFT JOIN family_members m ON r.member_id = m.id AND r.user_id = m.user_id "
+            "WHERE r.user_id = ? AND (m.relation = ? OR m.name = ? OR m.id = ?) "
+            "ORDER BY r.date DESC, r.created_at DESC LIMIT 10",
+            (uid, member_hint, member_hint, member_hint),
+        ).fetchall()
+        for row in rows:
+            readings.append({"content": row["content"] or ""})
+    if not readings:
+        rows = conn.execute(
+            "SELECT value, value2, text FROM vital_records "
+            "WHERE user_id = ? AND type = 'bp' ORDER BY date DESC, id DESC LIMIT 10",
+            (uid,),
+        ).fetchall()
+        for row in rows:
+            readings.append({"systolic": row["value"], "diastolic": row["value2"], "text": row["text"]})
+    return list(reversed(readings))
+
+
+def normalize_bp_meter_result(raw):
+    raw = raw if isinstance(raw, dict) else {}
+    return {
+        "systolic": _bounded_float(raw.get("systolic"), 40, 300),
+        "diastolic": _bounded_float(raw.get("diastolic"), 20, 200),
+        "pulse": _bounded_float(raw.get("pulse"), 30, 220),
+        "measuredPeriod": _short_text(raw.get("measuredPeriod"), 12) or "未知",
+        "imageQuality": _short_text(raw.get("imageQuality"), 24) or "清晰",
+        "confidence": _bounded_float(raw.get("confidence"), 0, 1),
+        "note": _short_text(raw.get("note"), 120),
+    }
+
+
 @route("POST", "/api/ai/vision")
 def ai_vision(ctx):
     task = clean_text(ctx.body.get("task"), "task", 12, required=True)
-    if task not in ("meal", "report"):
-        raise ApiError(400, "task 只能是 meal 或 report")
+    if task not in ("meal", "report", "bp_meter"):
+        raise ApiError(400, "task 只能是 meal、report 或 bp_meter")
 
     image_url = clean_text(ctx.body.get("imageUrl"), "imageUrl", 200, required=True)
     filename = os.path.basename(image_url) if image_url.startswith("/uploads/") else ""
@@ -2001,17 +2084,169 @@ def ai_vision(ctx):
     except ai.AiError as error:
         raise ApiError(502, "图片识别失败：%s" % error, "vision_failed")
 
-    result = normalize_meal_result(raw) if task == "meal" else normalize_report_result(raw)
+    validation = None
+    if task == "meal":
+        result = normalize_meal_result(raw)
+        clamped = validator.clamp_meal_items(result.get("foods") or [])
+        result["foods"] = clamped["foods"]
+        if clamped["foods"] and not result["total"].get("kcal"):
+            result["total"] = clamped["total"]
+    elif task == "bp_meter":
+        result = normalize_bp_meter_result(raw)
+        member_hint = clean_text(ctx.body.get("member"), "member", 30) or "本人"
+        recent_bp = _recent_bp_for_member(ctx.conn, ctx.user_id, member_hint)
+        validation = validator.validate_bp(
+            result.get("systolic"),
+            result.get("diastolic"),
+            pulse=result.get("pulse"),
+            recent_readings=recent_bp,
+            image_quality=result.get("imageQuality"),
+            confidence=result.get("confidence"),
+        )
+    else:
+        result = normalize_report_result(raw)
+        if result.get("systolic") and result.get("diastolic"):
+            recent_bp = _recent_bp_for_member(ctx.conn, ctx.user_id, "本人")
+            validation = validator.validate_bp(
+                result.get("systolic"),
+                result.get("diastolic"),
+                recent_readings=recent_bp,
+            )
+
     _vision_bump(ctx.conn, ctx.user_id)
 
     return {
         "task": task,
         "result": result,
+        "validation": validation,
         "configured": meta["configured"],
         "provider": meta["provider"],
         "model": meta["model"],
         "quotaLeft": max(0, VISION_DAILY_LIMIT - used - 1),
     }
+
+
+# ==========================================================
+# 写前校验、权威指南检索与异地家庭协同任务
+# ==========================================================
+COLLAB_STATUSES = ("pending_confirm", "pending_remind", "pending_call", "done")
+
+
+def collab_task_json(row):
+    return {
+        "id": row["id"],
+        "memberId": row["member_id"],
+        "memberName": row["member_name"] or "",
+        "title": row["title"],
+        "category": row["category"] or "异常复核",
+        "assignee": row["assignee"] or "子女",
+        "status": row["status"] or "pending_confirm",
+        "triggerSource": row["trigger_source"] or "manual",
+        "relatedMetric": row["related_metric"] or "",
+        "feedback": row["feedback"] or "",
+        "createdAt": row["created_at"] or "",
+        "updatedAt": row["updated_at"] or "",
+    }
+
+
+@route("POST", "/api/vitals/validate-bp", auth_required=False)
+def vitals_validate_bp(ctx):
+    body = ctx.body or {}
+    recent = body.get("recentReadings")
+    if recent is None and ctx.user_id:
+        recent = _recent_bp_for_member(ctx.conn, ctx.user_id, body.get("member"))
+    result = validator.validate_bp(
+        body.get("systolic"),
+        body.get("diastolic"),
+        pulse=body.get("pulse"),
+        recent_readings=recent,
+        image_quality=body.get("imageQuality"),
+        confidence=body.get("confidence"),
+    )
+    return {"validation": result}
+
+
+@route("GET", "/api/guidelines/search", auth_required=False)
+def guidelines_search(ctx):
+    q = query_value(ctx, "q") or ""
+    items = guidelines.retrieve_guidelines(q, "", top_k=4)
+    return {"guidelines": items}
+
+
+@route("GET", "/api/collab/tasks")
+def collab_tasks_list(ctx):
+    rows = ctx.conn.execute(
+        "SELECT * FROM collab_tasks WHERE user_id = ? "
+        "ORDER BY CASE status WHEN 'done' THEN 1 ELSE 0 END, updated_at DESC",
+        (ctx.user_id,),
+    ).fetchall()
+    return {"tasks": [collab_task_json(row) for row in rows]}
+
+
+@route("POST", "/api/collab/tasks")
+def collab_task_create(ctx):
+    title = clean_text(ctx.body.get("title"), "title", 120, required=True)
+    member_id = clean_text(ctx.body.get("memberId"), "memberId", 40) or None
+    member_name = clean_text(ctx.body.get("memberName"), "memberName", 30) or ""
+    category = clean_text(ctx.body.get("category"), "category", 20) or "异常复核"
+    assignee = clean_text(ctx.body.get("assignee"), "assignee", 30) or "子女"
+    status = clean_text(ctx.body.get("status"), "status", 24) or "pending_confirm"
+    if status not in COLLAB_STATUSES:
+        status = "pending_confirm"
+    trigger_source = clean_text(ctx.body.get("triggerSource"), "triggerSource", 30) or "manual"
+    related_metric = clean_text(ctx.body.get("relatedMetric"), "relatedMetric", 80) or ""
+    feedback = clean_text(ctx.body.get("feedback"), "feedback", 200) or ""
+
+    task_id = "ct" + db.new_id()
+    now = db.now()
+    ctx.conn.execute(
+        "INSERT INTO collab_tasks(id, user_id, member_id, member_name, title, category, "
+        "assignee, status, trigger_source, related_metric, feedback, created_at, updated_at) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        (task_id, ctx.user_id, member_id, member_name, title, category,
+         assignee, status, trigger_source, related_metric, feedback, now, now),
+    )
+    row = ctx.conn.execute("SELECT * FROM collab_tasks WHERE id = ?", (task_id,)).fetchone()
+    return 201, {"task": collab_task_json(row)}
+
+
+@route("PATCH", "/api/collab/tasks/<task_id>")
+def collab_task_update(ctx):
+    task_id = ctx.params["task_id"]
+    row = ctx.conn.execute(
+        "SELECT * FROM collab_tasks WHERE id = ? AND user_id = ?", (task_id, ctx.user_id)
+    ).fetchone()
+    if row is None:
+        raise ApiError(404, "协同任务不存在")
+
+    status = row["status"]
+    if "status" in ctx.body:
+        cand = clean_text(ctx.body.get("status"), "status", 24)
+        if cand not in COLLAB_STATUSES:
+            raise ApiError(400, "无效的任务状态")
+        status = cand
+    feedback = clean_text(ctx.body.get("feedback"), "feedback", 200) if "feedback" in ctx.body else (row["feedback"] or "")
+    assignee = clean_text(ctx.body.get("assignee"), "assignee", 30) if "assignee" in ctx.body else (row["assignee"] or "子女")
+
+    now = db.now()
+    ctx.conn.execute(
+        "UPDATE collab_tasks SET status = ?, feedback = ?, assignee = ?, updated_at = ? "
+        "WHERE id = ? AND user_id = ?",
+        (status, feedback, assignee, now, task_id, ctx.user_id),
+    )
+    updated = ctx.conn.execute("SELECT * FROM collab_tasks WHERE id = ?", (task_id,)).fetchone()
+    return {"task": collab_task_json(updated)}
+
+
+@route("DELETE", "/api/collab/tasks/<task_id>")
+def collab_task_delete(ctx):
+    cursor = ctx.conn.execute(
+        "DELETE FROM collab_tasks WHERE id = ? AND user_id = ?",
+        (ctx.params["task_id"], ctx.user_id),
+    )
+    if cursor.rowcount == 0:
+        raise ApiError(404, "协同任务不存在")
+    return {"ok": True}
 
 
 PLAN_RISK_LEVELS = ("低风险", "中风险", "高风险")
@@ -2959,6 +3194,39 @@ def sync_import(ctx):
         imported += 1
     counts["quickReminders"] = imported
 
+    # ---- 异地家庭协同任务 ----
+    imported = 0
+    if isinstance(body.get("collabTasks"), list):
+        conn.execute("DELETE FROM collab_tasks WHERE user_id = ?", (uid,))
+        for index, item in enumerate(body.get("collabTasks") or []):
+            if not isinstance(item, dict):
+                continue
+            title = safe_text(item.get("title"), 120)
+            if not title:
+                continue
+            old_member = safe_text(item.get("memberId"), 40)
+            status = safe_text(item.get("status"), 24, "pending_confirm")
+            if status not in COLLAB_STATUSES:
+                status = "pending_confirm"
+            task_id = "ct%d-%d" % (uid, index)
+            now = db.now()
+            conn.execute(
+                "INSERT INTO collab_tasks(id, user_id, member_id, member_name, title, category, "
+                "assignee, status, trigger_source, related_metric, feedback, created_at, updated_at) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (task_id, uid, member_map.get(old_member) or old_member or None,
+                 safe_text(item.get("memberName"), 30), title,
+                 safe_text(item.get("category"), 20, "异常复核"),
+                 safe_text(item.get("assignee"), 30, "子女"), status,
+                 safe_text(item.get("triggerSource"), 30, "manual"),
+                 safe_text(item.get("relatedMetric"), 80),
+                 safe_text(item.get("feedback"), 200),
+                 safe_text(item.get("createdAt"), 24) or now,
+                 safe_text(item.get("updatedAt"), 24) or now),
+            )
+            imported += 1
+    counts["collabTasks"] = imported
+
     return {"ok": True, "imported": counts}
 
 
@@ -3005,6 +3273,9 @@ def sync_export(ctx):
     report_rows = conn.execute(
         "SELECT * FROM report_records WHERE user_id = ? ORDER BY date", (uid,)
     ).fetchall()
+    collab_rows = conn.execute(
+        "SELECT * FROM collab_tasks WHERE user_id = ? ORDER BY updated_at DESC", (uid,)
+    ).fetchall()
 
     profile_row = read_profile(conn, uid)
     preference_row = conn.execute(
@@ -3043,6 +3314,7 @@ def sync_export(ctx):
         "familyRecords": [family_record_json(row) for row in record_rows],
         "reminders": [reminder_json(row) for row in reminder_rows],
         "quickReminders": [quick_json(row) for row in quick_rows],
+        "collabTasks": [collab_task_json(row) for row in collab_rows],
         "reports": [report_json(row) for row in report_rows],
         "female": {
             "profile": {

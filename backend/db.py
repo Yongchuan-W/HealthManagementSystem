@@ -290,6 +290,24 @@ CREATE TABLE IF NOT EXISTS report_records (
     created_at TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_report_user_date ON report_records(user_id, date);
+
+-- 异地家庭慢病协同任务（带负责人、状态流转与处理反馈）
+CREATE TABLE IF NOT EXISTS collab_tasks (
+    id             TEXT    PRIMARY KEY,
+    user_id        INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    member_id      TEXT,
+    member_name    TEXT,
+    title          TEXT    NOT NULL,
+    category       TEXT    NOT NULL DEFAULT '异常复核',
+    assignee       TEXT    NOT NULL DEFAULT '子女',
+    status         TEXT    NOT NULL DEFAULT 'pending_confirm',
+    trigger_source TEXT    NOT NULL DEFAULT 'manual',
+    related_metric TEXT,
+    feedback       TEXT,
+    created_at     TEXT,
+    updated_at     TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_collab_user_status ON collab_tasks(user_id, status, updated_at);
 """
 
 

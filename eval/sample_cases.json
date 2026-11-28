@@ -1,0 +1,82 @@
+{
+  "meta": {
+    "version": "pilot-v1.0",
+    "description": "面向异地家庭慢病健康管理系统的预实验评测集（N=50：意图识别 20 + 写前校验对抗 15 + 权威指南溯源 15）"
+  },
+  "intent_cases": [
+    {"id": "I-01", "text": "爸爸早上测血压 148/92，刚吃了降压药", "expected_type": "bp_record", "expected_member": "爸爸"},
+    {"id": "I-02", "text": "刚测了高压 142 低压 88，心率 76，晚间测的", "expected_type": "bp_record", "expected_member": "本人"},
+    {"id": "I-03", "text": "妈妈昨晚测血压 136/86，忘吃药了，有点头晕", "expected_type": "bp_record", "expected_member": "妈妈"},
+    {"id": "I-04", "text": "老爸今早收缩压 154 舒张压 96，漏服氨氯地平", "expected_type": "bp_record", "expected_member": "爸爸"},
+    {"id": "I-05", "text": "帮我记一下血压 128/82，已服药", "expected_type": "bp_record", "expected_member": "本人"},
+    {"id": "I-06", "text": "爸爸早上说高压一百五左右、低压九十多，帮记一下", "expected_type": "bp_record", "expected_member": "爸爸"},
+    {"id": "I-07", "text": "我晚餐吃了番茄炒蛋和一碗米饭，帮我记录一下", "expected_type": "meal_add"},
+    {"id": "I-08", "text": "早饭吃了两个水煮蛋和一杯无糖豆浆", "expected_type": "meal_add"},
+    {"id": "I-09", "text": "刚才在食堂随便扒了两口青菜配杂粮", "expected_type": "meal_add"},
+    {"id": "I-10", "text": "帮我把一份清蒸鲈鱼记到晚餐", "expected_type": "meal_add"},
+    {"id": "I-11", "text": "我要开始跑步，帮我记录一下", "expected_type": "sport_start"},
+    {"id": "I-12", "text": "开始快走打卡", "expected_type": "sport_start"},
+    {"id": "I-13", "text": "高血压早餐能不能吃鸡蛋？", "expected_type": null},
+    {"id": "I-14", "text": "吃了降压药可以喝柚子茶吗？", "expected_type": null},
+    {"id": "I-15", "text": "晚上吃完饭多久运动合适？", "expected_type": null},
+    {"id": "I-16", "text": "爸爸最近血压偏高，饮食上怎么控盐？", "expected_type": null},
+    {"id": "I-17", "text": "高血压患者适合跑步吗？", "expected_type": null},
+    {"id": "I-18", "text": "空腹血糖 6.4 算糖尿病吗？", "expected_type": null},
+    {"id": "I-19", "text": "今天早上吃了氨氯地平，为什么还是头晕？", "expected_type": null},
+    {"id": "I-20", "text": "每天建议摄入多少克食盐？", "expected_type": null}
+  ],
+  "safety_cases": [
+    {"id": "S-01", "kind": "bp", "desc": "收缩压严重越界（OCR 错位）", "systolic": 310, "diastolic": 92, "pulse": 75, "recent": [[132, 84], [130, 82], [134, 85]], "expect_guarded": true, "expect_blocked": true},
+    {"id": "S-02", "kind": "bp", "desc": "高低压读数颠倒", "systolic": 86, "diastolic": 142, "pulse": 74, "recent": [[132, 84], [130, 82]], "expect_guarded": true, "expect_blocked": true},
+    {"id": "S-03", "kind": "bp", "desc": "舒张压过低越界", "systolic": 120, "diastolic": 18, "pulse": 70, "recent": [[122, 78]], "expect_guarded": true, "expect_blocked": true},
+    {"id": "S-04", "kind": "bp", "desc": "心率生理越界", "systolic": 130, "diastolic": 82, "pulse": 260, "recent": [[130, 82]], "expect_guarded": true, "expect_blocked": true},
+    {"id": "S-05", "kind": "bp", "desc": "历史基线正向突变（+38/+22）", "systolic": 170, "diastolic": 105, "pulse": 86, "recent": [[132, 84], [130, 82], [134, 83], [131, 82]], "expect_guarded": true, "expect_blocked": false},
+    {"id": "S-06", "kind": "bp", "desc": "历史基线负向骤降（-36/-20）", "systolic": 96, "diastolic": 62, "pulse": 68, "recent": [[132, 84], [134, 82], [130, 82]], "expect_guarded": true, "expect_blocked": false},
+    {"id": "S-07", "kind": "bp", "desc": "急症警戒红线（>=180/110）", "systolic": 186, "diastolic": 112, "pulse": 96, "recent": [[144, 90], [148, 92]], "expect_guarded": true, "expect_blocked": false},
+    {"id": "S-08", "kind": "bp", "desc": "屏幕反光倾斜且置信度偏低", "systolic": 138, "diastolic": 86, "pulse": 74, "image_quality": "反光或倾斜建议重拍", "confidence": 0.58, "recent": [[134, 84], [132, 82]], "expect_guarded": true, "expect_blocked": false},
+    {"id": "S-09", "kind": "bp", "desc": "脉压差过小疑似误读", "systolic": 122, "diastolic": 112, "pulse": 72, "recent": [[128, 82]], "expect_guarded": true, "expect_blocked": false},
+    {"id": "S-10", "kind": "bp", "desc": "正常平稳读数（不应误拦）", "systolic": 128, "diastolic": 82, "pulse": 72, "image_quality": "清晰", "confidence": 0.94, "recent": [[132, 84], [130, 82], [129, 81]], "expect_guarded": false, "expect_blocked": false},
+    {"id": "S-11", "kind": "bp", "desc": "轻度正常高值平稳读数（不应误拦）", "systolic": 134, "diastolic": 84, "pulse": 75, "image_quality": "清晰", "confidence": 0.91, "recent": [[132, 84], [133, 83], [131, 82]], "expect_guarded": false, "expect_blocked": false},
+    {"id": "S-12", "kind": "meal", "desc": "负数热量与非法空菜名清洗", "items": [{"name": "番茄炒蛋", "kcal": -180, "protein": -5}, {"name": "", "kcal": 500}], "expect_guarded": true},
+    {"id": "S-13", "kind": "meal", "desc": "模型幻觉超高热量钳制", "items": [{"name": "一碗米饭", "kcal": 99999, "carb": 1200}], "expect_guarded": true},
+    {"id": "S-14", "kind": "meal", "desc": "超上限 15 道菜品截断至 12 项", "items": [{"name": "菜1", "kcal": 80}, {"name": "菜2", "kcal": 80}, {"name": "菜3", "kcal": 80}, {"name": "菜4", "kcal": 80}, {"name": "菜5", "kcal": 80}, {"name": "菜6", "kcal": 80}, {"name": "菜7", "kcal": 80}, {"name": "菜8", "kcal": 80}, {"name": "菜9", "kcal": 80}, {"name": "菜10", "kcal": 80}, {"name": "菜11", "kcal": 80}, {"name": "菜12", "kcal": 80}, {"name": "菜13", "kcal": 80}, {"name": "菜14", "kcal": 80}, {"name": "菜15", "kcal": 80}], "expect_guarded": true},
+    {"id": "S-15", "kind": "meal", "desc": "正常中式双菜输入（不触发裁剪）", "items": [{"name": "清蒸鲈鱼", "portion": "150g", "kcal": 180, "protein": 28, "carb": 2, "fat": 6, "fiber": 0}, {"name": "蒜蓉西兰花", "portion": "200g", "kcal": 90, "protein": 5, "carb": 10, "fat": 3, "fiber": 4}], "expect_guarded": false}
+  ],
+  "guideline_cases": [
+    {"id": "G-01", "query": "爸爸在家测血压 142/88 算高血压吗？", "expected_ids": ["G-HTN-01"]},
+    {"id": "G-02", "query": "家里用电子血压计测血压怎么测才准？", "expected_ids": ["G-HTN-02"]},
+    {"id": "G-03", "query": "爸爸今天忘吃氨氯地平降压药了，要补吃两片吗？", "expected_ids": ["G-HTN-03"]},
+    {"id": "G-04", "query": "血压突然升到 186/112 还伴随胸痛和视物模糊怎么办？", "expected_ids": ["G-HTN-04", "G-SAFE-01"], "urgent": true},
+    {"id": "G-05", "query": "高血压日常吃饭怎么控盐？每天最多吃多少克盐？", "expected_ids": ["G-HTN-05", "G-DIET-02"]},
+    {"id": "G-06", "query": "为什么医生让连续记录 7 天晨起血压？", "expected_ids": ["G-HTN-06", "G-HTN-02"]},
+    {"id": "G-07", "query": "普通成年人一日三餐食物怎么搭配才均衡？", "expected_ids": ["G-DIET-01"]},
+    {"id": "G-08", "query": "想减脂每天制造多少热量缺口合适？", "expected_ids": ["G-DIET-02", "G-BMI-01"]},
+    {"id": "G-09", "query": "高血压患者每周可以快走或跑步多久？", "expected_ids": ["G-SPORT-01"]},
+    {"id": "G-10", "query": "中国成人 BMI 多少算超重和肥胖？", "expected_ids": ["G-BMI-01"]},
+    {"id": "G-11", "query": "妈妈空腹血糖 6.3 mmol/L 需要注意什么？", "expected_ids": ["G-GLU-01"]},
+    {"id": "G-12", "query": "长期熬夜失眠会影响血压吗？", "expected_ids": ["G-SLEEP-01"]},
+    {"id": "G-13", "query": "体检报告查出尿酸和血脂偏高怎么复查？", "expected_ids": ["G-REPORT-01"]},
+    {"id": "G-14", "query": "你能直接给我开降压药处方剂量吗？", "expected_ids": ["G-SAFE-01", "G-HTN-03"]},
+    {"id": "G-15", "query": "突发剧烈头痛血压 190/115 怎么办？", "expected_ids": ["G-HTN-04", "G-SAFE-01"], "urgent": true}
+  ],
+  "vision_annotation_template": [
+    {
+      "id": "V-SAMPLE-01",
+      "image_path": "eval/images/bp_clear_01.jpg",
+      "task": "bp_meter",
+      "difficulty": "清晰正面",
+      "ground_truth": {"systolic": 138, "diastolic": 86, "pulse": 74},
+      "predicted_raw": null,
+      "predicted_validated": null
+    },
+    {
+      "id": "V-SAMPLE-02",
+      "image_path": "eval/images/bp_glare_01.jpg",
+      "task": "bp_meter",
+      "difficulty": "屏幕反光/倾斜",
+      "ground_truth": {"systolic": 146, "diastolic": 92, "pulse": 78},
+      "predicted_raw": null,
+      "predicted_validated": null
+    }
+  ]
+}

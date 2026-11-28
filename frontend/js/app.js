@@ -33,7 +33,7 @@ const SYNC_KEYS = [
   'profile', 'weightHistory', 'vitalsHistory', 'bp', 'glucose', 'mealLog',
   'moodLog', 'dietActivity', 'sport', 'reminders', 'quickReminders',
   'familyMembers', 'familyRecords', 'preferences', 'femaleProfile',
-  'femaleStatus', 'reports', 'beautyPlan', 'sleepLog'
+  'femaleStatus', 'reports', 'beautyPlan', 'sleepLog', 'collabTasks'
 ];
 const dataCache = Object.create(null);
 const OWNER_KEY = 'hm_owner';
@@ -197,6 +197,7 @@ function buildSyncPayload() {
     familyRecords: loadData('familyRecords', []),
     reminders: loadData('reminders', []),
     quickReminders: loadData('quickReminders', []),
+    collabTasks: loadData('collabTasks', []),
     preferences: loadData('preferences', {}),
     female: {
       profile: loadData('femaleProfile', {}),
@@ -285,6 +286,7 @@ function applyBundle(bundle) {
       : { goal: { kcal: 500, steps: 8000, minutes: 60 }, history: {} },
     reminders: bundle.reminders || [],
     quickReminders: bundle.quickReminders || [],
+    collabTasks: bundle.collabTasks || [],
     familyMembers: bundle.familyMembers || [],
     familyRecords: bundle.familyRecords || [],
     preferences: bundle.preferences || {},
@@ -487,12 +489,17 @@ document.getElementById('demoEnter').addEventListener('click', function () {
   afterLogin(loadData('profile', null));
 });
 
-// 免登录体验：不校验账号，直接进入本地示例数据
+// 免登录体验：不校验账号，直接进入本地 14 天异地慢病家庭示例数据
 document.getElementById('guestEnter').addEventListener('click', function () {
   setServerMode(false);
   document.getElementById('loginError').hidden = true;
+  if (window.HM_CHRONIC && typeof window.HM_CHRONIC.ensureGuestSeed === 'function') {
+    window.HM_CHRONIC.ensureGuestSeed(false);
+  }
   afterLogin(loadData('profile', null));
-  showToast('免登录体验中，数据只保存在本机');
+  refreshAllViews();
+  loadChatHistory();
+  showToast('已载入「异地慢病家庭」14 天示例档案（数据保存在本机）');
 });
 
 
@@ -1052,6 +1059,7 @@ function switchPage(name) {
   pages.forEach(function (page) {
     page.classList.toggle('active', page.id === 'page-' + name);
   });
+  document.body.classList.toggle('page-assistant', name === 'assistant');
   // AI 解读页隐藏通用 Hero，首屏只保留上传区
   const mainArea = document.querySelector('.main-area');
   // 数据大屏只给管理员看，打开时刷新一次，之后每 20 秒自动更新
@@ -1789,24 +1797,48 @@ function nutritionNumber(value, digits) {
   return digits ? Math.round(safe * 10) / 10 : Math.round(safe);
 }
 
-// 渲染识别出的食物清单、合计营养与说明
+// 渲染识别出的食物清单、合计营养与说明（支持写入前逐项调整热量与删除菜品）
+function recomputeMealRecognitionTotals() {
+  if (!mealRecognition || !Array.isArray(mealRecognition.foods)) return;
+  const oldTotal = mealRecognition.total || {};
+  const oldKcal = Math.max(1, Number(oldTotal.kcal) || mealRecognition.foods.reduce(function (s, f) {
+    return s + (Number(f.kcal) || 0);
+  }, 0) || 1);
+  const newKcal = mealRecognition.foods.reduce(function (s, f) {
+    return s + Math.max(0, Number(f.kcal) || 0);
+  }, 0);
+  const ratio = newKcal / oldKcal;
+  mealRecognition.total = {
+    kcal: Math.round(newKcal),
+    protein: nutritionNumber((Number(oldTotal.protein) || 0) * ratio, true),
+    carb: nutritionNumber((Number(oldTotal.carb) || 0) * ratio, true),
+    fat: nutritionNumber((Number(oldTotal.fat) || 0) * ratio, true),
+    fiber: nutritionNumber((Number(oldTotal.fiber) || 0) * ratio, true)
+  };
+}
+
 function renderMealRecognition(result) {
   mealRecognition = result || null;
   const foods = (result && result.foods) || [];
   const total = (result && result.total) || {};
 
   if (!foods.length) {
-    dietResult.innerHTML = '<div>没有识别出明确的食物，可以换一张更清晰的照片，或在下方手动记录。</div>';
+    dietResult.innerHTML = '<div>没有可写入的食物条目，可以换一张更清晰的照片，或在下方手动记录。</div>';
     dietResult.hidden = false;
     dietMealRow.hidden = true;
     dietFillMeal.hidden = true;
     return;
   }
 
-  const rows = foods.map(function (item) {
-    return '<div class="ai-food"><span>' + escapeHtml(item.name) +
-      (item.portion ? ' · ' + escapeHtml(item.portion) : '') + '</span><b>' +
-      nutritionNumber(item.kcal) + ' kcal</b></div>';
+  const rows = foods.map(function (item, idx) {
+    return '<div class="ai-food ai-food-editable" data-food-idx="' + idx + '">' +
+      '<span class="ai-food-name">' + escapeHtml(item.name) +
+      (item.portion ? ' · ' + escapeHtml(item.portion) : '') + '</span>' +
+      '<span class="ai-food-controls">' +
+        '<input type="number" class="ai-food-kcal-input" data-idx="' + idx + '" min="0" max="3000" value="' +
+        nutritionNumber(item.kcal) + '" aria-label="修改热量"><em>kcal</em>' +
+        '<button type="button" class="ai-food-del" data-del-idx="' + idx + '" title="移除该菜品">×</button>' +
+      '</span></div>';
   }).join('');
 
   const note = result.note
@@ -1814,6 +1846,7 @@ function renderMealRecognition(result) {
     : '';
 
   dietResult.innerHTML =
+    '<div class="ai-edit-hint">识别结果可在写入前逐项调整热量或删除误识别菜品，合计将实时重算：</div>' +
     '<div class="ai-foods">' + rows + '</div>' +
     '<div class="ai-total">共约 ' + nutritionNumber(total.kcal) + ' kcal · 蛋白质 ' +
     nutritionNumber(total.protein, true) + 'g · 碳水 ' + nutritionNumber(total.carb, true) +
@@ -1822,6 +1855,26 @@ function renderMealRecognition(result) {
   dietResult.hidden = false;
   dietMealRow.hidden = false;
   dietFillMeal.hidden = false;
+
+  dietResult.querySelectorAll('.ai-food-kcal-input').forEach(function (inp) {
+    inp.addEventListener('change', function () {
+      const i = Number(inp.dataset.idx);
+      if (!mealRecognition || !mealRecognition.foods[i]) return;
+      const val = Math.max(0, Math.min(3000, Number(inp.value) || 0));
+      mealRecognition.foods[i].kcal = val;
+      recomputeMealRecognitionTotals();
+      renderMealRecognition(mealRecognition);
+    });
+  });
+  dietResult.querySelectorAll('.ai-food-del').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      const i = Number(btn.dataset.delIdx);
+      if (!mealRecognition || !mealRecognition.foods) return;
+      mealRecognition.foods.splice(i, 1);
+      recomputeMealRecognitionTotals();
+      renderMealRecognition(mealRecognition);
+    });
+  });
 }
 
 // 调用后端多模态识别接口
@@ -6610,10 +6663,23 @@ const newsArticles = {
 
 const newsMask = document.getElementById('newsMask');
 
-// 点击卡片：在新标签页打开浏览器搜索，查看该主题的完整内容
+// 点击卡片：在站内阅读弹窗直接查看完整结构化科普与权威参考来源（不再跳转百度搜索）
+function openArticleReader(article) {
+  if (!article) return;
+  document.getElementById('newsTitle').textContent = article.title;
+  document.getElementById('newsBody').innerHTML = article.html +
+    '<p class="note">参考依据：《中国高血压防治指南（2024年修订版）》《中国居民膳食指南（2022）》《健康中国行动（2019—2030年）》。科普内容仅供健康管理参考，不替代线下诊疗。</p>';
+  openMask(newsMask);
+}
+
 function openArticleInBrowser(title) {
-  const url = 'https://www.baidu.com/s?wd=' + encodeURIComponent(title + ' 健康科普');
-  window.open(url, '_blank', 'noopener');
+  const found = Object.keys(newsArticles).map(function (k) { return newsArticles[k]; })
+    .find(function (item) { return item.title === title; });
+  if (found) {
+    openArticleReader(found);
+    return;
+  }
+  showToast('正在加载站内科普正文');
 }
 
 // ---------- 科普资讯：卡片渲染、搜索排序与换一批 ----------
@@ -6745,7 +6811,7 @@ function newsCardHtml(key, article, keyword) {
       '<div class="news-cat ' + article.color + '">' + escapeNewsHtml(article.cat) + '</div>' +
       '<div class="news-title">' + highlightNewsTitle(article.title, keyword) + '</div>' +
       '<p class="news-desc">' + escapeNewsHtml(article.desc) + '</p>' +
-      '<button type="button" class="read-more">在浏览器中查看全文 ›</button>' +
+      '<button type="button" class="read-more">阅读完整科普 ›</button>' +
       '<span class="news-quick" data-quick="1">速读摘要</span>' +
     '</div></article>';
 }
@@ -6791,7 +6857,7 @@ function filterNews() {
   });
 }
 
-// 点击卡片：普通点击跳百度看全文，点「速读摘要」在站内弹窗看
+// 点击卡片：在站内阅读弹窗直接查看完整科普（点「速读摘要」同样站内打开）
 newsGrid.addEventListener('click', function (event) {
   const card = event.target.closest('.news-card');
   if (!card) return;
@@ -6800,13 +6866,8 @@ newsGrid.addEventListener('click', function (event) {
 
   if (event.target.closest('.news-quick')) {
     event.stopPropagation();
-    document.getElementById('newsTitle').textContent = article.title;
-    document.getElementById('newsBody').innerHTML = article.html;
-    openMask(newsMask);
-    return;
   }
-
-  openArticleInBrowser(article.title);
+  openArticleReader(article);
 });
 
 // 热门词一键搜索
@@ -7023,6 +7084,9 @@ function refreshAllViews() {
   restoreReport();
   applyGenderView();
   renderPeriodFeel();
+  if (window.HM_CHRONIC && typeof window.HM_CHRONIC.renderAll === 'function') {
+    window.HM_CHRONIC.renderAll();
+  }
   updateAdminEntry();
 }
 
@@ -7650,60 +7714,51 @@ voiceFab.addEventListener('click', async function () {
   resetVoiceButton();
 });
 
-// 生成一条聊天气泡
-function makeBubble(text, who) {
+// 生成一条聊天气泡（支持在助手消息下方渲染「数据与指南溯源」卡片）
+function makeBubble(text, who, citations) {
   const bubble = document.createElement('div');
   bubble.className = 'msg ' + who;
-  bubble.textContent = text;
+  const body = document.createElement('div');
+  body.className = 'msg-text';
+  body.textContent = text;
+  bubble.appendChild(body);
+
+  if (who === 'bot' && citations && ((citations.records && citations.records.length) || (citations.guidelines && citations.guidelines.length))) {
+    const box = document.createElement('div');
+    box.className = 'ai-citations';
+    let html = '<div class="ai-cite-title">依据溯源（个人档案 + 权威指南）</div><div class="ai-cite-tags">';
+    (citations.records || []).slice(0, 3).forEach(function (r) {
+      html += '<span class="cite-tag cite-record" title="' + escapeHtml(r.date || '') + '">[' +
+        escapeHtml(r.refId || 'R') + '] ' + escapeHtml(r.label || '') + '</span>';
+    });
+    (citations.guidelines || []).slice(0, 3).forEach(function (g) {
+      html += '<span class="cite-tag cite-guide" title="' + escapeHtml(g.summary || '') + '">[' +
+        escapeHtml(g.id || 'G') + '] ' + escapeHtml(g.source || '') + ' · ' + escapeHtml(g.title || '') + '</span>';
+    });
+    html += '</div>';
+    if (citations.safetyNotice) {
+      html += '<div class="ai-cite-safe">' + escapeHtml(citations.safetyNotice) + '</div>';
+    }
+    box.innerHTML = html;
+    bubble.appendChild(box);
+  }
   return bubble;
 }
 
-// 简单的关键词规则库（离线演示，不依赖网络接口）
-const chatRules = [
-  {
-    keys: ['怎么用', '怎么使用', '使用教程', '教程', '怎么操作', '不会用'],
-    reply: '使用说明：\n1）左侧导航依次是健康数据、饮食、运动、家人健康、健康小管家、科普资讯。\n2）健康数据：点顶部评分或数据卡片，录入血压、血糖、体重，系统会自动算 BMI 和正常范围。\n3）饮食：在早餐/午餐/晚餐输入框写食物名并回车，查不到的食物由 AI 估算热量。\n4）运动：先设目标，再点运动类型开始计时，结束后自动统计。\n5）科普资讯：可搜索、点热门标签、点「刷新」看最新新闻。\n6）语音输入：先点要填的输入框，再点左下角「语音输入」说话。\n7）小管家还能直接执行指令，例如「我要开始跑步，帮我记录一下」。'
-  },
-  {
-    keys: ['饮食', '吃', '营养', '食谱', '三餐', '热量', '早餐', '午餐', '晚餐'],
-    reply: '饮食建议：三餐尽量规律，主食粗细搭配，保证每餐有一掌心大小的优质蛋白（鸡蛋、鱼、瘦肉或豆制品），再搭配两拳蔬菜。今日蛋白质目标 60g，别忘记补充哦。'
-  },
-  {
-    keys: ['运动', '锻炼', '跑步', '健身', '步数', '拉伸', '久坐'],
-    reply: '运动建议：成年人每周建议 150 分钟中等强度运动。久坐时每小时起身活动 3—5 分钟，做几组肩颈拉伸；今天目标完成率 65%，再走 2000 步就差不多达标啦。'
-  },
-  {
-    keys: ['睡眠', '失眠', '熬夜', '睡不够', '入睡'],
-    reply: '睡眠建议：尽量固定作息，睡前一小时减少看手机；卧室温度保持在 18—22℃，并保持安静昏暗。若长期入睡困难，建议记录睡眠日志并咨询医生。'
-  },
-  {
-    keys: ['生理期', '月经', '痛经', '经期', '排卵'],
-    reply: '生理期护理：注意腹部保暖，避免剧烈运动和生冷饮食；可以适量饮用温水或红糖姜茶。若疼痛明显或周期长期紊乱，建议到医院妇科检查。'
-  },
-  {
-    keys: ['血压', '血糖', '体检', 'bmi', '体脂', '指标'],
-    reply: '你的核心体征目前为：BMI 22.0（正常）、血压 110/70 mmHg、空腹血糖 5.2 mmol/L。整体处于健康范围，建议每 3—6 个月复测一次并保持规律运动。'
-  },
-  {
-    keys: ['减肥', '减脂', '体重', '瘦'],
-    reply: '减脂建议以“热量缺口 + 力量训练”为主：每天减少 300—500 kcal 摄入，每周 2—3 次力量训练，配合快走或慢跑。不要过度节食，保证蛋白质摄入才能减少肌肉流失。'
-  },
-  {
-    keys: ['心情', '情绪', '压力', '焦虑', '难过'],
-    reply: '情绪照顾同样重要：可以试试 4-7-8 呼吸法（吸气 4 秒、屏息 7 秒、呼气 8 秒），或把此刻的感受写进“心理情绪记录”。如果低落持续两周以上，建议寻求专业心理支持。'
+// 动态本地可溯源规则引擎（彻底移除写死的 60g / 65% 等假数据）
+function getReplyPacket(text) {
+  if (window.HM_CHRONIC && typeof window.HM_CHRONIC.buildLocalReply === 'function') {
+    return window.HM_CHRONIC.buildLocalReply(text);
   }
-];
+  return {
+    reply: '收到～我是健康小管家。你可以直接输入「爸爸早上测血压 148/92，已服药」快速生成校验草稿，或咨询血压、控盐与慢病日常监测问题。',
+    citations: null,
+    action: null
+  };
+}
 
-// 根据用户输入匹配回复
 function getReply(text) {
-  const lower = text.toLowerCase();
-  for (let i = 0; i < chatRules.length; i++) {
-    const rule = chatRules[i];
-    for (let j = 0; j < rule.keys.length; j++) {
-      if (lower.indexOf(rule.keys[j]) !== -1) return rule.reply;
-    }
-  }
-  return '收到～我是健康小管家。你可以问我饮食搭配、运动计划、睡眠改善或生理期护理等问题，我会给出简单可执行的建议。';
+  return getReplyPacket(text).reply;
 }
 
 // 聊天记录：悬浮窗与整页共用同一份，连后端时由服务端保存
@@ -7716,15 +7771,15 @@ function renderChatLog() {
       return;
     }
     chatMessages.forEach(function (item) {
-      box.appendChild(makeBubble(item.content, item.role === 'user' ? 'user' : 'bot'));
+      box.appendChild(makeBubble(item.content, item.role === 'user' ? 'user' : 'bot', item.citations));
     });
     box.scrollTop = box.scrollHeight;
   });
 }
 
 // 新增一条消息并重绘两边
-function pushMessage(role, content) {
-  chatMessages.push({ role: role, content: content });
+function pushMessage(role, content, citations) {
+  chatMessages.push({ role: role, content: content, citations: citations || null });
   if (chatMessages.length > 100) chatMessages = chatMessages.slice(-100);
   renderChatLog();
 }
@@ -7944,9 +7999,27 @@ async function loadChatHistory() {
   renderChatLog();
 }
 
-// 执行 AI 返回的动作：开始运动计时 / 写入某一餐
+// 执行 AI 返回的受限动作：血压草稿确认 / 开始运动计时 / 写入某一餐
 function runAiAction(action) {
   if (!action || !action.type) return;
+
+  if (action.type === 'bp_record') {
+    if (window.HM_CHRONIC && typeof window.HM_CHRONIC.openBpDraft === 'function') {
+      window.HM_CHRONIC.openBpDraft({
+        source: '对话/语音解析（待确认）',
+        member: action.member || '爸爸',
+        systolic: action.systolic,
+        diastolic: action.diastolic,
+        pulse: action.pulse,
+        measuredPeriod: action.measuredPeriod || '晨起',
+        medStatus: action.medStatus || '未说明',
+        symptom: action.symptom || '',
+        validation: action.validation || null
+      });
+      showToast('已解析血压草稿，请核对校验结果并确认写入');
+    }
+    return;
+  }
 
   if (action.type === 'sport_start') {
     const name = action.sport || '跑步';
@@ -7991,20 +8064,21 @@ function sendChat(rawText) {
   pushMessage('user', text);
   const stopTyping = startTyping();
 
-  // 纯静态演示：本地规则回复，并把对话留在本机
+  // 纯静态/免登录演示：动态读取真实档案 + 本地权威指南检索 + 动作解析
   if (!serverMode || !currentUser) {
-    const reply = getReply(text);
+    const packet = getReplyPacket(text);
 
     setTimeout(function () {
       stopTyping();
-      pushMessage('assistant', reply);
+      pushMessage('assistant', packet.reply, packet.citations);
+      if (packet.action) runAiAction(packet.action);
       staticSaveCurrent();
       if (!assistantHistPanel.hidden) loadConversationList();
-    }, 500);
+    }, 380);
     return;
   }
 
-  // 连后端：消息与回复都由服务端保存
+  // 连后端：消息与回复都由服务端保存，并附带可溯源 citations
   api('/api/ai/chat', {
     method: 'POST',
     body: { message: text, conversationId: currentConversationId }
@@ -8013,7 +8087,7 @@ function sendChat(rawText) {
       stopTyping();
       if (result.ok && result.data.reply) {
         if (result.data.conversationId) currentConversationId = result.data.conversationId;
-        pushMessage('assistant', result.data.reply);
+        pushMessage('assistant', result.data.reply, result.data.citations);
         runAiAction(result.data.action);
         if (!assistantHistPanel.hidden) loadConversationList();
         if (result.data.degraded) {
@@ -8098,5 +8172,29 @@ document.addEventListener('keydown', function (event) {
   closeMask(scoreMask);
   closeMask(memberRecordsMask);
   closeMask(newsMask);
+  closeMask(document.getElementById('bpDraftMask'));
+  closeMask(document.getElementById('weeklyReportMask'));
+  closeMask(document.getElementById('collabTaskMask'));
   closeTagMenus();
 });
+
+// 暴露给 chronic.js 的轻量协作桥接接口
+window.HM_APP = {
+  loadData: loadData,
+  saveData: saveData,
+  refreshAllViews: refreshAllViews,
+  switchPage: switchPage,
+  openMask: openMask,
+  closeMask: closeMask,
+  showToast: showToast,
+  api: api,
+  uploadImage: uploadImage,
+  escapeHtml: escapeHtml,
+  toISODate: toISODate,
+  getNutritionTargets: getNutritionTargets,
+  isServerMode: function () { return !!(serverMode && currentUser); },
+  getCurrentUser: function () { return currentUser; },
+  clearCache: function () {
+    Object.keys(dataCache).forEach(function (k) { delete dataCache[k]; });
+  }
+};

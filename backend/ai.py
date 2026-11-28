@@ -16,7 +16,7 @@ import time
 import urllib.error
 import urllib.request
 
-from . import telemetry
+from . import guidelines, telemetry, validator
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LOCAL_ENV_PATH = os.path.join(BASE_DIR, "ai_local.env")
@@ -116,10 +116,21 @@ def provider_name(settings=None):
     return "openai-compatible"
 
 
-def _build_messages(message, history, context):
+def _build_messages(message, history, context, guideline_items=None, record_refs=None):
     system = SYSTEM_PROMPT + "\n\n" + PAGE_GUIDE
     if context:
-        system += "\n用户健康数据摘要（仅供参考）：\n" + str(context).strip()
+        system += "\n用户健康数据摘要（仅供参考，严禁编造未出现的数值）：\n" + str(context).strip()
+    if record_refs:
+        ref_lines = "\n".join(
+            "[%s] %s %s" % (r.get("refId"), r.get("date") or "", r.get("label") or "")
+            for r in record_refs[:6]
+        )
+        system += "\n可溯源的个人/家庭近期记录（回答须优先立足这些真实记录，可引用编号）：\n" + ref_lines
+    if guideline_items:
+        system += (
+            "\n权威参考指南条文（建议须与以下规范保持一致，可引用对应编号如 [G-HTN-01]）：\n"
+            + guidelines.format_guidelines_for_prompt(guideline_items)
+        )
 
     messages = [{"role": "system", "content": system}]
     for item in (history or [])[-MAX_HISTORY:]:
@@ -202,7 +213,33 @@ def _request_model(settings, messages):
     }))
 
 
-def generate_reply(message, history=None, context=None):
+def _degraded_grounded_reply(message, guideline_items=None, record_refs=None, reason=None):
+    """未配置密钥或外部模型不可用时，基于本地指南库与真实记录返回可溯源降级建议。"""
+    lines = []
+    if reason:
+        lines.append("（外部大模型暂时不可用：%s，已自动切换至本地可溯源规则建议）" % reason)
+    else:
+        lines.append("（当前为本地可溯源规则建议模式）")
+    step = 1
+    if record_refs:
+        latest = record_refs[0]
+        lines.append("%d. 结合近期真实记录 [%s]（%s %s）：建议持续观察近 7 天变化趋势并核对服药与作息情况。" % (
+            step, latest.get("refId"), latest.get("date") or "", latest.get("label") or ""
+        ))
+        step += 1
+    if guideline_items:
+        for item in guideline_items[:2]:
+            lines.append("%d. 参考 [%s] %s：%s" % (
+                step, item["id"], item["source"], item["summary"]
+            ))
+            step += 1
+    else:
+        lines.append(PLACEHOLDER_REPLY)
+    lines.append("安全边界：以上内容仅用于健康监测与科普参考，不构成医疗诊断；若伴明显不适或血压 ≥180/110 mmHg 请及时就医。")
+    return "\n".join(lines)
+
+
+def generate_reply(message, history=None, context=None, guideline_items=None, record_refs=None):
     """调用大模型，返回 (回复文本, 元信息)。
 
     元信息：configured（是否配置了密钥）、degraded（是否走了兜底）、
@@ -210,15 +247,18 @@ def generate_reply(message, history=None, context=None):
     """
     settings = config()
     if settings is None:
-        return PLACEHOLDER_REPLY, {
+        return _degraded_grounded_reply(message, guideline_items, record_refs), {
             "configured": False, "degraded": True,
             "model": None, "provider": None, "error": "未配置 HM_AI_API_KEY",
         }
 
     try:
-        text = _request_model(settings, _build_messages(message, history, context))
+        text = _request_model(
+            settings,
+            _build_messages(message, history, context, guideline_items, record_refs),
+        )
     except AiError as error:
-        return FALLBACK_REPLY.format(reason=error), {
+        return _degraded_grounded_reply(message, guideline_items, record_refs, reason=error), {
             "configured": True, "degraded": True,
             "model": settings["model"], "provider": provider_name(settings),
             "error": str(error),
@@ -242,9 +282,13 @@ SPORT_HINTS = ("开始", "记录", "打卡", "帮我记")
 MEAL_HINTS = ("记录", "帮我", "填入", "填到", "记一下", "加进", "记入")
 
 
+QUESTION_HINTS = ("吗", "？", "?", "能不能", "可以吃", "适合", "推荐", "怎么办", "怎么吃", "为什么", "多少")
+
+
 def detect_action(message):
     """从用户原话中识别可执行动作，返回 dict 或 None。
 
+    - bp_record：解析血压/心率/服药/成员，返回待确认草稿动作（不盲目落库）
     - sport_start：开始一项运动计时
     - meal_add：把饮食描述写入某一餐
     """
@@ -252,16 +296,35 @@ def detect_action(message):
     if not text or len(text) > 500:
         return None
 
+    is_question = any(q in text for q in QUESTION_HINTS)
+
+    bp = validator.parse_bp_from_text(text)
+    if bp and (not is_question or any(h in text for h in ("记", "帮我", "刚测", "测了", "录入"))):
+        action = {"type": "bp_record"}
+        action.update(bp)
+        return action
+
+    if is_question:
+        return None
+
     sport = next((name for name in SPORT_KEYWORDS if name in text), None)
     if sport and any(hint in text for hint in SPORT_HINTS):
         return {"type": "sport_start", "sport": sport}
 
-    if (any(word in text for word in ("吃", "喝", "早餐", "午餐", "晚餐", "加餐", "夜宵"))
-            and any(hint in text for hint in MEAL_HINTS)):
+    meal_words = ("早餐", "午餐", "晚餐", "早饭", "午饭", "晚饭", "加餐", "夜宵")
+    has_eat = any(word in text for word in ("吃", "喝"))
+    has_meal = any(word in text for word in meal_words)
+    if (has_eat or has_meal) and (any(hint in text for hint in MEAL_HINTS) or (has_eat and has_meal)):
         meal = "加餐"
-        for key in ("早餐", "午餐", "晚餐", "加餐", "夜宵"):
+        mapping = {
+            "早餐": "早餐", "早饭": "早餐",
+            "午餐": "午餐", "午饭": "午餐",
+            "晚餐": "晚餐", "晚饭": "晚餐", "夜宵": "晚餐",
+            "加餐": "加餐",
+        }
+        for key, target in mapping.items():
             if key in text:
-                meal = "晚餐" if key == "夜宵" else key
+                meal = target
                 break
         cleaned = re.sub(r"^(帮我|请|麻烦)?(记录一下|记录|填入|记一下|记入)?", "", text)
         cleaned = cleaned.strip("，,。 ")
@@ -346,6 +409,15 @@ VISION_PROMPTS = {
         '"abnormal":["异常项描述"]}\n'
         "要求：体重单位 kg、体脂率单位 %、血糖单位 mmol/L、血压单位为 mmHg；"
         "报告上没有的字段填 null；最多 60 条指标。"
+    ),
+    "bp_meter": (
+        "识别这张家用电子血压计屏幕照片上的读数，只输出一个 JSON 对象：\n"
+        '{"systolic":数字或null,"diastolic":数字或null,"pulse":数字或null,'
+        '"measuredPeriod":"晨起|午后|晚间|未知",'
+        '"imageQuality":"清晰|轻微模糊|反光或倾斜建议重拍",'
+        '"confidence":0.0到1.0之间的数字,"note":"简短说明"}\n'
+        "要求：systolic 为高压/收缩压（mmHg），diastolic 为低压/舒张压（mmHg），pulse 为心率/脉搏（次/分）。"
+        "若屏幕反光、严重倾斜或数字残缺无法辨认，对应字段必须填 null 并在 imageQuality 中填「反光或倾斜建议重拍」，切勿臆造数字。"
     ),
 }
 
