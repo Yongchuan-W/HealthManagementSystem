@@ -580,6 +580,23 @@ document.getElementById('authModeSwitch').addEventListener('click', function () 
   setAuthMode(authMode === 'login' ? 'register' : 'login');
 });
 
+// 密码显示 / 隐藏：点击眼睛切换
+(function () {
+  const pwdInput = document.getElementById('loginPassword');
+  const pwdEye = document.getElementById('pwdEye');
+  if (!pwdInput || !pwdEye) return;
+  pwdEye.addEventListener('click', function () {
+    const show = pwdInput.type === 'password';
+    pwdInput.type = show ? 'text' : 'password';
+    pwdEye.classList.toggle('is-on', show);
+    pwdEye.setAttribute('aria-pressed', show ? 'true' : 'false');
+    pwdEye.setAttribute('aria-label', show ? '隐藏密码' : '显示密码');
+    const use = pwdEye.querySelector('use');
+    if (use) use.setAttribute('href', show ? '#i-eye-off' : '#i-eye');
+    pwdInput.focus();
+  });
+})();
+
 document.getElementById('loginForm').addEventListener('submit', async function (event) {
   event.preventDefault();
 
@@ -6346,7 +6363,7 @@ function renderMoodWeek() {
     const item = document.createElement('div');
     item.className = 'day' + (key === todayKey ? ' selected' : '');
     item.innerHTML =
-      '<span class="emoji">' + (entry ? moodEmojiOf(entry.mood) : '·') + '</span>' +
+      '<span class="emoji">' + (entry ? moodEmojiOf(entry.mood) : '') + '</span>' +
       '<span class="mood-label">' + (entry ? entry.mood : '未记录') + '</span>' +
       '<span class="date">' + (key === todayKey ? '今天' : (day.getMonth() + 1) + '/' + day.getDate()) + '</span>';
     item.title = entry ? (entry.mood + (entry.note ? '：' + entry.note : '')) : '未记录';
