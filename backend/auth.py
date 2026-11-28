@@ -197,11 +197,16 @@ def logout(conn, token):
 def public_user(user):
     try:
         role = user["role"] or "user"
+        account = user["account"]
     except (IndexError, KeyError):
         role = "user"
+        account = ""
+    # HM_ALLOWED_USERS 里列出的账号一律视为管理员（即使旧库里 role 仍是 user）
+    if account and account in allowed_accounts():
+        role = "admin"
     return {
         "id": user["id"],
-        "account": user["account"],
+        "account": account,
         "nickname": user["nickname"] or "",
         "role": role,
         "createdAt": user["created_at"],
@@ -209,11 +214,13 @@ def public_user(user):
 
 
 def is_admin(user):
-    """admin 账号是管理员，其余都是普通用户。"""
+    """role=admin，或账号位于 HM_ALLOWED_USERS 白名单时视为管理员。"""
     if user is None:
         return False
     try:
-        return str(user["role"] or "") == "admin"
+        if str(user["role"] or "") == "admin":
+            return True
+        return user["account"] in allowed_accounts()
     except (IndexError, KeyError):
         return False
 

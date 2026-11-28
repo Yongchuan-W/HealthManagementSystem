@@ -381,6 +381,8 @@ async function afterAuthenticated(knownUser) {
     profile = result.data.profile;
   }
   useAccountScope(currentUser);
+  // 登录/恢复会话后立刻刷新管理员入口（避免要刷新页面才出现「数据大屏」）
+  updateAdminEntry();
   // 记住上次登录的账号名，下次打开只需输密码（密码由浏览器决定是否记住）
   try {
     window.localStorage.setItem('hm_last_account', (currentUser && currentUser.account) || '');
@@ -592,7 +594,7 @@ document.getElementById('authModeSwitch').addEventListener('click', function () 
     pwdEye.setAttribute('aria-pressed', show ? 'true' : 'false');
     pwdEye.setAttribute('aria-label', show ? '隐藏密码' : '显示密码');
     const use = pwdEye.querySelector('use');
-    if (use) use.setAttribute('href', show ? '#i-eye-off' : '#i-eye');
+    if (use) use.setAttribute('href', show ? '#i-eye' : '#i-eye-off');
     pwdInput.focus();
   });
 })();

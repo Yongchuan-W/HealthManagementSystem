@@ -391,10 +391,15 @@ class HealthAppHandler(BaseHTTPRequestHandler):
 
 
 def prepare():
-    """初始化数据库，并按白名单创建指定账号（未配置时创建演示账号）。"""
+    """初始化数据库，并按白名单创建/同步管理账号。"""
     db.init_db()
     db.backup_database()
+    accounts = auth.allowed_accounts()
     with db.session() as conn:
-        if auth.allowed_accounts():
+        if accounts:
             auth.ensure_allowed_users(conn)
+    if accounts:
+        print("[AUTH] 已同步管理账号：", "、".join(accounts.keys()))
+    else:
+        print("[AUTH] 未配置 HM_ALLOWED_USERS，管理账号不启用（可在 ai_local.env 配置）")
     return True
