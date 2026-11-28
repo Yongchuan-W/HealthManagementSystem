@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>健康管理系统 · 健康数据总览</title>
-<link rel="stylesheet" href="css/style.css?v=20261128d">
+<link rel="stylesheet" href="css/style.css?v=20261128e">
 </head>
 <body>
 
@@ -328,11 +328,11 @@
   </div>
 
   <nav class="side-nav" id="nav">
-    <button class="active" data-page="data"><svg class="icon"><use href="#i-pulse"/></svg>健康数据</button>
-    <button data-page="diet"><svg class="icon"><use href="#i-fork"/></svg>饮食</button>
-    <button data-page="sport"><svg class="icon"><use href="#i-dumbbell"/></svg>运动</button>
+    <button class="active" data-page="data"><svg class="icon"><use href="#i-pulse"/></svg>慢病协同总览</button>
     <button data-page="family"><svg class="icon"><use href="#i-heart"/></svg>家人健康</button>
     <button data-page="assistant"><svg class="icon"><use href="#i-chat"/></svg>健康小管家</button>
+    <button data-page="diet"><svg class="icon"><use href="#i-fork"/></svg>饮食记录</button>
+    <button data-page="sport"><svg class="icon"><use href="#i-dumbbell"/></svg>运动记录</button>
     <button data-page="news"><svg class="icon"><use href="#i-book"/></svg>科普资讯</button>
     <button data-page="admin" id="navAdmin" hidden><svg class="icon"><use href="#i-activity"/></svg>数据大屏</button>
   </nav>
@@ -668,8 +668,14 @@
         </div>
       </div>
 
-      <!-- 睡眠板块（并入健康数据） -->
-      <div class="sleep-inline" id="sleepSection">
+      <!-- 更多个人日常记录（默认折叠，保持首屏聚焦于异地家庭慢病监测与协同） -->
+      <details class="more-personal-records" id="morePersonalDetails">
+        <summary class="more-personal-summary">
+          <span>展开更多个人日常记录（睡眠趋势 / 女性健康档案）</span>
+          <span class="more-personal-hint">点击展开</span>
+        </summary>
+        <!-- 睡眠板块（并入健康数据） -->
+        <div class="sleep-inline" id="sleepSection">
         <div class="sleep-card">
           <div class="sleep-icon"><svg class="icon"><use href="#i-moon"/></svg></div>
           <h2>优质睡眠，恢复活力</h2>
@@ -769,6 +775,7 @@
           </div>
         </div>
       </div>
+      </details>
     </section>
 
     <!-- ====================================================

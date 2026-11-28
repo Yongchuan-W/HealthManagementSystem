@@ -4893,3 +4893,33 @@ body.page-assistant .fab { opacity: 0; pointer-events: none; }
 @media (max-width: 560px) {
   .bp-form-grid, .chronic-kpis { grid-template-columns: 1fr; }
 }
+
+/* 首屏折叠更多个人记录，突出慢病主线 */
+.more-personal-records {
+  margin-top: 16px;
+  border-radius: 14px;
+  border: 1px dashed #cfd6cb;
+  background: rgba(255, 253, 248, 0.72);
+  padding: 4px 14px 10px;
+}
+.more-personal-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 4px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #496051;
+  cursor: pointer;
+  list-style: none;
+}
+.more-personal-summary::-webkit-details-marker { display: none; }
+.more-personal-hint {
+  font-size: 12px;
+  font-weight: 600;
+  color: #4a7c59;
+  padding: 3px 10px;
+  border-radius: 99px;
+  background: #edf4ef;
+}
+.more-personal-records[open] .more-personal-hint { display: none; }
