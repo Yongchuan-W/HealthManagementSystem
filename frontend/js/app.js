@@ -328,11 +328,10 @@ async function hydrateFromServer() {
   }
   if (!bundle) return;
 
-  // 本机有数据时先迁移：未绑定账号的旧版数据，或属于当前账号但服务器还没有记录
+  // 只有确认属于当前账号的本地缓存时才补推；绝不把未登录/示例数据上传到真实账号
   const owner = localOwner();
   const sameOwner = !!(owner && currentUser && owner === String(currentUser.id));
-  const isLegacy = hasLocalData() && !owner;
-  if (!bundleHasData(bundle) && (isLegacy || sameOwner)) {
+  if (!bundleHasData(bundle) && sameOwner && hasLocalData()) {
     const pushed = await flushSync();
     if (!pushed) return;   // 推不上去就保留本机数据，不用空数据覆盖
     try {
@@ -489,9 +488,12 @@ document.getElementById('demoEnter').addEventListener('click', function () {
   afterLogin(loadData('profile', null));
 });
 
-// 免登录体验：不校验账号，直接进入本地 14 天异地慢病家庭示例数据
+// 免登录体验：严格隔离到 __guest__ 本地沙箱，清空当前用户与管理员入口
 document.getElementById('guestEnter').addEventListener('click', function () {
+  currentUser = null;
   setServerMode(false);
+  useAccountScope({ account: '__guest__' });
+  updateAdminEntry();
   document.getElementById('loginError').hidden = true;
   if (window.HM_CHRONIC && typeof window.HM_CHRONIC.ensureGuestSeed === 'function') {
     window.HM_CHRONIC.ensureGuestSeed(false);
@@ -499,7 +501,7 @@ document.getElementById('guestEnter').addEventListener('click', function () {
   afterLogin(loadData('profile', null));
   refreshAllViews();
   loadChatHistory();
-  showToast('已载入「异地慢病家庭」14 天示例档案（数据保存在本机）');
+  showToast('已载入「异地慢病家庭」14 天示例档案（数据仅保存在本机）');
 });
 
 
